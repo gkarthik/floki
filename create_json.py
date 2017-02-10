@@ -1,19 +1,25 @@
 import pandas as pd
 import numpy as np
 import pickle
+import simplejson as json
 
 class Node:
+
+    reads = 0
+    ctrl_reads = 0
+    percentage = 0
+    ctrl_percentage = 0
     
     def __init__(self, p, c, taxid, name, r = 0, pr = 0, cr = 0, cpr = 0, pvalue = np.NaN):
         self.parent = p
         self.children = c
-        self.taxid = taxid
-        self.reads = r
+        self.taxid = int(taxid)
+        self.reads += r
         self.pvalue = pvalue
         self.name = name
-        self.ctrl_reads = cr
-        self.ctrl_percentage = cpr
-        self.percentage = pr
+        self.ctrl_reads += cr
+        self.ctrl_percentage += cpr
+        self.percentage += pr
         if p is not None:
             p.add_child(self)
         
@@ -25,16 +31,29 @@ class Node:
         self.parent = p
 
     def get_dict(self):
+        d = []
+        for i in self.children:
+            d.append(i.get_dict())
         return {
-            "children": self.get_children_dict(),
+            "children": d,
             "taxid": self.taxid,
             "pvalue": self.pvalue,
             "reads": self.get_read_count(),
             "percentage": self.get_percentage(),
             "name": self.name,
-            "ctrl_reads": self.get_ctrl_reads(),
+            "ctrl_reads": self.get_ctrl_read_count(),
             "ctrl_percentage": self.get_ctrl_percentage()
         }
+
+    def get_mini_dict(self):
+        d = []
+        for i in self.children:
+            d.append(i.get_mini_dict())
+        return {
+            "children": d,
+            "taxid": self.taxid,
+        }
+        
 
     def get_percentage(self):
         r = self.percentage
@@ -59,13 +78,6 @@ class Node:
         for i in self.children:
             r += i.get_read_count()
         return r
-
-    def get_children_dict(self):
-        d = []
-        for i in self.children:
-            if i.get_read_count() > 0:
-                d.append(i.get_dict())
-        return d
         
     def search_children(self, id):
         if self.taxid == id:
@@ -76,26 +88,35 @@ class Node:
         return None
 
     def populate_with_taxonomy(self, df, reads_df, pvalue_df, ctrl_df):
-        for i in reads_df.index:
-            _i = i
+        for j in reads_df.index:
+            _i = j
             n = self.search_children(_i)
             ancestory = []
+            # This will only be root
+            if n != None:
+                n.reads += reads_df.ix[j]
+                n.percentage += reads_df.ix[j]/reads_df.sum()
+                n.ctrl_reads += ctrl_df.ix[j]
+                n.ctrl_percentage += ctrl_df.ix[j]/ctrl_df.sum()
+                continue
             while n == None:
                 ancestory.append(_i)
-                _i = df.ix[i]["parent_tax_id"]
+                _i = df.ix[_i]["parent_tax_id"]
                 n = self.search_children(_i)
+            ancestory.reverse()
             for i in ancestory:
                 _t = None
-                if i in reads_df.index:
-                    _t = Node(n, [], i, df.ix[i]["tax_name"], reads_df.ix[i], reads_df.ix[i]/reads_df.sum(), ctrl_df.ix[i], ctrl_df.ix[i]/ctrl_df.sum(), pvalue = pvalue_df.ix[i])
-                else:
-                    _t = Node(n, [], i, df.ix[i]["tax_name"])
-                n.add_child(_t)
+                _t = self.search_children(i)
+                tax_name = df.ix[i]["tax_name"]
+                if _t == None:
+                    if i in reads_df.index:
+                        _t = Node(n, [], i, tax_name, reads_df.ix[i], reads_df.ix[i]/reads_df.sum(), ctrl_df.ix[i], ctrl_df.ix[i]/ctrl_df.sum(), pvalue = pvalue_df.ix[i])
+                    else:
+                        _t = Node(n, [], i, tax_name)
                 n = _t
 
-
 if __name__=="__main__":
-    df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")
+    df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")    
     src = "/Users/karthik/hpc_downloads/2017.01.30/"
     reads_df = pd.read_csv(src+"matrices/analysis_matrix.csv", index_col="Unnamed: 0")
     reads_df = reads_df.drop(['Undetermined_S0_L001_R1_001.trim.dedup.kraken.full.output',
@@ -113,10 +134,27 @@ if __name__=="__main__":
                   'ZikaCap24GE_S3_L001_R1_001.trim.dedup.kraken.full.output',
                   'ZikaCap48GE_S4_L001_R1_001.trim.dedup.kraken.full.output',
                   'ZikaCap6GE_S2_L001_R1_001.trim.dedup.kraken.full.output'], axis = 1)
+    reads_df = reads_df.fillna(0)
+    pvalue_df = pvalue_df.fillna(0)
+
+    incompatible = list(set(reads_df.index) - set(df.index))
+    changes_in_taxonomy = {10633: 1891767, 1345697:1921421, 1380774: 93220, 1439853: 28450, 552466: None, 710686: 212767}
+    for i in incompatible:
+        if changes_in_taxonomy[i] != None:
+            reads_df.ix[changes_in_taxonomy[i]] = reads_df.ix[i]
+            pvalue_df.ix[changes_in_taxonomy[i]] = pvalue_df.ix[i]
+        reads_df = reads_df.drop(i)
+        pvalue_df = pvalue_df.drop(i)
+            
     ctrl = "GN3-C1-RN-A1-L1_S4_L001_R1_001.trim.dedup.kraken.full.output"
     ctrl_df = reads_df[ctrl]
 
-    s = "PN2-C1-NS-A4-L1_S2_L001_R1_001.trim.dedup.kraken.full.output"
-    Root = Node(None, [], 1, "root")
-    Root.populate_with_taxonomy(df, reads_df[s], pvalue_df[s], ctrl_df)
+    for s in reads_df.columns:
+        if "PN" not in s:
+            continue
+        Root = Node(None, [], 1, "root")
+        Root.populate_with_taxonomy(df, reads_df[s], pvalue_df[s], ctrl_df)
+        a = json.dumps(Root.get_dict(),ignore_nan=True)
+        f = open("json_output/"+s.replace("kraken.full.output", "json"), "w")
+        f.write(a)
     
