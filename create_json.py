@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import simplejson as json
+import pickle
 
 class Node:
     
@@ -16,6 +16,7 @@ class Node:
         
     def add_child(self, n):
         self.children.append(n)
+        n.parent = self        
 
     def change_parent(self, p):
         self.parent = p
@@ -38,7 +39,8 @@ class Node:
     def get_children_dict(self):
         d = []
         for i in self.children:
-            d.append(i.get_dict())
+            if i.get_read_count() > 0:
+                d.append(i.get_dict())
         return d
         
     def search_children(self, id):
@@ -49,26 +51,20 @@ class Node:
                 return i.search_children(id)
         return None
 
+    def populate_with_taxonomy(self, df):
+        d = df[df["parent_tax_id"] == self.taxid]
+        print(self.taxid)
+        for i in d.index:
+            if i == 1:
+                continue
+            _t = Node(self, [], i, d.ix[i]["tax_name"])
+            self.add_child(_t)
+            _t.populate_with_taxonomy(df)
+
 if __name__=="__main__":
-    src = "/Users/karthik/hpc_downloads/2017.01.30/"
     df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")
-    reads_df = pd.read_csv(src+"matrices/analysis_matrix.csv", index_col="Unnamed: 0")
-    pvalue_matrix = pd.read_csv(src+"matrices/pvalue_matrix.csv", index_col="Unnamed: 0")
-    reads_df = reads_df.drop(['ZikaCap-NoZika_S5_L001_R1_001.trim.dedup.kraken.full.output',
-                              'ZikaCap-highHuRNA_S6_L001_R1_001.trim.dedup.kraken.full.output',
-                              'ZikaCap1-5GE_S1_L001_R1_001.trim.dedup.kraken.full.output',
-                              'ZikaCap24GE_S3_L001_R1_001.trim.dedup.kraken.full.output',
-                              'ZikaCap48GE_S4_L001_R1_001.trim.dedup.kraken.full.output',
-                              'ZikaCap6GE_S2_L001_R1_001.trim.dedup.kraken.full.output'], axis = 1)
-    pvalue_matrix = pvalue_matrix.drop(['ZikaCap-NoZika_S5_L001_R1_001.trim.dedup.kraken.full.output',
-                                        'ZikaCap-highHuRNA_S6_L001_R1_001.trim.dedup.kraken.full.output',
-                                        'ZikaCap1-5GE_S1_L001_R1_001.trim.dedup.kraken.full.output',
-                                        'ZikaCap24GE_S3_L001_R1_001.trim.dedup.kraken.full.output',
-                                        'ZikaCap48GE_S4_L001_R1_001.trim.dedup.kraken.full.output',
-                                        'ZikaCap6GE_S2_L001_R1_001.trim.dedup.kraken.full.output'])
-    ctrl = "GN3-C1-RN-A1-L1_S4_L001_R1_001.trim.dedup.kraken.full.output"
-    Root = Node(None, [], 1, "Root")
-    a = Node(Root, [], 2, "Bacteria", 10, 1)
-    b = Node(Root, [], 3, "Viruses", 5, 0.01)
-    c = Node(a, [], 4, "Salmonella", 20, 0.5)
+    Root = Node(None, [], 1, "root")
+    Root.populate_with_taxonomy(df)
+    f = open("taxdmp/taxonomy_tree", "w")
+    pickle.dump(Root, f)
     
