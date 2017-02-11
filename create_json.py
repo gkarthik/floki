@@ -10,16 +10,17 @@ class Node:
     percentage = 0
     ctrl_percentage = 0
     
-    def __init__(self, p, c, taxid, name, r = 0, pr = 0, cr = 0, cpr = 0, pvalue = np.NaN):
+    def __init__(self, p, c, taxid, name, rank, r = 0, pr = 0, cr = 0, cpr = 0, pvalue = np.NaN):
         self.parent = p
         self.children = c
         self.taxid = int(taxid)
-        self.reads += r
+        self.reads = r
         self.pvalue = pvalue
         self.name = name
-        self.ctrl_reads += cr
-        self.ctrl_percentage += cpr
-        self.percentage += pr
+        self.ctrl_reads = cr
+        self.ctrl_percentage = cpr
+        self.percentage = pr
+        self.rank = rank
         if p is not None:
             p.add_child(self)
         
@@ -42,9 +43,26 @@ class Node:
             "percentage": self.get_percentage(),
             "name": self.name,
             "ctrl_reads": self.get_ctrl_read_count(),
-            "ctrl_percentage": self.get_ctrl_percentage()
+            "ctrl_percentage": self.get_ctrl_percentage(),
+            "rank": self.rank
         }
 
+    def to_string(self):
+        d = []
+        for i in self.children:
+            d.append(i.name)
+        return {
+            "children": d,
+            "taxid": self.taxid,
+            "pvalue": self.pvalue,
+            "reads": self.get_read_count(),
+            "percentage": self.get_percentage(),
+            "name": self.name,
+            "ctrl_reads": self.get_ctrl_read_count(),
+            "ctrl_percentage": self.get_ctrl_percentage(),
+            "rank": self.rank
+        }
+    
     def get_mini_dict(self):
         d = []
         for i in self.children:
@@ -54,12 +72,11 @@ class Node:
             "taxid": self.taxid,
         }
         
-
     def get_percentage(self):
         r = self.percentage
         for i in self.children:
             r += i.get_percentage()
-        return r
+        return r            
 
     def get_ctrl_percentage(self):
         r = self.ctrl_percentage
@@ -80,12 +97,15 @@ class Node:
         return r
         
     def search_children(self, id):
+        n = None
         if self.taxid == id:
-            return self
+            n = self
         else:
-            for i in self.children:
-                return i.search_children(id)
-        return None
+            i = 0
+            while n == None and i < len(self.children):
+                n = self.children[i].search_children(id)
+                i += 1
+        return n
 
     def populate_with_taxonomy(self, df, reads_df, pvalue_df, ctrl_df):
         for j in reads_df.index:
@@ -94,10 +114,10 @@ class Node:
             ancestory = []
             # This will only be root
             if n != None:
-                n.reads += reads_df.ix[j]
-                n.percentage += reads_df.ix[j]/reads_df.sum()
-                n.ctrl_reads += ctrl_df.ix[j]
-                n.ctrl_percentage += ctrl_df.ix[j]/ctrl_df.sum()
+                n.reads = reads_df.ix[j]
+                n.percentage = reads_df.ix[j]/reads_df.sum()
+                n.ctrl_reads = ctrl_df.ix[j]
+                n.ctrl_percentage = ctrl_df.ix[j]/ctrl_df.sum()
                 continue
             while n == None:
                 ancestory.append(_i)
@@ -106,13 +126,12 @@ class Node:
             ancestory.reverse()
             for i in ancestory:
                 _t = None
-                _t = self.search_children(i)
                 tax_name = df.ix[i]["tax_name"]
-                if _t == None:
-                    if i in reads_df.index:
-                        _t = Node(n, [], i, tax_name, reads_df.ix[i], reads_df.ix[i]/reads_df.sum(), ctrl_df.ix[i], ctrl_df.ix[i]/ctrl_df.sum(), pvalue = pvalue_df.ix[i])
-                    else:
-                        _t = Node(n, [], i, tax_name)
+                rank = df.ix[i]["rank"].strip()
+                if i in reads_df.index:
+                    _t = Node(n, [], i, tax_name, rank, reads_df.ix[i], reads_df.ix[i]/reads_df.sum(), ctrl_df.ix[i], ctrl_df.ix[i]/ctrl_df.sum(), pvalue = pvalue_df.ix[i])
+                else:
+                    _t = Node(n, [], i, tax_name, rank)
                 n = _t
 
 if __name__=="__main__":
@@ -152,9 +171,13 @@ if __name__=="__main__":
     for s in reads_df.columns:
         if "PN" not in s:
             continue
-        Root = Node(None, [], 1, "root")
+        print(s)
+        Root = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
         Root.populate_with_taxonomy(df, reads_df[s], pvalue_df[s], ctrl_df)
         a = json.dumps(Root.get_dict(),ignore_nan=True)
         f = open("json_output/"+s.replace("kraken.full.output", "json"), "w")
         f.write(a)
-    
+
+    s = "PN1-C1-NS-A2-L1_S1_L001_R1_001.trim.dedup.kraken.full.output"
+    Root = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
+    Root.populate_with_taxonomy(df, reads_df[s], pvalue_df[s], ctrl_df)
