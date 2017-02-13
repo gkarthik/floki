@@ -136,30 +136,21 @@ class Node:
 
 if __name__=="__main__":
     df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")    
-    src = "/Users/karthik/hpc_downloads/2017.01.30/"
-    reads_df = pd.read_csv(src+"matrices/analysis_matrix.csv", index_col="Unnamed: 0")
-    reads_df = reads_df.drop(['Undetermined_S0_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap-NoZika_S5_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap-highHuRNA_S6_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap1-5GE_S1_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap24GE_S3_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap48GE_S4_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap6GE_S2_L001_R1_001.trim.dedup.kraken.full.output'], axis = 1)
-    pvalue_df = pd.read_csv(src+"matrices/pvalue_matrix.csv", index_col="Unnamed: 0")
+    src = "/Users/karthik/hpc_downloads/2017.02.12/"
+    reads_df = pd.read_csv(src+"matriced_trimmed/analysis_matrix.csv", index_col="Unnamed: 0")
+    pvalue_df = pd.read_csv(src+"matriced_trimmed/pvalue_matrix.csv", index_col="Unnamed: 0")
     pvalue_df = pvalue_df.transpose()
     pvalue_df.index = pvalue_df.index.astype(int)
-    pvalue_df = pvalue_df.drop(['Undetermined_S0_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap-NoZika_S5_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap-highHuRNA_S6_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap1-5GE_S1_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap24GE_S3_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap48GE_S4_L001_R1_001.trim.dedup.kraken.full.output',
-                  'ZikaCap6GE_S2_L001_R1_001.trim.dedup.kraken.full.output'], axis = 1)
     reads_df = reads_df.fillna(0)
     pvalue_df = pvalue_df.fillna(0)
 
     incompatible = list(set(reads_df.index) - set(df.index))
-    changes_in_taxonomy = {10633: 1891767, 1345697:1921421, 1380774: 93220, 1439853: 28450, 552466: None, 710686: 212767}
+    incompatible = [1345697, 1380774, 710686]
+    # incompatible = [1345697, 51290, 1380774, 710686]
+    # changes_in_taxonomy = {10633: 1891767, 1345697:1921421, 1380774: 93220, 1439853: 28450, 552466: None, 710686: 212767}
+    reads_df = reads_df.drop(552466)
+    pvalue_df = pvalue_df.drop(552466)
+    changes_in_taxonomy = {1345697: 1921421, 51290: 1783257, 1380774 : 93220, 710686: 212767}
     for i in incompatible:
         if changes_in_taxonomy[i] != None:
             reads_df.ix[changes_in_taxonomy[i]] = reads_df.ix[i]
@@ -167,11 +158,11 @@ if __name__=="__main__":
         reads_df = reads_df.drop(i)
         pvalue_df = pvalue_df.drop(i)
             
-    ctrl = "GN3-C1-RN-A1-L1_S4_L001_R1_001.trim.dedup.kraken.full.output"
+    ctrl = "GN4_C1_RN_A1_L_S5_L001_R1_001.trim.dedup.kraken.full.output"
     ctrl_df = reads_df[ctrl]
 
     for s in reads_df.columns:
-        if "PN" not in s:
+        if "PS5" not in s:
             continue
         print(s)
         Root = Node(None, [], 1, "root", df.ix[1]["rank"].strip())

@@ -24,16 +24,16 @@ angular.module('dashboardApp')
 	console.log(jsonFile);
 	var padding = 20;
 	var d3 = $window.d3;
-	var width = $window.innerWidth , height = $window.innerHeight;
+	var width = $window.innerWidth , height = $window.innerHeight+500;
 	var rawSvg = element.find("svg")[0];
 	var svg = d3.select(rawSvg);
-	d3.select(element.find("h3")[0]).html(jsonFile.split("/")[1].replace(".trim.dedup.json", ""));
+	d3.select(element.find("h3")[0]).html(jsonFile.split("/")[1].replace(".json", ""));
 	var base = 100;
 	svg.attr("width", width);
 	svg.attr("height", height);
 	var g = svg.append("svg:g");
 	g.attr("transform", "translate(50, 50)");
-	var tree = d3.tree().size([height-150, width-400]);
+	var tree = d3.tree().size([height-150, width-500]);
 	var colorScale = d3.scaleSequential(d3.interpolateRdYlBu);
 	
 	scope.updateFilters = function(){
@@ -94,12 +94,18 @@ angular.module('dashboardApp')
 	      }
 	      return d.children ? "" : d.data.name;
 	    });
+
+	  nodeEnter.on("click", function(d,i){
+	    var url = "https://en.wikipedia.org/w/index.php?search="+d.data.name.replace(/ /g,"+");
+	    var win = window.open(url, '_blank');
+	    win.focus();
+	  });
 	  nodeEnter.on("mouseover", function(d, i){
 	    var t = g.append("svg:g")
 		.attr("class","tool-tip")
 	    	.attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x+10)+")");	    
 	    t.append("rect")
-	      .attr("height", 100)
+	      .attr("height", 130)
 	      .attr("width", 300)
 	      .attr("stroke", "#000")
 	      .attr("fill", "#FFF");
@@ -107,14 +113,14 @@ angular.module('dashboardApp')
 	      .attr("transform", "translate(2,12)")
 	      .selectAll("tspan")
 	      .data(function(){
-		var a = [];
+		var a = [d.data.name];
 		if(d.data.pvalue != null){
-		  a = [d.data.pvalue.toExponential()];
+		  a.push(d.data.pvalue.toExponential());
 		} 
 		a.push("Reads: "+d.data.reads);
 		a.push("Control Reads: "+d.data.ctrl_reads);
-		a.push("Sample %: "+Math.round(d.data.percentage*1000000)/100);
-		a.push("Ctrl %: "+Math.round(d.data.ctrl_percentage*1000000)/100);
+		a.push("Sample %: "+Math.round(d.data.percentage*1000000)/10000);
+		a.push("Ctrl %: "+Math.round(d.data.ctrl_percentage*1000000)/10000);
 		return a;
 	      })
 	      .enter().append("tspan")
