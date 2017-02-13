@@ -129,7 +129,7 @@ class Node:
                 tax_name = df.ix[i]["tax_name"]
                 rank = df.ix[i]["rank"].strip()
                 if i in reads_df.index:
-                    _t = Node(n, [], i, tax_name, rank, reads_df.ix[i], reads_df.ix[i]/reads_df.sum(), ctrl_df.ix[i], ctrl_df.ix[i]/ctrl_df.sum(), pvalue = pvalue_df.ix[i])
+                    _t = Node(n, [], i, tax_name, rank, reads_df.ix[i], reads_df.ix[i]/reads_df.sum(), ctrl_df.ix[i], ctrl_df.ix[i]/ctrl_df.sum(), pvalue_df.ix[i])
                 else:
                     _t = Node(n, [], i, tax_name, rank)
                 n = _t
@@ -145,7 +145,9 @@ if __name__=="__main__":
                   'ZikaCap24GE_S3_L001_R1_001.trim.dedup.kraken.full.output',
                   'ZikaCap48GE_S4_L001_R1_001.trim.dedup.kraken.full.output',
                   'ZikaCap6GE_S2_L001_R1_001.trim.dedup.kraken.full.output'], axis = 1)
-    pvalue_df = pd.read_csv(src+"matrices/analysis_matrix.csv", index_col="Unnamed: 0")
+    pvalue_df = pd.read_csv(src+"matrices/pvalue_matrix.csv", index_col="Unnamed: 0")
+    pvalue_df = pvalue_df.transpose()
+    pvalue_df.index = pvalue_df.index.astype(int)
     pvalue_df = pvalue_df.drop(['Undetermined_S0_L001_R1_001.trim.dedup.kraken.full.output',
                   'ZikaCap-NoZika_S5_L001_R1_001.trim.dedup.kraken.full.output',
                   'ZikaCap-highHuRNA_S6_L001_R1_001.trim.dedup.kraken.full.output',

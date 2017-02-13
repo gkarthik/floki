@@ -94,5 +94,13 @@ body {
 
 .link{
 	fill: none;
-	stroke: #000;
+	stroke: #000;	
+}
+
+.node{
+	cursor: pointer;
+}
+
+.tool-tip{
+	margin-top: 20px;	
 }
