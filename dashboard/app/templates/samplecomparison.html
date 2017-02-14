@@ -1,0 +1,24 @@
+<table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <td>
+          <a href="#" ng-click="sortType = 'name'; sortReverse = !sortReverse">
+	    Genus
+          </a>
+        </td>
+        <td ng-repeat="d in jsonFiles track by $index">
+          <a href="#" ng-click="sortType = 'd'; sortReverse = !sortReverse">
+	    {{d.substring(12, d.length).replace(".trim.dedup.json","")}}
+          </a>
+        </td>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <tr ng-repeat="roll in sushi | orderBy:sortType:sortReverse | filter:searchFish">
+        <td>{{ roll.name }}</td>
+        <td>{{ roll.fish }}</td>
+        <td>{{ roll.tastiness }}</td>
+      </tr>
+    </tbody>    
+</table>

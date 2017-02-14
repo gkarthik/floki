@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pickle
 import simplejson as json
+from scipy.stats import fisher_exact
 
 class Node:
 
@@ -21,6 +22,8 @@ class Node:
         self.ctrl_percentage = cpr
         self.percentage = pr
         self.rank = rank
+        self.superkingdom_percentage = np.NaN
+        self.ctrl_superkingdom_percentage = np.NaN
         if p is not None:
             p.add_child(self)
         
@@ -134,6 +137,21 @@ class Node:
                     _t = Node(n, [], i, tax_name, rank)
                 n = _t
 
+    def generate_pvalues(self, sample_total, CtrlRoot, ctrl_sum):
+        r = self.get_read_count()
+        oddsratio, pvalue = fisher_exact([[r, sample_total],[CtrlRoot.search_children(self.taxid).get_read_count() , ctrl_sum]])
+        self.pvalue = pvalue;
+        for i in self.children:
+            i.generate_pvalues(sample_total, CtrlRoot, ctrl_sum)
+            
+    # def generate_superkingdom_percentages(self, ctrl):
+    #     if self.rank != "superkingdom" and self.name!="root":
+    #         p = self.parent
+    #         while(p.rank != "superkingdom"):
+    #             p = p.parent
+    #         self.superkingdom_percentage = self.reads/p.reads
+    #         self.ctrl_superkingdom_percentage = ctrl.ix[self.taxid]/ctrl.ix[p.taxid]
+                    
 if __name__=="__main__":
     df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")    
     src = "/Users/karthik/hpc_downloads/2017.02.12/"
@@ -160,6 +178,11 @@ if __name__=="__main__":
             
     ctrl = "GN4_C1_RN_A1_L_S5_L001_R1_001.trim.dedup.kraken.full.output"
     ctrl_df = reads_df[ctrl]
+    pvalue_df[ctrl] = [np.NaN] * len(pvalue_df.index)
+    CtrlRoot = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
+    CtrlRoot.populate_with_taxonomy(df, reads_df[ctrl], pvalue_df[ctrl], ctrl_df)
+    CtrlRoot.generate_pvalues(reads_df[ctrl].sum(), CtrlRoot, CtrlRoot.get_read_count())
+        
 
     for s in reads_df.columns:
         if "PS5" not in s:
@@ -167,10 +190,8 @@ if __name__=="__main__":
         print(s)
         Root = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
         Root.populate_with_taxonomy(df, reads_df[s], pvalue_df[s], ctrl_df)
+        Root.generate_pvalues(reads_df[s].sum(), CtrlRoot, CtrlRoot.get_read_count())
+        # Root.generate_superkingdom_percentages(ctrl_df)
         a = json.dumps(Root.get_dict(),ignore_nan=True)
         f = open("json_output/"+s.replace("kraken.full.output", "json"), "w")
         f.write(a)
-
-    s = "PN1-C1-NS-A2-L1_S1_L001_R1_001.trim.dedup.kraken.full.output"
-    Root = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
-    Root.populate_with_taxonomy(df, reads_df[s], pvalue_df[s], ctrl_df)

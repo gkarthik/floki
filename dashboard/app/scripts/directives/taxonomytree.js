@@ -18,6 +18,7 @@ angular.module('dashboardApp')
 	scope.pvalueThreshold = 0.05,
 	scope.readsThreshold = 10;
 	scope.ratioThreshold = 1;
+	scope.taxFilter = "nofilter";
 	console.log(scope);
 	var ranks = ["superkingdom", "species", "genus"];
 	var jsonFile = scope.jsonFile;
@@ -116,11 +117,12 @@ angular.module('dashboardApp')
 		var a = [d.data.name];
 		if(d.data.pvalue != null){
 		  a.push(d.data.pvalue.toExponential());
-		} 
+		}		
 		a.push("Reads: "+d.data.reads);
 		a.push("Control Reads: "+d.data.ctrl_reads);
 		a.push("Sample %: "+Math.round(d.data.percentage*1000000)/10000);
 		a.push("Ctrl %: "+Math.round(d.data.ctrl_percentage*1000000)/10000);
+		a.push(d.data.rank);
 		return a;
 	      })
 	      .enter().append("tspan")
@@ -174,7 +176,7 @@ angular.module('dashboardApp')
 
 	function getSignificantNodes(node){
 	  if(node.children.length == 0){
-	    if(node.pvalue > scope.pvalueThreshold || node.reads <= scope.readsThreshold || node.percentage <= node.ctrl_percentage * scope.ratioThreshold ){
+	    if(node.pvalue > scope.pvalueThreshold || node.reads <= scope.readsThreshold || node.percentage <= node.ctrl_percentage * scope.ratioThreshold || (scope.taxFilter != "nofilter" && scope.taxFilter != node.rank)){
 	      return 0;
 	    }
 	    return 1;

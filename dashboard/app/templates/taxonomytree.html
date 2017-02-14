@@ -30,4 +30,19 @@
     </td>
   </tr>    
 </table>
+<form>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="genus" ng-change="updateFilters()">
+    Genus
+  </label><br/>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="species" ng-change="updateFilters()">
+    Species
+  </label><br/>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
+    None
+  </label><br/>
+  <tt>color = {{color.name | json}}</tt><br/>
+ </form>
 <svg></svg>
