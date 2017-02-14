@@ -19,7 +19,7 @@ angular.module('dashboardApp')
 	scope.readsThreshold = 10;
 	scope.ratioThreshold = 1;
 	scope.taxFilter = "nofilter";
-	console.log(scope);
+	scope.fdrFilter = true;
 	var ranks = ["superkingdom", "species", "genus"];
 	var jsonFile = scope.jsonFile;
 	console.log(jsonFile);
@@ -36,8 +36,13 @@ angular.module('dashboardApp')
 	g.attr("transform", "translate(50, 50)");
 	var tree = d3.tree().size([height-150, width-500]);
 	var colorScale = d3.scaleSequential(d3.interpolateRdYlBu);
+
+	function getAllAttributeValues(){
+	  
+	}
 	
 	scope.updateFilters = function(){
+	  console.log(scope.fdrFilter);
 	  d3.json(scope.jsonFile, function(error, data){
 	    getSignificantNodes(data);
 	    var root = d3.hierarchy(data);	  
@@ -106,8 +111,8 @@ angular.module('dashboardApp')
 		.attr("class","tool-tip")
 	    	.attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x+10)+")");	    
 	    t.append("rect")
-	      .attr("height", 130)
-	      .attr("width", 300)
+	      .attr("height", 150)
+	      .attr("width", 350)
 	      .attr("stroke", "#000")
 	      .attr("fill", "#FFF");
 	    t.append("text")	      
@@ -115,9 +120,9 @@ angular.module('dashboardApp')
 	      .selectAll("tspan")
 	      .data(function(){
 		var a = [d.data.name];
-		if(d.data.pvalue != null){
-		  a.push(d.data.pvalue.toExponential());
-		}		
+		a.push("Pass FDR Test: "+d.data.pass_fdr_test);
+		a.push("Corrected P-value: "+d.data.pvalue.toExponential());
+		a.push("Uncorrected P-value: "+d.data.uncorrected_pvalue.toExponential());
 		a.push("Reads: "+d.data.reads);
 		a.push("Control Reads: "+d.data.ctrl_reads);
 		a.push("Sample %: "+Math.round(d.data.percentage*1000000)/10000);
@@ -174,13 +179,30 @@ angular.module('dashboardApp')
 	      return colorScale(d.data.percentage);
 	}
 
-	function getSignificantNodes(node){
-	  if(node.children.length == 0){
-	    if(node.pvalue > scope.pvalueThreshold || node.reads <= scope.readsThreshold || node.percentage <= node.ctrl_percentage * scope.ratioThreshold || (scope.taxFilter != "nofilter" && scope.taxFilter != node.rank)){
+	function runThreholdFilters(node){
+	  if(scope.fdrFilter){
+	    console.log(node.pass_fdr_test);
+	    if(!node.pass_fdr_test || node.reads <= scope.readsThreshold || node.percentage <= node.ctrl_percentage * scope.ratioThreshold){
 	      return 0;
 	    }
-	    return 1;
-	  }	  
+	  } else {
+	    if(node.uncorrected_pvalue > scope.pvalueThreshold || node.reads <= scope.readsThreshold || node.percentage <= node.ctrl_percentage * scope.ratioThreshold){
+	      return 0;
+	    }
+	  }
+	  return 1;
+	}
+
+	function getSignificantNodes(node){
+	  if(node.rank == scope.taxFilter){
+	    node.significantChildren = 0;
+	    node.value = c + 1;
+	    node.children = [];
+	    return runThreholdFilters(node);
+	  }
+	  if(node.children.length == 0){
+	    return runThreholdFilters(node);
+	  }
 	  var c = 0;
 	  var _c = 0;
 	  for(var t=0;t<node.children.length;t++){

@@ -1,3 +1,53 @@
+<table>
+  <tr>
+    <td>
+      Pvalue Threshold
+    </td>
+    <td>
+      <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
+    </td>
+    <td>
+      <input type="checkbox" ng-model="fdrFilter" value="false" ng-change="triggerUpdate()">
+      &nbsp;False Discovery Rate 
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Reads Threshold
+    </td>
+    <td>
+      <input type="text" id="reads-threshold" ng-model="readsThreshold" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      Ratio Threshold
+    </td>
+    <td>
+      <input type="text" id="ratio-threshold" ng-model="ratioThreshold" />
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <input type="button" id="update-filters" ng-click="triggerUpdate()" value="Update Filters" />
+    </td>
+  </tr>    
+</table>
+<form>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="genus" ng-change="triggerUpdate()">
+    Genus
+  </label><br/>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="species" ng-change="triggerUpdate()">
+    Species
+  </label><br/>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="triggerUpdate()">
+    None
+  </label><br/>
+ </form>
+
 <table class="table table-bordered table-striped">
     <thead>
       <tr>
@@ -15,10 +65,21 @@
     </thead>
     
     <tbody>
-      <tr ng-repeat="roll in sushi | orderBy:sortType:sortReverse | filter:searchFish">
-        <td>{{ roll.name }}</td>
-        <td>{{ roll.fish }}</td>
-        <td>{{ roll.tastiness }}</td>
+      <tr ng-repeat="(taxid, node) in listNodes | orderObjectBy:'percentage'">
+        <td ng-repeat="(k, v) in node">
+	  <span ng-if="k == 'genus'">
+	    {{ v.name }}
+	  </span>
+	  <span ng-if="v.reads">
+	    Sample: {{ formatNumber(v.percentage) }}%<br>
+	    Ctrl: {{ formatNumber(v.ctrl_percentage) }}%<br>
+	    Sample Reads: {{ v.reads }}<br>
+	    Ctrl Reads: {{v.ctrl_reads}}<br>	    
+	    Corrected P-value: {{ formatNumber(v.pvalue)}}<br>
+	    FDR Test Result: {{v.pass_fdr_test}}<br>
+	    Uncorrected P-value: {{ formatNumber(v.uncorrected_pvalue)}}
+	  </span>
+	</td>
       </tr>
     </tbody>    
 </table>

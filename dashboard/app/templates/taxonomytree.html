@@ -7,6 +7,10 @@
     <td>
       <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
     </td>
+    <td>
+      <input type="checkbox" ng-model="fdrFilter" value="false" ng-change="updateFilters()">
+      &nbsp;False Discovery Rate 
+    </td>
   </tr>
   <tr>
     <td>
@@ -43,6 +47,5 @@
     <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
     None
   </label><br/>
-  <tt>color = {{color.name | json}}</tt><br/>
  </form>
 <svg></svg>
