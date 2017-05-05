@@ -22,7 +22,6 @@ angular.module('dashboardApp')
 	scope.fdrFilter = true;
 	var ranks = ["superkingdom", "species", "genus"];
 	var jsonFile = scope.jsonFile;
-	console.log(jsonFile);
 	var padding = 20;
 	var d3 = $window.d3;
 	var width = $window.innerWidth , height = $window.innerHeight+500;
@@ -42,7 +41,6 @@ angular.module('dashboardApp')
 	}
 	
 	scope.updateFilters = function(){
-	  console.log(scope.fdrFilter);
 	  d3.json(scope.jsonFile, function(error, data){
 	    getSignificantNodes(data);
 	    var root = d3.hierarchy(data);	  
@@ -111,7 +109,7 @@ angular.module('dashboardApp')
 		.attr("class","tool-tip")
 	    	.attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x+10)+")");	    
 	    t.append("rect")
-	      .attr("height", 150)
+	      .attr("height", 170)
 	      .attr("width", 350)
 	      .attr("stroke", "#000")
 	      .attr("fill", "#FFF");
@@ -120,6 +118,7 @@ angular.module('dashboardApp')
 	      .selectAll("tspan")
 	      .data(function(){
 		var a = [d.data.name];
+		a.push("Tax ID: "+d.data.taxid);
 		a.push("Pass FDR Test: "+d.data.pass_fdr_test);
 		a.push("Corrected P-value: "+d.data.pvalue.toExponential());
 		a.push("Uncorrected P-value: "+d.data.uncorrected_pvalue.toExponential());
@@ -181,7 +180,6 @@ angular.module('dashboardApp')
 
 	function runThreholdFilters(node){
 	  if(scope.fdrFilter){
-	    console.log(node.pass_fdr_test);
 	    if(!node.pass_fdr_test || node.reads <= scope.readsThreshold || node.percentage <= node.ctrl_percentage * scope.ratioThreshold){
 	      return 0;
 	    }

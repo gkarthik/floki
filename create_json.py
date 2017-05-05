@@ -177,21 +177,18 @@ def run_fdr_test(p):
 
 if __name__=="__main__":
     df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")    
-    src = "/Users/karthik/hpc_downloads/2017.02.12/"
-    reads_df = pd.read_csv(src+"matriced_trimmed/analysis_matrix.csv", index_col="Unnamed: 0")
-    pvalue_df = pd.read_csv(src+"matriced_trimmed/pvalue_matrix.csv", index_col="Unnamed: 0")
+    src = "/Users/karthik/hpc_downloads/2017.04.30/matrices/"
+    reads_df = pd.read_csv(src+"analysis_matrix.csv", index_col="Unnamed: 0")
+    pvalue_df = pd.read_csv(src+"pvalue_matrix.csv", index_col="Unnamed: 0")
     pvalue_df = pvalue_df.transpose()
     pvalue_df.index = pvalue_df.index.astype(int)
     reads_df = reads_df.fillna(0)
     pvalue_df = pvalue_df.fillna(0)
 
     incompatible = list(set(reads_df.index) - set(df.index))
-    incompatible = [1345697, 1380774, 710686]
-    # incompatible = [1345697, 51290, 1380774, 710686]
-    # changes_in_taxonomy = {10633: 1891767, 1345697:1921421, 1380774: 93220, 1439853: 28450, 552466: None, 710686: 212767}
-    reads_df = reads_df.drop(552466)
-    pvalue_df = pvalue_df.drop(552466)
-    changes_in_taxonomy = {1345697: 1921421, 51290: 1783257, 1380774 : 93220, 710686: 212767}
+    changes_in_taxonomy = {10633: 1891767, 1345697:1921421, 1380774: 93220, 1439853: 28450, 552466: None, 710686: 212767}
+    # reads_df = reads_df.drop(552466)
+    # pvalue_df = pvalue_df.drop(552466)
     for i in incompatible:
         if changes_in_taxonomy[i] != None:
             reads_df.ix[changes_in_taxonomy[i]] = reads_df.ix[i]
@@ -199,7 +196,7 @@ if __name__=="__main__":
         reads_df = reads_df.drop(i)
         pvalue_df = pvalue_df.drop(i)
             
-    ctrl = "GN4_C1_RN_A1_L_S5_L001_R1_001.trim.dedup.kraken.full.output"
+    ctrl = "GN3-C1-RN-A1-L1_S4_L001_R1_001.trim.dedup.kraken.full.output"
     ctrl_df = reads_df[ctrl]
     pvalue_df[ctrl] = [np.NaN] * len(pvalue_df.index)
     CtrlRoot = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
@@ -211,7 +208,7 @@ if __name__=="__main__":
 
     complete_json = {};        
     for s in reads_df.columns:
-        if "PS5" not in s:
+        if "PN" not in s:
             continue
         print(s)
         Root = Node(None, [], 1, "root", df.ix[1]["rank"].strip())
