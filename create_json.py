@@ -177,7 +177,7 @@ def run_fdr_test(p):
 
 if __name__=="__main__":
     df = pd.read_csv("taxdmp/tax_parent_name_2.csv", index_col="tax_id")    
-    src = "/Users/karthik/hpc_downloads/2017.04.30/matrices/"
+    src = "/Users/karthik/hpc_downloads/2017.05.19/matrices/"
     reads_df = pd.read_csv(src+"analysis_matrix.csv", index_col="Unnamed: 0")
     pvalue_df = pd.read_csv(src+"pvalue_matrix.csv", index_col="Unnamed: 0")
     pvalue_df = pvalue_df.transpose()
@@ -187,6 +187,7 @@ if __name__=="__main__":
 
     incompatible = list(set(reads_df.index) - set(df.index))
     changes_in_taxonomy = {10633: 1891767, 1345697:1921421, 1380774: 93220, 1439853: 28450, 552466: None, 710686: 212767}
+                           # 1179809:347209, 1179810:347213 , 1609188: None, 51290:1783257 , 131550:1783270 }
     # reads_df = reads_df.drop(552466)
     # pvalue_df = pvalue_df.drop(552466)
     for i in incompatible:
@@ -196,7 +197,7 @@ if __name__=="__main__":
         reads_df = reads_df.drop(i)
         pvalue_df = pvalue_df.drop(i)
             
-    ctrl = "GN3-C1-RN-A1-L1_S4_L001_R1_001.trim.dedup.kraken.full.output"
+    ctrl = "Undetermined_S0_L001_R1_001.trim.dedup.kraken.full.output"
     ctrl_df = reads_df[ctrl]
     pvalue_df[ctrl] = [np.NaN] * len(pvalue_df.index)
     CtrlRoot = Node(None, [], 1, "root", df.ix[1]["rank"].strip())

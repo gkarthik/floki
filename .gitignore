@@ -4,4 +4,4 @@ json_output/*
 .DS_Store
 dashboard/app/json_output/*
 dashboard/app/.DS_Store
-dashboard/app/scripts/directives/.tern-port
+.tern-port
