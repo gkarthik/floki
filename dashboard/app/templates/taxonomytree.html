@@ -9,7 +9,7 @@
     </td>
     <td>
       <input type="checkbox" ng-model="fdrFilter" value="false" ng-change="updateFilters()">
-      &nbsp;False Discovery Rate 
+      &nbsp;False Discovery Rate
     </td>
   </tr>
   <tr>
@@ -30,9 +30,9 @@
   </tr>
   <tr>
     <td>
-      <input type="button" id="update-filters" ng-click="updateFilters()" value="Update Filters" />
+      <input type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
     </td>
-  </tr>    
+  </tr>
 </table>
 <form>
   <label>
@@ -48,4 +48,10 @@
     None
   </label><br/>
  </form>
-<svg></svg>
+ <tr>
+   <td>
+     <input type="button" id="display-reads" value="Display Reads" ng-click="displayReads()" />
+   </td>
+ </tr>
+ <svg>
+ </svg>

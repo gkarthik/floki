@@ -20,6 +20,5 @@ angular.module('dashboardApp')
       console.log(res);
       $scope.jsonData = res;
     });
-    
-    
+
   });
