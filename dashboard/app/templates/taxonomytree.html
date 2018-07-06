@@ -54,8 +54,12 @@
       <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
     </td>
     <td>
-      <input type="checkbox" ng-model="fdrFilter" value="false" ng-change="updateFilters()">
+      <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="updateFilters()">
       &nbsp;False Discovery Rate
+    </td>
+    <td>
+      <input type="checkbox" ng-model="allFilter" value="false" ng-change="updateFilters()">
+      &nbsp; Display nodes which pass filter in at least one sample
     </td>
   </tr>
   <tr>
@@ -78,9 +82,17 @@
     <td>
       <input type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
     </td>
+    <td>
+      <input type="checkbox" ng-model="redFilter" value="true" ng-change="updateFilters()">
+      &nbsp; Click a node to zoom in on Children
+    </td>
   </tr>
 </table>
 <form>
+  <label>
+    <input type="radio" ng-model="taxFilter" value="superkingdom" ng-change="updateFilters()">
+    Super kingdom
+  </label><br/>
   <label>
     <input type="radio" ng-model="taxFilter" value="genus" ng-change="updateFilters()">
     Genus
@@ -93,6 +105,11 @@
     <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
     None
   </label><br/>
+    <td>
+      <input type="checkbox" ng-model="mapFilter" value="false" ng-change="runTree()">
+      &nbsp; Toggle Heat Maps
+    </td>
+
  </form>
  <!-- <br>
    <label> Difference between two samples: </label> -->
