@@ -94,7 +94,7 @@ body {
 
 .link{
 	fill: none;
-	stroke: #000;
+	// stroke: #000;
 }
 
 .node{
@@ -104,3 +104,21 @@ body {
 .tool-tip{
 	margin-top: 20px;
 }
+.slidecontainer {
+    width: 25%;
+}
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 50%;
+    height: 25px;
+    background: #d3d3d3;
+    outline: none;
+}
+
+
+// .found {
+//   fill: #ff4136;
+//   stroke: #ff4136;
+// }

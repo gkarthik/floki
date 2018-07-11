@@ -54,11 +54,11 @@
       <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
     </td>
     <td>
-      <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="updateFilters()">
+      <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="runTree()">
       &nbsp;False Discovery Rate
     </td>
     <td>
-      <input type="checkbox" ng-model="allFilter" value="false" ng-change="updateFilters()">
+      <input type="checkbox" ng-model="allFilter" value="false" ng-change="runTree()">
       &nbsp; Display nodes which pass filter in at least one sample
     </td>
   </tr>
@@ -69,6 +69,15 @@
     <td>
       <input type="text" id="reads-threshold" ng-model="readsThreshold" />
     </td>
+    <td>
+      Search:
+    </td>
+    <td>
+      <input type="text" id="searchText" ng-model="searchText" ng-change="runSearch()"/>
+    </td>
+    <!-- <td>
+      <input type="button" id="searchbutton" value="Search" ng-click="runSearch()" />
+    </td> -->
   </tr>
   <tr>
     <td>
@@ -82,27 +91,49 @@
     <td>
       <input type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
     </td>
-    <td>
-      <input type="checkbox" ng-model="redFilter" value="true" ng-change="updateFilters()">
+    <!-- <td>
+      <input type="checkbox" ng-model="redFilter" value="true">
       &nbsp; Click a node to zoom in on Children
-    </td>
+    </td> -->
   </tr>
+  <tr>
+  <td>
+    <input type="radio" ng-model="colorTax" value="rank" ng-change="updateFilters()" />
+    &nbsp; Color nodes by taxonomic rank
+  </td>
+  <td>
+    <input type="radio" ng-model="colorTax" value="shared" ng-change="updateFilters()" />
+    &nbsp; Color by passing reads threshold
+  </td>
+  <td>
+    <input type="radio" ng-model="colorTax" value="reads" ng-change="updateFilters()" />
+    &nbsp; Reads
+  </td>
+  <td>
+    <input type="radio" ng-model="colorTax" value="percentage" ng-change="updateFilters()" />
+    &nbsp; Percentage
+  </td>
+</tr>
 </table>
 <form>
+  &nbsp; Seperation between heatmap nodes:
+  <div class="slidecontainer">
+    <input type="range" min="1" max="150" class="slider" id="myRange" ng-model= "seperation" ng-change="delayedRun()">
+  </div>
   <label>
-    <input type="radio" ng-model="taxFilter" value="superkingdom" ng-change="updateFilters()">
-    Super kingdom
+    <input type="radio" ng-model="taxFilter" value="phylum" ng-change="runTree()">
+    Phylum
   </label><br/>
   <label>
-    <input type="radio" ng-model="taxFilter" value="genus" ng-change="updateFilters()">
+    <input type="radio" ng-model="taxFilter" value="genus" ng-change="runTree()">
     Genus
   </label><br/>
   <label>
-    <input type="radio" ng-model="taxFilter" value="species" ng-change="updateFilters()">
+    <input type="radio" ng-model="taxFilter" value="species" ng-change="runTree()">
     Species
   </label><br/>
   <label>
-    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
+    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="runTree()">
     None
   </label><br/>
     <td>
@@ -111,6 +142,8 @@
     </td>
 
  </form>
+ <svg id="svg2">
+ </svg>
  <!-- <br>
    <label> Difference between two samples: </label> -->
  <!-- </br>
@@ -132,5 +165,5 @@
 </br>
   <input type="button" id="toggle-compare" ng-click=""> -->
  </tr>
- <svg>
+ <svg id="svg1">
  </svg>

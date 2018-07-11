@@ -8,6 +8,13 @@
  * Controller of the dashboardApp
  */
 angular.module('dashboardApp')
+  // .controller('MainCtrl2', function ($scope, $interval) {
+  //   $scope.callAtInterval = function() {
+  //      console.log("$scope.callAtInterval - Interval occurred");
+  //  }
+  //
+  //  $interval( function(){ $scope.callAtInterval(); }, 3000);
+  // })
   .controller('MainCtrl', function ($scope) {
     $scope.jsonOutputs = [
       // "json_output/PN1-C1-NS-A2-L1_S1_L001_R1_001.trim.dedup.json",
