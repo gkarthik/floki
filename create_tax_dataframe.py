@@ -22,6 +22,6 @@ if __name__=="__main__":
         if j == 1:
             parent_tax_name.append("root")
         else:
-            parent_tax_name.append(uniq[uniq["tax_id"]==i]["name_txt"].iloc[0].strip())            
+            parent_tax_name.append(uniq[uniq["tax_id"]==i]["name_txt"].iloc[0].strip())           
     nodes_df["tax_name"] = tax_name
     nodes_df["parent_tax_name"] = parent_tax_name    

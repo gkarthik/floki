@@ -23,9 +23,11 @@ angular.module('dashboardApp')
   scope.allFilter = true;
   scope.redFilter = false;
   scope.mapFilter = true;
+  scope.opacsupress = false;
   scope.colorTax = "percentage";
-  scope.searchText;
-  scope.seperation = 21;
+  scope.searchText = "";
+  scope.seperation = "3";
+  scope.searchcollapse = false;
 	var ranks = ["superkingdom", "species", "genus"];
   var root;
   var typingTimer;
@@ -71,7 +73,7 @@ angular.module('dashboardApp')
   scope.runTree = function(){
     if (scope.mapFilter){
     tree = d3.cluster()
-      tree.nodeSize([scope.seperation/7,(width/80)])
+      tree.nodeSize([scope.seperation,(width/80)])
       tree.separation(function separation(a, b) {
         return a.parent == b.parent ? 5: 5;
     });
@@ -81,13 +83,25 @@ angular.module('dashboardApp')
     }
 d3.json(scope.jsonFile, function(error, data){
 	scope.updateFilters = function(){
-      resizeSVG(root);
       clearAll(root);
       makescales(root);
       updatelabel(root);
       root.children.forEach(collapseLevel);
       update(root);
+      resizeSVG(root);
 	}
+  scope.updateColors = function(){
+      makescales(root);
+      updatelabel(root);
+      update(root);
+      resizeSVG(root);
+  }
+  scope.opacityFilters = function () {
+    d3.selectAll(".box1").remove()
+    d3.selectAll(".box").remove()
+    clearAll(root);
+    update(root);
+  }
 	var connector = function(d){
 	  	    return "M" + d.parent.y + "," + d.parent.x
 	      + "V" + d.x + "H" + d.y
@@ -167,25 +181,6 @@ d3.json(scope.jsonFile, function(error, data){
         }
       }
 
-  function searchTree(d) {
-    if(scope.searchText.length>0){
-      if (d.children)
-          d.children.forEach(searchTree);
-      else if (d._children)
-          d._children.forEach(searchTree);
-      var searchFieldValue = d.data.name[0];
-      if (searchFieldValue && (searchFieldValue.toUpperCase()).match(scope.searchText.toUpperCase())) {
-              var ancestors = [];
-              var parent = d;
-              while (parent) {
-                  ancestors.push(parent);
-                  parent.class1 = "found";
-                  parent = parent.parent;
-              }
-      }
-    }
-}
-
 function countNodes(d){
   if(d.children){
     d.children.forEach(countNodes);
@@ -198,10 +193,9 @@ function countNodes(d){
 function resizeSVG(d) {
   countNodes(d);
   if (scope.mapFilter){
-      height = nodecounter * 16/3 * scope.seperation/7;
-      g.attr("transform", "translate(" + (30) + "," + height/1.12 + ")");
+      height = nodecounter * 16/3 * scope.seperation +20;
+      g.attr("transform", "translate(" + (30) + "," + height/1.13 + ")");
   }else {
-    height = nodecounter * 16.5;
     g.attr("transform", "translate(" + (30) + "," + 0 + ")");
   }
   width = $window.innerWidth;
@@ -211,7 +205,8 @@ function resizeSVG(d) {
 }
 
 function clearAll(d) {
-    d.class1 = "";
+    d.class1 = null;
+    d.class2 = null;
     if (d.children)
         d.children.forEach(clearAll);
     else if (d._children){
@@ -224,18 +219,96 @@ scope.delayedRun = function () {
       scope.runTree(root);
     }, doneSlidingInterval)
 }
+
+function spaceOut(d) {
+  if(d != "root"){
+    d.x0 = 0;
+    d.y0 = scope.seperation/7;
+    var node = d3.select(this);
+    node.attr("transform", "translate(" + d.y0 + "," + d.x0 + ")");
+  }
+  if (d.children) {
+    d.children.forEach(spaceOut);
+  }
+}
 scope.runSearch = function(){
   clearTimeout(typingTimer);
   typingTimer = setTimeout(function() {
-    doneTyping()
+    expandAll(root);
+    scope.taxFilter = "nofilter";
+    clearAll(root);
+    searchTree(root);
+    if (scope.searchcollapse && scope.searchText.length > 0) {
+      root.children.forEach(collapsenotfound);
+    }
+    resizeSVG(root);
+    update(root);
   }, doneTypingInterval);
 }
 
-  function doneTyping() {
-    clearAll(root);
-    searchTree(root);
-    update(root);
+// scope.runSearchCollapse = function(){
+//   clearTimeout(typingTimer);
+//   typingTimer = setTimeout(function() {
+//     expandAll(root);
+//     clearAll(root);
+//     searchTree(root);
+//     if (scope.searchcollapse) {
+//       root.children.forEach(collapsenotfound);
+//     }
+//     resizeSVG(root);
+//     update(root);
+//   }, doneTypingInterval);
+// }
+
+
+function searchTree(d) {
+  if(scope.searchText.length>0){
+    if (d.children)
+        d.children.forEach(searchTree);
+    else if (d._children)
+        d._children.forEach(searchTree);
+    var searchFieldValue = d.data.name[0];
+    if (searchFieldValue && (searchFieldValue.toUpperCase()).match(scope.searchText.toUpperCase())) {
+            var ancestors = [];
+            var parent = d;
+            while (parent) {
+                ancestors.push(parent);
+                parent.class1 = "found";
+                parent = parent.parent;
+            }
+    }
   }
+}
+
+function collapsenotfound(d) {
+  if (d.children) {
+    if (d.class1 !== "found") {
+        d._children = d.children;
+        d._children.forEach(collapsenotfound);
+        d.children = null;
+        d.class2 = "collapsed";
+} else
+        d.children.forEach(collapsenotfound);
+  }
+}
+
+function expandAll(d) {
+  if (d._children) {
+      d.children = d._children;
+      d.children.forEach(expandAll);
+      d._children = null;
+      d.class2 = null;
+  } else if (d.children)
+      d.children.forEach(expandAll);
+      d.class2 = null;
+}
+
+scope.expandinate = function () {
+  scope.taxFilter = "nofilter";
+  expandAll(root);
+  resizeSVG(root);
+  update(root);
+}
 
   function updatelabel(d) {
     if(typeof(b) !== 'undefined'){
@@ -245,7 +318,6 @@ scope.runSearch = function(){
     .attr("class", "legend");
     var labelrange;
     if (scope.colorTax=="shared") {
-      sharescale = d3.scaleSequential(d3.interpolateViridis).domain([0, d.data.reads.length])
       var band = d3.scaleBand()
           .domain(d3.range(d.data.reads.length+1))
           .range([0, 600]);
@@ -256,7 +328,7 @@ scope.runSearch = function(){
       b.append("text")
       .attr("text-anchor", "middle")
       .attr("transform", "translate(300,25)")
-      .text("Node " + scope.colorTax)
+      .text("Number of samples in which node passes reads threshold")
       .attr("font-family","sans-serif");
       var boxen = b.selectAll('.boxen')
         .data(d3.range(d.data.reads.length+1))
@@ -467,6 +539,26 @@ scope.runSearch = function(){
         return 0.5
       }
     })
+    .style("opacity", function (d) {
+  if (scope.opacsupress) {
+    nodesharecount = 0
+    for (var q=0; q<d.data.reads.length; q++){
+      if (d.data.reads[q] >= scope.readsThreshold){
+        nodesharecount = nodesharecount + 1
+      }
+  }
+  if (nodesharecount == d.data.reads.length) {
+    return 1/4;
+  }else if (nodesharecount == d.data.reads.length-1) {
+    return 1/3
+  }else if (nodesharecount == d.data.reads.length-2) {
+    return 3/4
+  }
+  return 1;
+}else {
+  return 1;
+}
+})
     .style("fill", function(d) {
       if (scope.colorTax=="shared") {
               nodesharecount = 0
@@ -633,6 +725,26 @@ scope.runSearch = function(){
           return 0.5
         }
       })
+      .style("opacity", function (d) {
+    if (scope.opacsupress) {
+      nodesharecount = 0
+      for (var q=0; q<d.data.reads.length; q++){
+        if (d.data.reads[q] >= scope.readsThreshold){
+          nodesharecount = nodesharecount + 1
+        }
+    }
+    if (nodesharecount == d.data.reads.length) {
+      return 1/4;
+    }else if (nodesharecount == d.data.reads.length-1) {
+      return 1/3
+    }else if (nodesharecount == d.data.reads.length-2) {
+      return 3/4
+    }
+    return 1;
+  }else {
+    return 1;
+  }
+  })
       .style("fill", function(d) {
         if (scope.colorTax=="shared") {
                 nodesharecount = 0
@@ -661,7 +773,6 @@ scope.runSearch = function(){
                 }
               }
             });
-
     nodeUpdate.each(function(nodeData){
       var _map = d3.select(this).selectAll(".box1");
         var mapEnter1 = _map.data(function (d) {
@@ -689,9 +800,29 @@ scope.runSearch = function(){
             }else{
               return 0;
             }})
-            .attr("stroke", "#000")
+        .attr("stroke", "#000")
         .attr("fill", function(d){
-          return bigscale(Math.log(d.percentage/rootready * 10000000));});
+          return bigscale(Math.log(d.percentage/rootready * 10000000));})
+        .attr("opacity", function (d) {
+        if (scope.opacsupress) {
+          nodesharecount = 0
+          for (var q=0; q<root.data.reads.length; q++){
+            if (nodeData.data.reads[q] >= scope.readsThreshold){
+              nodesharecount = nodesharecount + 1
+            }
+        }
+        if (nodesharecount == root.data.reads.length) {
+          return 1/4;
+        }else if (nodesharecount == root.data.reads.length-1) {
+          return 1/3
+        }else if (nodesharecount == root.data.reads.length-2) {
+          return 3/4
+        }
+        return 1;
+      }else {
+        return 1;
+      }
+      });
 
           var mapUpdate1 = _map.merge(mapEnter1);
 
@@ -707,10 +838,11 @@ scope.runSearch = function(){
       });
 
       nodeEnter.append("text")
+      .attr("class", "nodelabels")
       .attr("dy", function (d) {
-        if(d.data.rank[0]=="superkingdom"){
+        if(d.data.rank[0]=="superkingdom" && d.children){
           return 12;
-        }else if (d.data.rank[0]=="phylum") {
+        }else if (d.data.rank[0]=="phylum" && d.children) {
           return -3;
         }else{
           return 3;
@@ -729,6 +861,26 @@ scope.runSearch = function(){
             return d.children ? "" : d.data.name[0];
   	    })
         .style('stroke-width', 0.5)
+        .style("opacity", function (d) {
+        if (scope.opacsupress) {
+          nodesharecount = 0
+          for (var q=0; q<root.data.reads.length; q++){
+            if (d.data.reads[q] >= scope.readsThreshold){
+              nodesharecount = nodesharecount + 1
+            }
+        }
+        if (nodesharecount == d.data.reads.length) {
+          return 1/4;
+        }else if (nodesharecount == d.data.reads.length-1) {
+          return 1/3
+        }else if (nodesharecount == d.data.reads.length-2) {
+          return 3/4
+        }
+        return 1;
+      }else {
+        return 1;
+      }
+    })
         .style('stroke', function (d) {
           if (d.class1 === "found") {
               return "#3884ff";
@@ -766,9 +918,29 @@ scope.runSearch = function(){
               }})
           .attr("stroke", "#000")
           .attr("fill", function(d){
-            var scalio = d3.scaleSequential(d3.interpolateBuPu).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+            var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
             })]);
-            return scalio(d.percentage);});
+            return scalio(d.percentage);})
+            .attr("opacity", function (d) {
+            if (scope.opacsupress) {
+              nodesharecount = 0
+              for (var q=0; q<root.data.reads.length; q++){
+                if (nodeData.data.reads[q] >= scope.readsThreshold){
+                  nodesharecount = nodesharecount + 1
+                }
+            }
+            if (nodesharecount == nodeData.data.reads.length) {
+              return 1/4;
+            }else if (nodesharecount == nodeData.data.reads.length-1) {
+              return 1/3
+            }else if (nodesharecount == nodeData.data.reads.length-2) {
+              return 3/4
+            }
+            return 1;
+          }else {
+            return 1;
+          }
+          });
 
             var mapUpdate = map_.merge(mapEnter);
 
@@ -780,16 +952,17 @@ scope.runSearch = function(){
                 }
             })  .attr("height", gridSize)
             .attr("fill", function(d){
-              var scalio = d3.scaleSequential(d3.interpolateBuPu).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+              var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
               })]);
               return scalio(d.percentage);})
         });
 
-  	  nodeUpdate.select("text").style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+  	  nodeUpdate.select("text").style("text-anchor", function(d) {
+      return d.children ? "end" : "start"; })
       .attr("dy", function (d) {
-        if(d.data.rank[0]=="superkingdom"){
+        if(d.data.rank[0]=="superkingdom" && d.children){
           return 12;
-        }else if (d.data.rank[0]=="phylum") {
+        }else if (d.data.rank[0]=="phylum" && d.children) {
           return -3;
         }else{
           return 3;
@@ -811,7 +984,27 @@ scope.runSearch = function(){
          if (d.class1 === "found") {
              return "#3884ff";
          }
-       });
+       })
+       .style("opacity", function (d) {
+               if (scope.opacsupress) {
+                 nodesharecount = 0
+                 for (var q=0; q<root.data.reads.length; q++){
+                   if (d.data.reads[q] >= scope.readsThreshold){
+                     nodesharecount = nodesharecount + 1
+                   }
+               }
+               if (nodesharecount == d.data.reads.length) {
+                 return 1/4;
+               }else if (nodesharecount == d.data.reads.length-1) {
+                 return 1/3
+               }else if (nodesharecount == d.data.reads.length-2) {
+                 return 3/4
+               }
+               return 1;
+             }else {
+               return 1;
+             }
+           });
 
 	  node.exit().transition()
 	    .duration(duration)
@@ -819,10 +1012,10 @@ scope.runSearch = function(){
 	    .style("opacity", 1e-6)
 	    .remove();
 
-	  nodes.eachBefore(function (d) {
-	    d.x0 = d.x;
-	    d.y0 = d.y;
-	  });
+	  // nodes.eachBefore(function (d) {
+	  //   d.x0 = d.x;
+	  //   d.y0 = d.y;
+	  // });
 	}
 
   	function colorFill(d){

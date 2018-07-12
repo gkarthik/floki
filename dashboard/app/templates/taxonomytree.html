@@ -75,6 +75,13 @@
     <td>
       <input type="text" id="searchText" ng-model="searchText" ng-change="runSearch()"/>
     </td>
+    <td>
+      <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
+      &nbsp; Expand found nodes, collapse not found
+    </td>
+    <td>
+      <input type="button" id="Expand-All" value="Expand All" ng-click="expandinate()" />
+    </td>
     <!-- <td>
       <input type="button" id="searchbutton" value="Search" ng-click="runSearch()" />
     </td> -->
@@ -98,28 +105,39 @@
   </tr>
   <tr>
   <td>
-    <input type="radio" ng-model="colorTax" value="rank" ng-change="updateFilters()" />
+    <input type="radio" ng-model="colorTax" value="rank" ng-change="updateColors()" />
     &nbsp; Color nodes by taxonomic rank
   </td>
   <td>
-    <input type="radio" ng-model="colorTax" value="shared" ng-change="updateFilters()" />
+    <input type="radio" ng-model="colorTax" value="shared" ng-change="updateColors()" />
     &nbsp; Color by passing reads threshold
   </td>
   <td>
-    <input type="radio" ng-model="colorTax" value="reads" ng-change="updateFilters()" />
+    <input type="radio" ng-model="colorTax" value="reads" ng-change="updateColors()" />
     &nbsp; Reads
   </td>
   <td>
-    <input type="radio" ng-model="colorTax" value="percentage" ng-change="updateFilters()" />
+    <input type="radio" ng-model="colorTax" value="percentage" ng-change="updateColors()" />
     &nbsp; Percentage
+  </td>
+  <td>
+    <input type="checkbox" ng-model="opacsupress" value = "false" ng-change="opacityFilters()" />
+    &nbsp; Reduce opacity of nodes common throughout samples
   </td>
 </tr>
 </table>
+<td>
+&nbsp; Seperation between heatmap nodes:
+<input type="radio" ng-model="seperation" value="2.5" ng-change="delayedRun()" />
+&nbsp; 1
+<input type="radio" ng-model="seperation" value="3" ng-change="delayedRun()" />
+&nbsp; 2
+<input type="radio" ng-model="seperation" value="4" ng-change="delayedRun()" />
+&nbsp; 3
+<input type="radio" ng-model="seperation" value="6" ng-change="delayedRun()" />
+&nbsp; 4
+</td>
 <form>
-  &nbsp; Seperation between heatmap nodes:
-  <div class="slidecontainer">
-    <input type="range" min="1" max="150" class="slider" id="myRange" ng-model= "seperation" ng-change="delayedRun()">
-  </div>
   <label>
     <input type="radio" ng-model="taxFilter" value="phylum" ng-change="runTree()">
     Phylum
