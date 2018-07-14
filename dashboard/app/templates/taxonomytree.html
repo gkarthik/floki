@@ -1,167 +1,145 @@
 <h3></h3>
-<!-- <tr>
-  <div>
-       <input type="checkbox" id="scales" name="json1"
-              value="scales" checked />
-       <label for="scales">Scales</label>
-   </div>
-
-   <div>
-       <input type="checkbox" id="horns" name="check1"
-              value="horns" />
-       <label for="check1">Horns</label>
-   </div>
-
-   <div>
-       <input type="checkbox" id="claws" name="check2"
-              value="claws" />
-       <label for="check2">Claws</label>
-   </div>
-   <div>
-       <input type="checkbox" id="claws" name="check3"
-              value="claws" />
-       <label for="check3">Claws</label>
-   </div>
-   <div>
-       <input type="checkbox" id="claws" name="check4"
-              value="claws" />
-       <label for="check4">Claws</label>
-   </div>
-   <div>
-       <input type="checkbox" id="claws" name="check5"
-              value="claws" />
-       <label for="check5">Sample5</label>
-   </div>
-</tr> -->
-<!-- <table>
-  <tr>
-    <td>
-      <input type="text" id="window-size" ng-model="windowSize" />
-    </td>
-  </tr>
-  <tr>
-  <td>
-    <input type="button" id="update-window" value="Update Window Size" ng-click="runTree()" />
-  </td>
-  </tr>
-  </table> -->
+<div id="topbar">
 <table>
   <tr>
     <td>
+      &nbsp;
       Pvalue Threshold
     </td>
     <td>
-      <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
-    </td>
-    <td>
-      <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="runTree()">
-      &nbsp;False Discovery Rate
-    </td>
-    <td>
-      <input type="checkbox" ng-model="allFilter" value="false" ng-change="runTree()">
-      &nbsp; Display nodes which pass filter in at least one sample
-    </td>
-  </tr>
-  <tr>
-    <td>
+      &nbsp;
       Reads Threshold
     </td>
     <td>
-      <input type="text" id="reads-threshold" ng-model="readsThreshold" />
-    </td>
-    <td>
-      Search:
-    </td>
-    <td>
-      <input type="text" id="searchText" ng-model="searchText" ng-change="runSearch()"/>
-    </td>
-    <td>
-      <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
-      &nbsp; Expand found nodes, collapse not found
-    </td>
-    <td>
-      <input type="button" id="Expand-All" value="Expand All" ng-click="expandinate()" />
-    </td>
-    <!-- <td>
-      <input type="button" id="searchbutton" value="Search" ng-click="runSearch()" />
-    </td> -->
-  </tr>
-  <tr>
-    <td>
+      &nbsp;
       Ratio Threshold
     </td>
+  </tr>
+  <tr>
+      <td>
+        &nbsp;
+      <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
+    </td>
+
     <td>
+      &nbsp;
+      <input type="text" id="reads-threshold" ng-model="readsThreshold" />
+    </td>
+
+    <td>
+      &nbsp;
       <input type="text" id="ratio-threshold" ng-model="ratioThreshold" />
     </td>
-  </tr>
-  <tr>
     <td>
+      &nbsp;
       <input type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
     </td>
-    <!-- <td>
-      <input type="checkbox" ng-model="redFilter" value="true">
-      &nbsp; Click a node to zoom in on Children
-    </td> -->
   </tr>
-  <tr>
+</table>
+<table
+<tr>
   <td>
-    <input type="radio" ng-model="colorTax" value="rank" ng-change="updateColors()" />
-    &nbsp; Color nodes by taxonomic rank
+    &nbsp;
+    <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="runTree()">
+    &nbsp;False Discovery Rate
   </td>
   <td>
-    <input type="radio" ng-model="colorTax" value="shared" ng-change="updateColors()" />
-    &nbsp; Color by passing reads threshold
-  </td>
-  <td>
-    <input type="radio" ng-model="colorTax" value="reads" ng-change="updateColors()" />
-    &nbsp; Reads
-  </td>
-  <td>
-    <input type="radio" ng-model="colorTax" value="percentage" ng-change="updateColors()" />
-    &nbsp; Percentage
-  </td>
-  <td>
-    <input type="checkbox" ng-model="opacsupress" value = "false" ng-change="opacityFilters()" />
-    &nbsp; Reduce opacity of nodes common throughout samples
+    &nbsp;
+    <input type="checkbox" ng-model="allFilter" value="false" ng-change="runTree()">
+    &nbsp; Display nodes which pass filter in at least one sample
   </td>
 </tr>
 </table>
-<td>
-&nbsp; Seperation between heatmap nodes:
-<input type="radio" ng-model="seperation" value="2.5" ng-change="delayedRun()" />
-&nbsp; 1
-<input type="radio" ng-model="seperation" value="3" ng-change="delayedRun()" />
-&nbsp; 2
-<input type="radio" ng-model="seperation" value="4" ng-change="delayedRun()" />
-&nbsp; 3
-<input type="radio" ng-model="seperation" value="6" ng-change="delayedRun()" />
-&nbsp; 4
-</td>
-<form>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="phylum" ng-change="runTree()">
-    Phylum
-  </label><br/>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="genus" ng-change="runTree()">
-    Genus
-  </label><br/>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="species" ng-change="runTree()">
-    Species
-  </label><br/>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="runTree()">
-    None
-  </label><br/>
-    <td>
-      <input type="checkbox" ng-model="mapFilter" value="false" ng-change="runTree()">
-      &nbsp; Toggle Heat Maps
-    </td>
+<table>
+    <p class="bold">
+  <tr>
+  <td>
+    &nbsp;
+    <input type="radio" ng-model="taxFilter" value="phylum" ng-change="updateFilters()">
+  Phylum
+  </td>
 
- </form>
+  <td>
+    &nbsp;
+    <input type="radio" ng-model="taxFilter" value="genus" ng-change="updateFilters()">
+    Genus
+  </td>
+  <td>
+    &nbsp;
+    <input type="radio" ng-model="taxFilter" value="species" ng-change="updateFilters()">
+     Species
+  </td>
+  <td>
+    &nbsp;
+    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
+   None
+  </td>
+  </tr>
+  </p>
+ </table>
+<table>
+   <input type="checkbox" ng-model="mapFilter" value="false" ng-change="runTree()">
+   &nbsp; Toggle Heat Maps
+
+ &nbsp; Seperation between heatmap nodes
+</table>
+ <div class="slidecontainer">
+   <input type="range" min="2.1" max="10.5" class="slider" id="myRange" ng-model="seperation" ng-change="slideR()" step="0.4" width = "5%">
+ </div>
+ <table>
+   <tr>
+     &nbsp;
+   </tr>
+   <tr>
+     <td>
+       &nbsp;
+       Search:
+     </td>
+     <td>
+       &nbsp;
+       <input type="text" id="searchText" ng-model="searchText" ng-change="runSearch()"/>
+     </td>
+     <td>
+       &nbsp;
+       <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
+       &nbsp; Expand found nodes, collapse not found
+     </td>
+     <td>
+       &nbsp;
+       <input type="button" id="Expand-All" value="Expand All" ng-click="expandinate()" />
+     </td>
+     <!-- <td>
+       <input type="button" id="searchbutton" value="Search" ng-click="runSearch()" />
+     </td> -->
+   </tr>
+ </table>
+ <table>
+   <tr>
+   <td>
+     <input type="radio" ng-model="colorTax" value="rank" ng-change="updateColors()" />
+     &nbsp; Color nodes by taxonomic rank
+   </td>
+   <td>
+     <input type="radio" ng-model="colorTax" value="shared" ng-change="updateColors()" />
+     &nbsp; Color by passing reads threshold
+   </td>
+   <td>
+     <input type="radio" ng-model="colorTax" value="reads" ng-change="updateColors()" />
+     &nbsp; Reads
+   </td>
+   <td>
+     <input type="radio" ng-model="colorTax" value="percentage" ng-change="updateColors()" />
+     &nbsp; Percentage
+   </td>
+   <td>
+     <input type="checkbox" ng-model="opacsupress" value = "false" ng-change="opacityFilters()" />
+     &nbsp; Reduce opacity of nodes common throughout samples
+   </td>
+ </tr>
+ </table>
  <svg id="svg2">
  </svg>
+</div>
  <!-- <br>
    <label> Difference between two samples: </label> -->
  <!-- </br>

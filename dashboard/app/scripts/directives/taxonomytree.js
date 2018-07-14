@@ -26,15 +26,15 @@ angular.module('dashboardApp')
   scope.opacsupress = false;
   scope.colorTax = "percentage";
   scope.searchText = "";
-  scope.seperation = "3";
+  scope.seperation = 3.30;
   scope.searchcollapse = false;
 	var ranks = ["superkingdom", "species", "genus"];
   var root;
+  var nodes;
   var typingTimer;
   var doneTypingInterval = 400;
-  var doneSlidingInterval = 400;
+  var doneSlidingInterval = 300;
   var databox;
-  var databox2;
   var striscale;
   var searchingTimer;
   var t;
@@ -58,7 +58,7 @@ angular.module('dashboardApp')
   svg.attr("width", width + margin.left + margin.right);
   svg.attr("height", 3000 + margin.top + margin.bottom);
   label1.attr("width", width + margin.left + margin.right);
-  label1.attr("height", 155);
+  label1.attr("height", 85);
   var g = svg.append("svg:g");
 	var colorScale = d3.scaleSequential(d3.interpolateRdYlBu);
   var bigscale = d3.scaleSequential(d3.interpolateReds).domain([0, 8]);
@@ -70,7 +70,10 @@ angular.module('dashboardApp')
   var nodedata;
   var smolscale;
   var b;
+  var link;
+  var linkEnter;
   scope.runTree = function(){
+    nodecounter = 0;
     if (scope.mapFilter){
     tree = d3.cluster()
       tree.nodeSize([scope.seperation,(width/80)])
@@ -81,25 +84,36 @@ angular.module('dashboardApp')
     tree = d3.tree()
     tree.size([height-150, width-200]);
     }
+
 d3.json(scope.jsonFile, function(error, data){
 	scope.updateFilters = function(){
+      nodecounter = 0;
       clearAll(root);
+      markOpac(root);
       makescales(root);
       updatelabel(root);
       root.children.forEach(collapseLevel);
+      countNodes(root);
+      adjustSVG(root);
+      if (scope.mapFilter) {
+        translateSVG(root);
+      }else {
+        resetSVGpos(root);
+      }
       update(root);
-      resizeSVG(root);
 	}
   scope.updateColors = function(){
+    if(scope.colorTax == "rank"){
+      label1.attr("height", 155)
+    }
       makescales(root);
       updatelabel(root);
       update(root);
-      resizeSVG(root);
   }
   scope.opacityFilters = function () {
-    d3.selectAll(".box1").remove()
-    d3.selectAll(".box").remove()
-    clearAll(root);
+    g.selectAll(".box1").remove()
+    g.selectAll(".box").remove()
+    markOpac(root);
     update(root);
   }
 	var connector = function(d){
@@ -129,6 +143,7 @@ d3.json(scope.jsonFile, function(error, data){
     }
     }
 }
+
   function createKeys(d){
     for (var key in d.data){
       if (key != 'children'){
@@ -138,6 +153,7 @@ d3.json(scope.jsonFile, function(error, data){
       }
       }
       }
+
   function createminmax(d) {
     for (var key in d.data) {
         if (key != "children"){
@@ -190,19 +206,89 @@ function countNodes(d){
   }
 }
 
-function resizeSVG(d) {
-  countNodes(d);
+function adjustSVG(d) {
   if (scope.mapFilter){
-      height = nodecounter * 16/3 * scope.seperation +20;
-      g.attr("transform", "translate(" + (30) + "," + height/1.13 + ")");
-  }else {
-    g.attr("transform", "translate(" + (30) + "," + 0 + ")");
+    height = nodecounter * 15.7/3 * scope.seperation;
+    }else {
+    height = nodecounter * 15.7/3 * scope.seperation;
   }
   width = $window.innerWidth;
   svg.attr("width", width + margin.left + margin.right);
-  svg.attr("height", height + margin.top + margin.bottom);
-  nodecounter = 0;
+  svg.attr("height", height +200 + margin.top + margin.bottom);;
 }
+
+function translateSVG(d) {
+  g.transition().duration(0).attr("transform", "translate(30," + (20 + nodecounter * 15.7/3 * scope.seperation)/1.1 + ")");
+}
+function resetSVGpos(d) {
+  g.transition().duration(0).attr("transform", "translate(0,0)");
+}
+
+scope.slideR = function () {
+    if (scope.mapFilter){
+    tree = d3.cluster()
+      tree.nodeSize([scope.seperation,(width/80)])
+      tree.separation(function separation(a, b) {
+        return a.parent == b.parent ? 5: 5;
+    });
+    translateSVG(root);
+    }else {
+    tree = d3.tree()
+    tree.size([height-150, width-200]);
+    resetSVGpos(root);
+    }
+    spreadNodes(root);
+    if (scope.mapFilter){
+      height = nodecounter * 15.7/3 * scope.seperation;
+    }else {
+      height = nodecounter * 15.7/3 * scope.seperation;
+    }
+    width = $window.innerWidth;
+    svg.attr("width", width + margin.left + margin.right);
+    svg.attr("height", height + 200 + margin.top + margin.bottom);
+  // clearTimeout(searchingTimer);
+  // searchingTimer = setTimeout(function() {
+  // update(root);
+  // }, doneSlidingInterval);
+}
+
+  // function spaceOut2(d) {
+  //
+  //    // nodes.forEach(function(d) {
+  //      if(d.parent){
+  //        if (d.y > d.parent.y){
+  //          d.y0 = scope.seperation/50;
+  //          d.y = d.y + d.y0;
+  //         // d.attr("transform", "translate( ,"+ d.y +")");
+  //        }else if (d.y < d.parent.y){
+  //          d.y0 = scope.seperation/50;
+  //          d.y = d.y - d.y0;
+  //          // d.attr("transform", "translate(" + d.y + ", 0)");
+  //        }
+  //      }
+  //      if(d.children){
+  //        d.children.forEach(spaceOut2)
+  //      }
+  //
+  // }
+  //
+  // function spaceOut(d) {
+  //   if(d.parent){
+  //     if (d.y > d.parent.y){
+  //       d.y0 = scope.seperation;
+  //       var node = d3.select(this);
+  //       console.log(node)
+  //       node.attr("transform", "translate(" + d.y0 + ", 0)");
+  //     }else if (d.y < d.parent.y){
+  //       d.y0 = scope.seperation;
+  //       var node = d3.select(this);
+  //       node.attr("transform", "translate(" + (-d.y0) + ", 0)");
+  //     }
+  //   }
+  //   if (d.children) {
+  //     d.children.forEach(spaceOut);
+  //   }
+  // }
 
 function clearAll(d) {
     d.class1 = null;
@@ -212,25 +298,31 @@ function clearAll(d) {
     else if (d._children){
         d._children.forEach(clearAll);
 }}
-
-scope.delayedRun = function () {
-    clearTimeout(searchingTimer);
-    searchingTimer = setTimeout(function (d) {
-      scope.runTree(root);
-    }, doneSlidingInterval)
+function markOpac(d){
+  if(d.children){
+    d.children.forEach(markOpac)
+    d.children.forEach(function (d) {
+      if (d.class3) {
+        d.parent.class3 = "visible"
+      }
+    })
+  }else {
+    nodesharecount = 0
+    for (var q=0; q<d.data.reads.length; q++){
+      if (d.data.reads[q] >= scope.readsThreshold){
+        nodesharecount = nodesharecount + 1
+      }
+      if (nodesharecount == d.data.reads.length) {
+        d.class3 = null;
+      }else if (nodesharecount == d.data.reads.length-1) {
+        d.class3 = null;
+      }else {
+        d.class3 = "visible";
+      }
+  }
+}
 }
 
-function spaceOut(d) {
-  if(d != "root"){
-    d.x0 = 0;
-    d.y0 = scope.seperation/7;
-    var node = d3.select(this);
-    node.attr("transform", "translate(" + d.y0 + "," + d.x0 + ")");
-  }
-  if (d.children) {
-    d.children.forEach(spaceOut);
-  }
-}
 scope.runSearch = function(){
   clearTimeout(typingTimer);
   typingTimer = setTimeout(function() {
@@ -241,24 +333,17 @@ scope.runSearch = function(){
     if (scope.searchcollapse && scope.searchText.length > 0) {
       root.children.forEach(collapsenotfound);
     }
-    resizeSVG(root);
+    nodecounter = 0
+    countNodes(root);
+    adjustSVG(root);
     update(root);
+    if (scope.mapFilter) {
+      translateSVG(root);
+    }else {
+      resetSVGpos(root);
+    }
   }, doneTypingInterval);
 }
-
-// scope.runSearchCollapse = function(){
-//   clearTimeout(typingTimer);
-//   typingTimer = setTimeout(function() {
-//     expandAll(root);
-//     clearAll(root);
-//     searchTree(root);
-//     if (scope.searchcollapse) {
-//       root.children.forEach(collapsenotfound);
-//     }
-//     resizeSVG(root);
-//     update(root);
-//   }, doneTypingInterval);
-// }
 
 
 function searchTree(d) {
@@ -306,8 +391,12 @@ function expandAll(d) {
 scope.expandinate = function () {
   scope.taxFilter = "nofilter";
   expandAll(root);
-  resizeSVG(root);
   update(root);
+  if (scope.mapFilter) {
+    translateSVG(root);
+  }else {
+    resetSVGpos(root);
+  }
 }
 
   function updatelabel(d) {
@@ -467,13 +556,37 @@ scope.expandinate = function () {
             }
           }
         }
+        function spreadNodes(source){
+          nodes = tree(root);
+          // link = g.selectAll(".link")
+          //     .data(root.descendants().slice(1));
+          // linkEnter = link.enter().append("path")
+          //     .attr("class", "link")
+          //     .attr("d", connector);
+          //
+          link.merge(linkEnter).transition()
+                  .duration(0)
+                  .attr('d', connector);
+          var node = g.selectAll(".node").data(nodes.descendants());
+          var nodeEnter = node.enter().append("g")
+              .attr("transform", function(d) {
+          return "translate(" + d.y + "," + d.x + ")";
+              }
+            );
+          nodeEnter.append("circle");
+                var nodeUpdate = node.merge(nodeEnter).transition()
+                    .duration(0)
+                    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+              }
 
 	function update(source){
-	  var nodes = tree(root);
-	  var duration = 350;
-	  var link = g.selectAll(".link")
+	  nodes = tree(root);
+    markOpac(root);
+	  var duration = 300;
+	  link = g.selectAll(".link")
 	      .data(root.descendants().slice(1));
-	  var linkEnter = link.enter().append("path")
+	  linkEnter = link.enter().append("path")
 	      .attr("class", "link")
 	      .attr("d", connector)
         .attr("stroke", function (d) {
@@ -484,8 +597,10 @@ scope.expandinate = function () {
           }
         })
         .attr("stroke-width", function (d) {
-          if (d.class1 === "found" || d.class2 === "collapsed") {
+          if (d.class1 === "found") {
             return 3;
+          }else if(d.class2 === "collapsed") {
+            return 1.5
           }
         });
 
@@ -502,26 +617,25 @@ scope.expandinate = function () {
             .attr("stroke-width", function (d) {
               if (d.class1 === "found") {
                 return 3;
+              }else if(d.class2 === "collapsed") {
+                return 1.5
               }
             });
 	  link.exit().transition()
 	    .duration(duration)
-	    .attr("transform", function(d) { return "translate(" + d.parent.y + "," + d.parent.x + ")"; })
+	    .attr("transform", function(d) { return "translate(" + source.x + "," + source.y + ")"; })
 	    .remove();
 	  var node = g.selectAll(".node").data(nodes.descendants());
 	  var nodeEnter = node.enter().append("g")
 	      .attr("class", function(d) { return "node" + (d.children ? " node-internal" : " node-leaf"); })
 	      .attr("transform", function(d) {
-		return "translate(" + d.y + "," + d.x + ")";
-	      });
+		return "translate(" + d.y + "," + d.x + ")";height/1.12
+	      }
+      );
 	  nodeEnter.append("circle")
       .on("click", click)
     .attr("r", function (d) {
-      if (d.class2 === "collapsed") {
-        return 7;
-      }else {
-        return 5;
-      }
+      return 5;
     })
     .style("stroke", function (d) {
       if (d.class1 === "found") {
@@ -534,31 +648,21 @@ scope.expandinate = function () {
       if (d.class1 === "found") {
           return 3;
       }else if (d.class2 === "collapsed"){
-        return 1.5
+        return 2.5
       }else {
         return 0.5
       }
     })
     .style("opacity", function (d) {
-  if (scope.opacsupress) {
-    nodesharecount = 0
-    for (var q=0; q<d.data.reads.length; q++){
-      if (d.data.reads[q] >= scope.readsThreshold){
-        nodesharecount = nodesharecount + 1
-      }
-  }
-  if (nodesharecount == d.data.reads.length) {
-    return 1/4;
-  }else if (nodesharecount == d.data.reads.length-1) {
-    return 1/3
-  }else if (nodesharecount == d.data.reads.length-2) {
-    return 3/4
-  }
-  return 1;
-}else {
-  return 1;
-}
-})
+      if (scope.opacsupress) {
+
+        if (d.class3) {
+          return 1;
+        }else {
+          return 0.5;
+    }
+    }
+  })
     .style("fill", function(d) {
       if (scope.colorTax=="shared") {
               nodesharecount = 0
@@ -703,11 +807,7 @@ scope.expandinate = function () {
 
 	  nodeUpdate.select("circle")
     .attr("r", function (d) {
-          if (d.class2 === "collapsed") {
-            return 7;
-          }else {
-            return 5;
-          }
+          return 5;
         })
       .style("stroke", function (d) {
         if (d.class1 === "found") {
@@ -720,31 +820,20 @@ scope.expandinate = function () {
         if (d.class1 === "found") {
             return 3;
         }else if (d.class2 === "collapsed"){
-          return 1.5
+          return 2.5
         }else {
           return 0.5
         }
       })
       .style("opacity", function (d) {
-    if (scope.opacsupress) {
-      nodesharecount = 0
-      for (var q=0; q<d.data.reads.length; q++){
-        if (d.data.reads[q] >= scope.readsThreshold){
-          nodesharecount = nodesharecount + 1
-        }
-    }
-    if (nodesharecount == d.data.reads.length) {
-      return 1/4;
-    }else if (nodesharecount == d.data.reads.length-1) {
-      return 1/3
-    }else if (nodesharecount == d.data.reads.length-2) {
-      return 3/4
-    }
-    return 1;
-  }else {
-    return 1;
-  }
-  })
+        if (scope.opacsupress) {
+          if (d.class3) {
+            return 1;
+          }else {
+            return 0.5;
+      }
+      }
+    })
       .style("fill", function(d) {
         if (scope.colorTax=="shared") {
                 nodesharecount = 0
@@ -773,134 +862,20 @@ scope.expandinate = function () {
                 }
               }
             });
-    nodeUpdate.each(function(nodeData){
-      var _map = d3.select(this).selectAll(".box1");
-        var mapEnter1 = _map.data(function (d) {
-          databox2 = [];
-            for (var q=0; q<d.data.percentage.length; q++){
-              databox2[q]={}
-              databox2[q]["children"]= (d.children) ? d.children : [];
-             databox2[q]["num"] = q;
-            databox2[q]["name"] = d.data.file[q];
-            databox2[q]["percentage"] = d.data.percentage[q];
-            databox2[q]["reads"] = d.data.reads[q];
-          }
-          return databox2;
-       })
-       .enter().append("svg:g")
-     .append("rect")
-      .attr("x", function(d) {return 20+(gridSize * databox2.length);})
-     .attr("transform", function(d, i){
-       return  "translate(" +i * gridSize + ", "+(-5)+")";})
-        .attr("class","box1")
-        .attr("height", gridSize)
-        .attr("width", function (d, i) {
-          if(d.children.length == 0 && scope.mapFilter){
-              return  gridSize;
-            }else{
-              return 0;
-            }})
-        .attr("stroke", "#000")
-        .attr("fill", function(d){
-          return bigscale(Math.log(d.percentage/rootready * 10000000));})
-        .attr("opacity", function (d) {
-        if (scope.opacsupress) {
-          nodesharecount = 0
-          for (var q=0; q<root.data.reads.length; q++){
-            if (nodeData.data.reads[q] >= scope.readsThreshold){
-              nodesharecount = nodesharecount + 1
-            }
-        }
-        if (nodesharecount == root.data.reads.length) {
-          return 1/4;
-        }else if (nodesharecount == root.data.reads.length-1) {
-          return 1/3
-        }else if (nodesharecount == root.data.reads.length-2) {
-          return 3/4
-        }
-        return 1;
-      }else {
-        return 1;
-      }
-      });
-
-          var mapUpdate1 = _map.merge(mapEnter1);
-
-          mapUpdate1.attr("width", function(d){
-            if(d.children.length == 0 && scope.mapFilter){
-                return  gridSize;
-              }else{
-                return 0;
-              }
-          })  .attr("height", gridSize)
-          .attr("fill", function(d){
-            return bigscale(Math.log(d.percentage/rootready *10000000));})
-      });
-
-      nodeEnter.append("text")
-      .attr("class", "nodelabels")
-      .attr("dy", function (d) {
-        if(d.data.rank[0]=="superkingdom" && d.children){
-          return 12;
-        }else if (d.data.rank[0]=="phylum" && d.children) {
-          return -3;
-        }else{
-          return 3;
-        }
-      })
-        .attr("x", function(d) { if (scope.mapFilter && !d.children) {
-          return databox2.length*gridSize*2.2;
-        }else {
-          return d.children ? -8 : 8;
-        }})
-  	    .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
-  	    .text(function(d) {
-            if(d.data.rank[0]=="superkingdom"||d.data.rank[0]=="phylum"){
-        return d.data.name[0];
-            }
-            return d.children ? "" : d.data.name[0];
-  	    })
-        .style('stroke-width', 0.5)
-        .style("opacity", function (d) {
-        if (scope.opacsupress) {
-          nodesharecount = 0
-          for (var q=0; q<root.data.reads.length; q++){
-            if (d.data.reads[q] >= scope.readsThreshold){
-              nodesharecount = nodesharecount + 1
-            }
-        }
-        if (nodesharecount == d.data.reads.length) {
-          return 1/4;
-        }else if (nodesharecount == d.data.reads.length-1) {
-          return 1/3
-        }else if (nodesharecount == d.data.reads.length-2) {
-          return 3/4
-        }
-        return 1;
-      }else {
-        return 1;
-      }
-    })
-        .style('stroke', function (d) {
-          if (d.class1 === "found") {
-              return "#3884ff";
-          }
-        });
 
     nodeUpdate.each(function(nodeData){
+        databox = [];
+        for (var q=0; q<nodeData.data.percentage.length; q++){
+          databox[q]={}
+          databox[q]["children"]= (nodeData.children) ? nodeData.children : [];
+        //  databox[q]["num"] = q;
+        // databox[q]["name"] = d.data.file[q];
+        databox[q]["percentage"] = nodeData.data.percentage[q];
+        databox[q]["reads"] = nodeData.data.reads[q];
+        databox[q]["class3"] = nodeData.class3;
+      }
       var map_ = d3.select(this).selectAll(".box");
-        var mapEnter = map_.data(function (d) {
-          databox = [];
-            for (var q=0; q<d.data.percentage.length; q++){
-              databox[q]={}
-              databox[q]["children"]= (d.children) ? d.children : [];
-             databox[q]["num"] = q;
-            databox[q]["name"] = d.data.file[q];
-            databox[q]["percentage"] = d.data.percentage[q];
-            databox[q]["reads"] = d.data.reads[q];
-          }
-          return databox;
-       })
+        var mapEnter = map_.data(databox)
        .enter().append("svg:g")
        .attr("transform", function(d, i){
        return  "translate(10 , "+(-5)+")";
@@ -921,25 +896,14 @@ scope.expandinate = function () {
             var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
             })]);
             return scalio(d.percentage);})
-            .attr("opacity", function (d) {
-            if (scope.opacsupress) {
-              nodesharecount = 0
-              for (var q=0; q<root.data.reads.length; q++){
-                if (nodeData.data.reads[q] >= scope.readsThreshold){
-                  nodesharecount = nodesharecount + 1
-                }
+          .style("opacity", function (d) {
+              if (scope.opacsupress) {
+                if (d.class3) {
+                  return 1;
+                }else {
+                  return 0.5;
             }
-            if (nodesharecount == nodeData.data.reads.length) {
-              return 1/4;
-            }else if (nodesharecount == nodeData.data.reads.length-1) {
-              return 1/3
-            }else if (nodesharecount == nodeData.data.reads.length-2) {
-              return 3/4
             }
-            return 1;
-          }else {
-            return 1;
-          }
           });
 
             var mapUpdate = map_.merge(mapEnter);
@@ -955,7 +919,147 @@ scope.expandinate = function () {
               var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
               })]);
               return scalio(d.percentage);})
+
+      var _map = d3.select(this).selectAll(".box1");
+        var mapEnter1 = _map.data(databox)
+       .enter().append("svg:g")
+     .append("rect")
+      .attr("x", function(d) {return 20+(gridSize * databox.length);})
+     .attr("transform", function(d, i){
+       return  "translate(" +i * gridSize + ", "+(-5)+")";})
+        .attr("class","box1")
+        .attr("height", gridSize)
+        .attr("width", function (d, i) {
+          if(d.children.length == 0 && scope.mapFilter){
+              return  gridSize;
+            }else{
+              return 0;
+            }})
+        .attr("stroke", "#000")
+        .attr("fill", function(d){
+          return bigscale(Math.log(d.percentage/rootready * 10000000));})
+        .attr("opacity", function (d) {
+            if (scope.opacsupress) {
+              if (d.class3) {
+                return 1;
+              }else {
+                return 0.5;
+          }
+          }
         });
+
+          var mapUpdate1 = _map.merge(mapEnter1);
+
+          mapUpdate1.attr("width", function(d){
+            if(d.children.length == 0 && scope.mapFilter){
+                return  gridSize;
+              }else{
+                return 0;
+              }
+          })  .attr("height", gridSize)
+          .attr("fill", function(d){
+            return bigscale(Math.log(d.percentage/rootready *10000000));})
+
+      });
+
+      nodeEnter.append("text")
+      .attr("class", "nodelabels")
+      .attr("dy", function (d) {
+        if(d.data.rank[0]=="superkingdom" && d.children){
+          return 12;
+        }else if (d.data.rank[0]=="phylum" && d.children) {
+          return -3;
+        }else{
+          return 3;
+        }
+      })
+        .attr("x", function(d) { if (scope.mapFilter && !d.children) {
+          return databox.length*gridSize*2.2;
+        }else {
+          return d.children ? -8 : 8;
+        }})
+  	    .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+  	    .text(function(d) {
+            if(d.data.rank[0]=="superkingdom"||d.data.rank[0]=="phylum"){
+        return d.data.name[0];
+            }
+            return d.children ? "" : d.data.name[0];
+  	    })
+        .style('stroke-width', 0.5)
+        .style("opacity", function (d) {
+          if (scope.opacsupress) {
+            if (d.class3) {
+              return 1;
+            }else {
+              return 0.5;
+        }
+        }
+      })
+        .style('stroke', function (d) {
+          if (d.class1 === "found") {
+              return "#3884ff";
+          }
+        });
+
+    // nodeUpdate.each(function(nodeData){
+    //   var map_ = d3.select(this).selectAll(".box");
+    //     var mapEnter = map_.data(function (d) {
+    //       databox = [];
+    //         for (var q=0; q<d.data.percentage.length; q++){
+    //           databox[q]={}
+    //           databox[q]["children"]= (d.children) ? d.children : [];
+    //         //  databox[q]["num"] = q;
+    //         // databox[q]["name"] = d.data.file[q];
+    //         databox[q]["percentage"] = d.data.percentage[q];
+    //         databox[q]["reads"] = d.data.reads[q];
+    //         // databox[q]["class3"] = d.class3;
+    //       }
+    //       return databox;
+    //    })
+    //    .enter().append("svg:g")
+    //    .attr("transform", function(d, i){
+    //    return  "translate(10 , "+(-5)+")";
+    //  }).append("rect")
+    //      .attr("transform", function(d, i){
+    //        return  "translate(" + i * gridSize + ", 0)";
+    //    })
+    //       .attr("class","box")
+    //       .attr("height", gridSize)
+    //       .attr("width", function (d, i) {
+    //         if(d.children.length == 0 && scope.mapFilter){
+    //             return  gridSize;
+    //           }else{
+    //             return 0;
+    //           }})
+    //       .attr("stroke", "#000")
+    //       .attr("fill", function(d){
+    //         var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+    //         })]);
+    //         return scalio(d.percentage);})
+    //       .style("opacity", function (d) {
+    //           if (scope.opacsupress) {
+    //             if (d.class3) {
+    //               return 1;
+    //             }else {
+    //               return 0.5;
+    //         }
+    //         }
+    //       });
+    //
+    //         var mapUpdate = map_.merge(mapEnter);
+    //
+    //         mapUpdate.attr("width", function(d){
+    //           if(d.children.length == 0 && scope.mapFilter){
+    //               return  gridSize;
+    //             }else{
+    //               return 0;
+    //             }
+    //         })  .attr("height", gridSize)
+    //         .attr("fill", function(d){
+    //           var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+    //           })]);
+    //           return scalio(d.percentage);})
+    //     });
 
   	  nodeUpdate.select("text").style("text-anchor", function(d) {
       return d.children ? "end" : "start"; })
@@ -986,29 +1090,18 @@ scope.expandinate = function () {
          }
        })
        .style("opacity", function (d) {
-               if (scope.opacsupress) {
-                 nodesharecount = 0
-                 for (var q=0; q<root.data.reads.length; q++){
-                   if (d.data.reads[q] >= scope.readsThreshold){
-                     nodesharecount = nodesharecount + 1
-                   }
-               }
-               if (nodesharecount == d.data.reads.length) {
-                 return 1/4;
-               }else if (nodesharecount == d.data.reads.length-1) {
-                 return 1/3
-               }else if (nodesharecount == d.data.reads.length-2) {
-                 return 3/4
-               }
-               return 1;
-             }else {
-               return 1;
-             }
-           });
+         if (scope.opacsupress) {
+           if (d.class3) {
+             return 1;
+           }else {
+             return 0.5;
+       }
+       }
+     });
 
 	  node.exit().transition()
 	    .duration(duration)
-	    .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+	    .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
 	    .style("opacity", 1e-6)
 	    .remove();
 
@@ -1102,8 +1195,12 @@ scope.expandinate = function () {
       d.children = d._children;
       d._children = null;
     }
-    resizeSVG(root);
     update(d);
+    if (scope.mapFilter) {
+      translateSVG(root);
+    }else {
+      resetSVGpos(root);
+    }
     }
 
   function collapseLevel(d) {
@@ -1115,7 +1212,6 @@ scope.expandinate = function () {
       if (d.children && d.data.rank[0] == scope.taxFilter) {
           d.class2 = "collapsed";
           d._children = d.children;
-          // d._children.forEach(collapseAll);
           d.children = null;
       } else if (d.children) {
           d.children.forEach(collapseLevel);
@@ -1130,12 +1226,18 @@ scope.expandinate = function () {
   }
   getSignificantNodes(data);
   root = d3.hierarchy(data);
+  countNodes(root);
+  adjustSVG(root);
+  if (scope.mapFilter) {
+    translateSVG(root);
+  }else {
+    resetSVGpos(root);
+  }
   createKeys(root);
   getkeyScales(root);
   createminmax(root);
   makescales(root);
   root.children.forEach(collapseLevel);
-  resizeSVG(root);
   rootready = 0
   for (var q=0; q<root.data.reads.length; q++){
       rootready = rootready + root.data.percentage[q];
