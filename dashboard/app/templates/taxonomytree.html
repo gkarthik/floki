@@ -1,5 +1,5 @@
 <h3></h3>
-<div id="topbar">
+<div class="topbar" id="myHeader">
 <table>
   <tr>
     <td>
@@ -14,84 +14,120 @@
       &nbsp;
       Ratio Threshold
     </td>
+    <td>
+      &nbsp;
+      Filter by Taxonomy
+    </td>
+    <td>
+    </td>
+    <td>
+      Adjust Seperation
+    </td>
   </tr>
   <tr>
       <td>
         &nbsp;
-      <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
+      <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" ng-change="runFilters()"/>
     </td>
 
     <td>
       &nbsp;
-      <input type="text" id="reads-threshold" ng-model="readsThreshold" />
+      <input type="text" id="reads-threshold" ng-model="readsThreshold" ng-change="runFilters()"/>
     </td>
 
     <td>
       &nbsp;
-      <input type="text" id="ratio-threshold" ng-model="ratioThreshold" />
+      <input type="text" id="ratio-threshold" ng-model="ratioThreshold" ng-change="runFilters()"/>
+    </td>
+    <td>
+      &nbsp;
+      <select ng-model="taxFilter" ng-change="updateFilters()">
+        <option value="phylum">Phylum</option>
+        <option value="genus">Genus</option>
+        <option value="species">Species</option>
+        <option value="nofilter">No Filter</option>
+      </select>
     </td>
     <td>
       &nbsp;
       <input type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
+      &nbsp;
+    </td>
+    <td>
+      <div class="slidecontainer">
+        <input type="range" min="2.1" max="10.5" class="slider" id="myRange" ng-model="seperation" ng-change="slideR()" step="0.05" width = "80%">
+      </div>
+    </td>
+    <td>
+      &nbsp;
+      <input type="button" id="Expand-All" value="Recenter" ng-click="recenterZoom()" />
+    </td>
+    <td>
+      &nbsp;
+      <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="runTree()">
+      &nbsp;False Discovery Rate
+    </td>
+    <td>
+      &nbsp;
+      <input type="checkbox" ng-model="allFilter" value="false" ng-change="runTree()">
+      &nbsp; Pass in at least 1 sample
+    </td>
+    <td>
+      &nbsp;
+      <input type="checkbox" ng-model="pinBar" value ='True' ng-change="runTree()">
+      &nbsp; Pin top bar
     </td>
   </tr>
 </table>
-<table
-<tr>
-  <td>
-    &nbsp;
-    <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="runTree()">
-    &nbsp;False Discovery Rate
-  </td>
-  <td>
-    &nbsp;
-    <input type="checkbox" ng-model="allFilter" value="false" ng-change="runTree()">
-    &nbsp; Display nodes which pass filter in at least one sample
-  </td>
-</tr>
-</table>
-<table>
-    <p class="bold">
-  <tr>
-  <td>
-    &nbsp;
-    <input type="radio" ng-model="taxFilter" value="phylum" ng-change="updateFilters()">
-  Phylum
-  </td>
-
-  <td>
-    &nbsp;
-    <input type="radio" ng-model="taxFilter" value="genus" ng-change="updateFilters()">
-    Genus
-  </td>
-  <td>
-    &nbsp;
-    <input type="radio" ng-model="taxFilter" value="species" ng-change="updateFilters()">
-     Species
-  </td>
-  <td>
-    &nbsp;
-    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
-   None
-  </td>
-  </tr>
-  </p>
- </table>
-<table>
+<!-- <table>
    <input type="checkbox" ng-model="mapFilter" value="false" ng-change="runTree()">
    &nbsp; Toggle Heat Maps
 
  &nbsp; Seperation between heatmap nodes
+</table> -->
+<table>
+  <tr>
+    <td>
+      &nbsp; Search:
+      <input type="text" id="searchText" ng-model="searchText" ng-change="runSearch()"/>
+    </td>
+    <td>
+      &nbsp;
+      <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
+      &nbsp; Collapsing search
+    </td>
+    <td>
+      <svg id="svg2">
+      </svg>
+    </td>
+    <td>
+      &nbsp; Color By:
+      <select ng-model="colorTax" ng-change="updateFilters()">
+        <option value="rank">Taxonomic Rank</option>
+        <option value="shared"># of samples passed</option>
+        <option value="reads"># of Reads</option>
+        <option value="percentage">Sample %</option>
+        <option value="uncorrected_pvalue">P Value</option>
+      </select>
+    </td>
+    <td>
+      &nbsp;
+      <input type="checkbox" ng-model="showchart" value = "showchart" ng-change="togglebars()" />
+       Bar Charts
+    </td>
+    <td>
+       &nbsp;
+      <input type="checkbox" ng-model="opacsupress" value = "false" ng-change="opacityFilters()" />
+     Supress common nodes
+    </td>
+  </tr>
 </table>
- <div class="slidecontainer">
-   <input type="range" min="2.1" max="10.5" class="slider" id="myRange" ng-model="seperation" ng-change="slideR()" step="0.4" width = "5%">
- </div>
  <table>
    <tr>
      &nbsp;
    </tr>
-   <tr>
-     <td>
+   <!-- <tr> -->
+     <!-- <td>
        &nbsp;
        Search:
      </td>
@@ -107,38 +143,21 @@
      <td>
        &nbsp;
        <input type="button" id="Expand-All" value="Expand All" ng-click="expandinate()" />
-     </td>
+     </td> -->
      <!-- <td>
        <input type="button" id="searchbutton" value="Search" ng-click="runSearch()" />
      </td> -->
-   </tr>
+   <!-- </tr> -->
  </table>
- <table>
+ <!-- <table>
    <tr>
    <td>
-     <input type="radio" ng-model="colorTax" value="rank" ng-change="updateColors()" />
-     &nbsp; Color nodes by taxonomic rank
-   </td>
-   <td>
-     <input type="radio" ng-model="colorTax" value="shared" ng-change="updateColors()" />
-     &nbsp; Color by passing reads threshold
-   </td>
-   <td>
-     <input type="radio" ng-model="colorTax" value="reads" ng-change="updateColors()" />
-     &nbsp; Reads
-   </td>
-   <td>
-     <input type="radio" ng-model="colorTax" value="percentage" ng-change="updateColors()" />
-     &nbsp; Percentage
-   </td>
-   <td>
-     <input type="checkbox" ng-model="opacsupress" value = "false" ng-change="opacityFilters()" />
-     &nbsp; Reduce opacity of nodes common throughout samples
+      &nbsp;
+     <input type="checkbox" ng-model="freezoom" value = "false" />
+    Free zoom
    </td>
  </tr>
- </table>
- <svg id="svg2">
- </svg>
+ </table> -->
 </div>
  <!-- <br>
    <label> Difference between two samples: </label> -->

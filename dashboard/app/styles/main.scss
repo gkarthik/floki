@@ -18,14 +18,14 @@ body {
 .header,
 .marketing,
 .footer {
-  padding-left: 15px;
-  padding-right: 15px;
+  padding-left: 0px;
+  padding-right: 0px;
 }
 
 /* Custom page header */
 .header {
   border-bottom: 1px solid #e5e5e5;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 
   /* Make the masthead heading the same height as the navigation */
   h3 {
@@ -105,18 +105,41 @@ body {
 	margin-top: 20px;
 }
 .slidecontainer {
-    width: 10%;
+    width: 80%;
 }
 
 .slider {
     -webkit-appearance: none;
     appearance: none;
-    width: 10%;
+    width: 80%;
     height: 15px;
-    background: #d3d3d3;
+    background: #d0f0c0;
     outline: none;
 }
+/* Style the header */
+.topbar {
+  // padding: 0px 0px;
+  // height: 25%;
+  background: #ffffff;
+  border-bottom: 2px solid #e5e5e5;
+}
 
+/* Page content */
+.content {
+  padding: 0px;
+}
+
+/* The sticky class is added to the header with JS when it reaches its scroll position */
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%
+}
+
+/* Add some top padding to the page content to prevent sudden quick movement (as the header gets a new position at the top of the page (position:fixed and top:0) */
+.sticky + .content {
+  padding-top: 102px;
+}
 
 // .found {
 //   fill: #ff4136;
