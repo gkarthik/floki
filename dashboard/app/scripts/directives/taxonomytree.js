@@ -51,21 +51,14 @@ angular.module('dashboardApp')
   var sharednodecount = 0;
   var sharescale;
   var rawSvg = element.find("#svg1")[0];
-  const zoom = d3.zoom()
-  .scaleExtent([0.2,4])
-  .on("zoom", zoomHandler);
-  var svg = d3.select(rawSvg)
-  .call(zoom);
+  var zoom;
+  var svg = d3.select(rawSvg);
   var svglabel = element.find("#svg2")[0];
   var label1 = d3.select(svglabel);
 	d3.select(element.find("h3")[0]).html(jsonFile.split("/")[1].replace(".json", ""));
 	var base = 100;
   svg.attr("width", width + margin.left + margin.right);
   svg.attr("height", 1000 + margin.top + margin.bottom);
-  function zoomHandler() {
-	let {x, y, k} = d3.event.transform;
-	d3.select(this).select("g").attr("transform", `translate(${x},${y}) scale(${k})`);
-}
 window.onscroll = function() {stickyBar()};
 var header = document.getElementById("myHeader");
 var sticky = header.offsetTop;
@@ -80,12 +73,12 @@ function stickyBar() {
     header.classList.remove("sticky");
   }
 }
-  function zoomed() {
-  g.attr("transform", d3.event.transform);
-}
   label1.attr("width", 640);
   label1.attr("height", 155);
   var g = svg.append("svg:g");
+  function zoomed() {
+  g.attr("transform", d3.event.transform);
+}
 	var colorScale = d3.scaleSequential(d3.interpolateRdYlBu);
   var bigscale = d3.scaleSequential(d3.interpolateReds).domain([0, 8]);
   var tree;
@@ -142,7 +135,6 @@ d3.json(scope.jsonFile, function(error, data){
   scope.opacityFilters = function () {
     g.selectAll(".box1").remove()
     g.selectAll(".box").remove()
-    markOpac(root);
     update(root);
   }
 	var connector = function(d){
@@ -234,12 +226,20 @@ function countNodes(d){
     return nodecounter;
   }
 }
-
-function adjustSVG(d) {
+function adjustZoom() {
   height = nodecounter * 15.7/3 * scope.seperation;
   width = $window.innerWidth;
   svg.attr("width", width + margin.left + margin.right);
-  svg.attr("height", height +200 + margin.top + margin.bottom);
+  svg.attr("height", height +300 + margin.top + margin.bottom);
+  zoom = d3.zoom()
+      .scaleExtent([1, 3])
+      .translateExtent([[-width/2.5, -height], [width, height/10]])
+      .extent([[0, 0], [width, height]])
+      .on("zoom", zoomed);
+  svg.call(zoom);
+}
+function adjustSVG(d) {
+  adjustZoom();
   resetZoom();
 }
 
@@ -261,7 +261,14 @@ function clearAll(d) {
         d._children.forEach(clearAll);
 }}
 function markOpac(d){
-  if(d.children){
+  if(d._children){
+    d._children.forEach(markOpac)
+    d._children.forEach(function (d) {
+      if (d.class3) {
+        d.parent.class3 = "visible"
+      }
+    })
+  }else if(d.children){
     d.children.forEach(markOpac)
     d.children.forEach(function (d) {
       if (d.class3) {
@@ -651,7 +658,6 @@ scope.expandinate = function () {
     })
     .style("opacity", function (d) {
       if (scope.opacsupress) {
-
         if (d.class3) {
           return 1;
         }else {
@@ -1012,9 +1018,10 @@ scope.expandinate = function () {
       .attr("dy", function (d) {
         if(d.data.rank[0]=="superkingdom" && d.children){
           return 12;
-        }else if (d.data.rank[0]=="phylum" && d.children) {
+        }else if (d.data.rank[0]=="phylum" && d.children && scope.colorTax == 'rank'){
           return -3;
-        }else{
+        }
+        else{
           return 3;
         }
       })
@@ -1025,7 +1032,7 @@ scope.expandinate = function () {
         }})
   	    .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
   	    .text(function(d) {
-            if(d.data.rank[0]=="superkingdom"||d.data.rank[0]=="phylum"){
+            if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum" && scope.colorTax == 'rank')){
         return d.data.name[0];
             }
             return d.children ? "" : d.data.name[0];
@@ -1051,7 +1058,7 @@ scope.expandinate = function () {
       .attr("dy", function (d) {
         if(d.data.rank[0]=="superkingdom" && d.children){
           return 12;
-        }else if (d.data.rank[0]=="phylum" && d.children) {
+        }else if (d.data.rank[0]=="phylum" && d.children && scope.colorTax == 'rank') {
           return -3;
         }else{
           return 3;
@@ -1063,7 +1070,7 @@ scope.expandinate = function () {
         return d.children ? -8 : 8;
       }})
   	    .text(function(d) {
-          if(d.data.rank[0]=="superkingdom"||d.data.rank[0]=="phylum"){
+          if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum"&& scope.colorTax == 'rank')){
    return d.data.name[0];
        }
        return d.children ? "" : d.data.name[0];
@@ -1098,6 +1105,7 @@ scope.expandinate = function () {
 
     nodecounter = 0
     countNodes(root);
+    adjustZoom();
 	}
 
   	function colorFill(d){
