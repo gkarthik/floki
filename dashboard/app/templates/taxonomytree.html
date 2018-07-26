@@ -42,6 +42,7 @@
     <td>
       &nbsp;
       <select ng-model="taxFilter" ng-change="updateFilters()">
+        <option value="superkingdom">Superkingdom</option>
         <option value="phylum">Phylum</option>
         <option value="genus">Genus</option>
         <option value="species">Species</option>
@@ -74,7 +75,7 @@
     </td>
     <td>
       &nbsp;
-      <input type="checkbox" ng-model="pinBar" value ='True' ng-change="runTree()">
+      <input type="checkbox" ng-model="pinBar" value ='False'>
       &nbsp; Pin top bar
     </td>
   </tr>

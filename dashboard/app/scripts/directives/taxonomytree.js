@@ -28,8 +28,8 @@ angular.module('dashboardApp')
   scope.searchText = "";
   scope.seperation = 3.30;
   scope.searchcollapse = false;
-  scope.showchart = true;
-  scope.pinBar = true;
+  scope.showchart = false;
+  scope.pinBar = false;
 	var ranks = ["superkingdom", "species", "genus"];
   var root;
   var nodes;
@@ -64,7 +64,7 @@ var header = document.getElementById("myHeader");
 var sticky = header.offsetTop;
 function stickyBar() {
   if(scope.pinBar){
-    if (window.pageYOffset > sticky) {
+    if (window.pageYOffset >= sticky) {
       header.classList.add("sticky");
     } else {
       header.classList.remove("sticky");
@@ -233,7 +233,7 @@ function adjustZoom() {
   svg.attr("height", height +300 + margin.top + margin.bottom);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[-width/2.5, -height], [width, height/10]])
+      .translateExtent([[-width/3, -height], [width - 20, height/10]])
       .extent([[0, 0], [width, height]])
       .on("zoom", zoomed);
   svg.call(zoom);
@@ -1188,9 +1188,10 @@ scope.expandinate = function () {
       d._children = d.children;
       d.children = null;
     } else {
-      d.class2 = "null"
-      d.children = d._children;
-      d._children = null;
+      expandAll(d);
+      // d.class2 = "null"
+      // d.children = d._children;
+      // d._children = null;
     }
     update(d);
     }
