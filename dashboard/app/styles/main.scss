@@ -18,7 +18,7 @@ body {
 .header,
 .marketing,
 .footer {
-  padding-left: 0px;
+  padding-left: 10px;
   padding-right: 0px;
 }
 
@@ -26,17 +26,17 @@ body {
 .header {
   border-bottom: 1px solid #e5e5e5;
   margin-bottom: 0px;
+  padding-left: 10px;
 
   /* Make the masthead heading the same height as the navigation */
   h3 {
+    padding: 14px;
     margin-top: 0;
     margin-bottom: 0;
     line-height: 40px;
-    padding-bottom: 19px;
   }
 }
 
-/* Custom page footer */
 .footer {
   padding-top: 19px;
   color: #777;
@@ -47,18 +47,16 @@ body {
   margin: 30px 0;
 }
 
-/* Main marketing message and sign up button */
 .jumbotron {
   text-align: center;
   border-bottom: 1px solid #e5e5e5;
 
   .btn {
-    font-size: 21px;
-    padding: 14px 24px;
+    font-size: 18px;
+    vertical-align: top;
   }
 }
 
-/* Supporting marketing content */
 .marketing {
   margin: 40px 0;
 
@@ -67,81 +65,101 @@ body {
   }
 }
 
-/* Responsive: Portrait tablets and up */
 @media screen and (min-width: 768px) {
   .container {
     max-width: 730px;
   }
-
-  /* Remove the padding we set earlier */
   .header,
   .marketing,
   .footer {
     padding-left: 0;
     padding-right: 0;
   }
-  /* Space out the masthead */
   .header {
     margin-bottom: 30px;
   }
-  /* Remove the bottom border on the jumbotron for visual effect */
   .jumbotron {
     border-bottom: 0;
   }
 }
 
-/* Tree Style */
-
 .link{
 	fill: none;
-	// stroke: #000;
 }
 
 .node{
 	cursor: pointer;
 }
 
+.canvas{
+	cursor: all-scroll;
+}
+
 .tool-tip{
 	margin-top: 20px;
 }
+
 .slidecontainer {
+    padding-left: 10px;
     width: 80%;
 }
 
 .slider {
     -webkit-appearance: none;
     appearance: none;
-    width: 80%;
+    width: 100%;
     height: 15px;
     background: #d0f0c0;
     outline: none;
 }
-/* Style the header */
+.table {
+  table-layout: auto;
+  width:100%;
+  height: 30px;
+}
+
+.inputtext {
+  width: 40px;
+}
+
 .topbar {
-  // padding: 0px 0px;
-  // height: 25%;
+  width:100%;
+  height: 22vh;
   background: #ffffff;
   border-bottom: 2px solid #e5e5e5;
 }
 
-/* Page content */
 .content {
-  padding: 0px;
+  padding: 33vh;
 }
 
-/* The sticky class is added to the header with JS when it reaches its scroll position */
 .sticky {
+  height:10.5vh;
+  padding-top: 5px;
+  width:100%;
+  background: #ffffff;
+  border-bottom: 2px solid #e5e5e5;
   position: fixed;
   top: 0;
-  width: 100%
 }
 
-/* Add some top padding to the page content to prevent sudden quick movement (as the header gets a new position at the top of the page (position:fixed and top:0) */
 .sticky + .content {
-  padding-top: 102px;
+  padding-top: 33vh;
 }
 
-// .found {
-//   fill: #ff4136;
-//   stroke: #ff4136;
-// }
+.floatedTable {
+    float:left;
+}
+
+.floatedTable2{
+  float:right;
+}
+
+.label{
+  background-color:white;
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  font-size: 14px;
+  font-family:Sans-serif;
+  font-weight: normal;
+}

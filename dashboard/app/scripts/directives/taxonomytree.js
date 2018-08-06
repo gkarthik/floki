@@ -24,21 +24,23 @@ angular.module('dashboardApp')
   scope.redFilter = false;
   scope.mapFilter = true;
   scope.opacsupress = false;
-  scope.colorTax = "percentage";
+  scope.colorTax = "reads";
   scope.searchText = "";
   scope.seperation = 3.30;
   scope.searchcollapse = false;
   scope.showchart = false;
-  scope.pinBar = false;
+  scope.pinBar = true;
+  scope.readsHidden = 10;
 	var ranks = ["superkingdom", "species", "genus"];
   var root;
   var nodes;
   var typingTimer;
   var doneTypingInterval = 400;
-  var databox;
+  var databox = [];
   var striscale;
   var searchingTimer;
   var t;
+  var z;
   var nodesharecount = 0;
   var nodecounter = 0;
   var rootready;
@@ -54,27 +56,35 @@ angular.module('dashboardApp')
   var zoom;
   var svg = d3.select(rawSvg);
   var svglabel = element.find("#svg2")[0];
+  var svgname = element.find("#svg3")[0];
   var label1 = d3.select(svglabel);
+  var namelabel = d3.select(svgname);
+  var stickycheck=false;
 	d3.select(element.find("h3")[0]).html(jsonFile.split("/")[1].replace(".json", ""));
 	var base = 100;
-  svg.attr("width", width + margin.left + margin.right);
+  svg.attr("width", width);
   svg.attr("height", 1000 + margin.top + margin.bottom);
 window.onscroll = function() {stickyBar()};
-var header = document.getElementById("myHeader");
+var header = document.getElementById("stickyHeader");
 var sticky = header.offsetTop;
 function stickyBar() {
-  if(scope.pinBar){
-    if (window.pageYOffset >= sticky) {
-      header.classList.add("sticky");
-    } else {
+    if(scope.pinBar){
+      if (window.pageYOffset >= sticky && stickycheck==false) {
+        header.classList.add("sticky");
+        stickycheck=true;
+      }else if (window.pageYOffset < sticky) {
+        header.classList.remove("sticky");
+        stickycheck=false;
+      }
+    }else if (window.pageYOffset < sticky) {
       header.classList.remove("sticky");
+      stickycheck=false;
     }
-  }else {
-    header.classList.remove("sticky");
-  }
 }
-  label1.attr("width", 640);
-  label1.attr("height", 155);
+  namelabel.attr("width", 200);
+  namelabel.attr("height", 50);
+  label1.attr("width", 415);
+  label1.attr("height", 70);
   var g = svg.append("svg:g");
   function zoomed() {
   g.attr("transform", d3.event.transform);
@@ -95,6 +105,7 @@ function stickyBar() {
   scope.recenterZoom = function () {
     resetZoom();
   }
+
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
@@ -128,15 +139,34 @@ d3.json(scope.jsonFile, function(error, data){
       adjustSVG(root);
 	}
   scope.updateColors = function(){
+    if(root.data[scope.colorTax]){
+      if (typeof(root.data[scope.colorTax][0])=="string") {
+        label1.attr("height", 160);
+
+      }else {
+        label1.attr("height", 70);
+      }
+    }else {
+      label1.attr("height", 70);
+    }
       makescales(root);
       updatelabel(root);
       update(root);
   }
+
   scope.opacityFilters = function () {
     g.selectAll(".box1").remove()
     g.selectAll(".box").remove()
     update(root);
   }
+
+  scope.runOpac = function(){
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(function() {
+      scope.opacityFilters();
+    }, doneTypingInterval);
+  }
+
 	var connector = function(d){
 	  	    return "M" + d.parent.y + "," + d.parent.x
 	      + "V" + d.x + "H" + d.y
@@ -154,11 +184,11 @@ d3.json(scope.jsonFile, function(error, data){
       } else {
         if (maxs[scope.colorTax]>=10000){
         logscale = d3.scaleLinear()
-        .domain([mins[scope.colorTax], Math.log(maxs[scope.colorTax])/5, Math.log(maxs[scope.colorTax])])
+        .domain([0, Math.log(maxs[scope.colorTax])/2, Math.log(maxs[scope.colorTax])])
         .range(["#e62e00", "#ffffb3", "#004080"]);
       }else {
         smolscale = d3.scaleLinear()
-        .domain([mins[scope.colorTax], Math.log(maxs[scope.colorTax]*100000)/5, Math.log(maxs[scope.colorTax]*100000)])
+        .domain([0, Math.log(maxs[scope.colorTax]*100000)/2, Math.log(maxs[scope.colorTax]*100000)])
         .range(["#e62e00", "#ffffb3", "#004080"]);
       }
     }
@@ -226,17 +256,18 @@ function countNodes(d){
     return nodecounter;
   }
 }
+
 function adjustZoom() {
   height = nodecounter * 15.7/3 * scope.seperation;
   width = $window.innerWidth;
-  svg.attr("width", width + margin.left + margin.right);
+  svg.attr("width", width);
   svg.attr("height", height +300 + margin.top + margin.bottom);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[-width/3, -height], [width - 20, height/10]])
+      .translateExtent([[-width/3, -height], [width - 20,  height/5]])
       .extent([[0, 0], [width, height]])
       .on("zoom", zoomed);
-  svg.call(zoom);
+      svg.call(zoom);
 }
 function adjustSVG(d) {
   adjustZoom();
@@ -251,10 +282,19 @@ scope.slideR = function () {
     adjustSVG(root);
     spreadNodes(root);
 }
+function clearSearch(d) {
+    d.class1 = null;
+    if (d.children)
+        d.children.forEach(clearSearch);
+    else if (d._children){
+        d._children.forEach(clearSearch);
+}}
 
 function clearAll(d) {
     d.class1 = null;
-    d.class2 = null;
+    if(!d._children){
+      d.class2 =  null;
+    }
     if (d.children)
         d.children.forEach(clearAll);
     else if (d._children){
@@ -265,27 +305,29 @@ function markOpac(d){
     d._children.forEach(markOpac)
     d._children.forEach(function (d) {
       if (d.class3) {
-        d.parent.class3 = "visible"
+        d.parent.class3 = d.class3;
       }
     })
   }else if(d.children){
     d.children.forEach(markOpac)
     d.children.forEach(function (d) {
       if (d.class3) {
-        d.parent.class3 = "visible"
+        d.parent.class3 = d.class3;
       }
     })
   }else {
     nodesharecount = 0
     for (var q=0; q<d.data.reads.length; q++){
-      if (d.data.reads[q] >= scope.readsThreshold){
+      if (d.data.reads[q] >= scope.readsHidden){
         nodesharecount = nodesharecount + 1
       }
       if (nodesharecount == d.data.reads.length) {
         d.class3 = null;
-      }else if (nodesharecount == d.data.reads.length-1) {
+      }
+      else if (nodesharecount == d.data.reads.length-1) {
         d.class3 = null;
-      }else {
+      }
+      else {
         d.class3 = "visible";
       }
   }
@@ -295,15 +337,20 @@ function markOpac(d){
 scope.runSearch = function(){
   clearTimeout(typingTimer);
   typingTimer = setTimeout(function() {
-    expandAll(root);
-    scope.taxFilter = "nofilter";
-    clearAll(root);
-    searchTree(root);
     if (scope.searchcollapse && scope.searchText.length > 0) {
+      expandAll(root);
+      scope.taxFilter = "nofilter";
+      clearAll(root);
+      searchTree(root);
       root.children.forEach(collapsenotfound);
+      update(root);
+      adjustSVG(root);
+    }else {
+      clearSearch(root);
+      searchTree(root);
+      update(root);
+      adjustSVG(root);
     }
-    update(root);
-    adjustSVG(root);
   }, doneTypingInterval);
 }
 
@@ -364,54 +411,57 @@ scope.expandinate = function () {
 }
 
   function updatelabel(d) {
+    var num_rectangles = 100;
     if(typeof(b) !== 'undefined'){
       b.remove();
     }
     b = label1.append("svg:g")
     .attr("class", "legend");
+    z = namelabel.append("svg:g");
     var labelrange;
     if (scope.colorTax=="shared") {
       var band = d3.scaleBand()
           .domain(d3.range(d.data.reads.length+1))
-          .range([0, 600]);
+          .range([0, 350]);
       b.append("g")
-        .attr("transform", "translate(20,65)")
+        .attr("transform", "translate(20,35)")
         .call(d3.axisBottom(band)
-        );
-      b.append("text")
-      .attr("text-anchor", "middle")
-      .attr("transform", "translate(300,25)")
-      .text("Number of samples in which node passes reads threshold")
-      .attr("font-family","sans-serif");
+      );
       var boxen = b.selectAll('.boxen')
         .data(d3.range(d.data.reads.length+1))
         .enter().append("rect")
-          .attr("transform", "translate(20,35)")
+          .attr("transform", "translate(20,5)")
           .attr("class", "boxen")
-          .attr("x", function(i) { return i * (600/(d.data.reads.length+1));})
+          .attr("x", function(i) { return i * (350/(d.data.reads.length+1));})
           .attr("y", 0)
           .attr("height", 25)
-          .attr("width", 600/(d.data.reads.length+1))
+          .attr("width", 350/(d.data.reads.length+1))
           .style("fill", function(d, i) {
             return sharescale(i); });
-        }
-        else if (typeof d.data[scope.colorTax][0]== 'string') {
+            d3.select("#labeltext").remove();
+            z.append("text")
+              .attr("y", 20)
+              .attr("x", 20)
+              .attr("id", "labeltext")
+              .attr("text-anchor", "right")
+              .text("Number of samples passing:");
+        }else if (typeof d.data[scope.colorTax][0]== 'string') {
           var band = d3.scaleBand()
               .domain(keys[scope.colorTax])
-              .range([0, 600]);
+              .range([0, 350]);
           var boxen = b.selectAll('.boxen')
             .data(d3.range(keys[scope.colorTax].length))
             .enter().append("rect")
-              .attr("transform", "translate(20,35)")
+              .attr("transform", "translate(20,5)")
               .attr("class", "boxen")
-              .attr("x", function(d, i) { return i * (600/keys[scope.colorTax].length); })
+              .attr("x", function(d, i) { return i * (350/keys[scope.colorTax].length); })
               .attr("y", 0)
               .attr("height", 25)
-              .attr("width", 600/keys[scope.colorTax].length - 8)
+              .attr("width", 350/keys[scope.colorTax].length - 8)
               .style("fill", function(d, i ) {
                 return striscale(keys[scope.colorTax][d]); });
             b.append("g")
-              .attr("transform", "translate(20,65)")
+              .attr("transform", "translate(20,35)")
               .call(d3.axisBottom(band)
               ).selectAll("text")
               .attr("y", 0)
@@ -419,104 +469,107 @@ scope.expandinate = function () {
               .attr("dy", ".35em")
               .attr("transform", "rotate(90)")
               .style("text-anchor", "start");
-            b.append("text")
-            .attr("text-anchor", "middle")
-            .attr("transform", "translate(300,25)")
-            .text("Node " + scope.colorTax)
-            .attr("font-family","sans-serif");
+              d3.select("#labeltext").remove();
+              z.append("text")
+                .attr("y", 20)
+                .attr("x", 20)
+                .attr("id", "labeltext")
+                .attr("text-anchor", "right")
+                .text("Node " + scope.colorTax +":");
             } else {
             if (maxs[scope.colorTax]>=10000){
-              var legend = b.append("defs")
-                .append("svg:linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "0%")
-                .attr("y1", "100%")
-                .attr("x2", "100%")
-                .attr("y2", "100%")
-                .attr("spreadMethod", "pad");
+  var band = d3.scaleLog()
+    .domain([1, maxs[scope.colorTax]])
+    .range([0, 350]);
+
+  var domain = band.domain;
+  var range = band.range;
+  var colour_range = logscale.range;
+
+  var logScale =  d3.scaleLog().domain(domain).range(range)
+  var linearScale = d3.scaleLinear().domain(domain).range(range)
+
+  var num_colours = colour_range.length
+  var diff = range[1] - range[0]
+
+  var step = 10
+  var for_inversion = d3.range(num_colours).map(function(d) {return range[0] + d*step})
+  var log_colour_values = for_inversion.map(logScale.invert)
+  var num_rectangles = 100
+
+  var step = diff/num_rectangles
+  var rect_data = d3.range(num_rectangles);
+
+  b.selectAll("rect").data(rect_data).enter()
+  .append("rect")
+  .attr("transform", "translate(20,5)")
+  .attr("x", function(d) {return 3.5*d})
+  .attr("y", function(d) {return 0})
+  .attr("height", function(d) {return 25})
+  .attr("width", function(d) {return 10})
+  .attr("fill", function(d) {
+  return logscale(Math.log(maxs[scope.colorTax])/100*d);
+  })
+  b.append("g")
+  .attr("transform", "translate(20,35)")
+  .call(d3.axisBottom(band)
+  .ticks(8)
+  );
+  d3.select("#labeltext").remove();
+  z.append("text")
+    .attr("y", 20)
+    .attr("x", 20)
+    .attr("id","labeltext")
+    .attr("text-anchor", "right")
+    .text("Average "+scope.colorTax +":");
+            }else if (scope.colorTax == 'percentage'){
               var band = d3.scaleLog()
-                  .domain([1, maxs[scope.colorTax]])
-                  .range([0, 600])
-                  ;
+                .domain([1, maxs[scope.colorTax]])
+                .range([0, 350]);
+
+              var domain = band.domain;
+              var range = band.range;
+              var colour_range = smolscale.range;
+
+              var logScale =  d3.scaleLog().domain(domain).range(range)
+              var linearScale = d3.scaleLinear().domain(domain).range(range)
+
+              var num_colours = colour_range.length
+              var diff = range[1] - range[0]
+
+              var step = 10
+              var for_inversion = d3.range(num_colours).map(function(d) {return range[0] + d*step})
+              var log_colour_values = for_inversion.map(logScale.invert)
+              var num_rectangles = 100
+
+              var step = diff/num_rectangles
+              var rect_data = d3.range(num_rectangles);
+
+              b.selectAll("rect").data(rect_data).enter()
+              .append("rect")
+              .attr("transform", "translate(20,5)")
+              .attr("x", function(d) {return 3.5*d})
+              .attr("y", function(d) {return 0})
+              .attr("height", function(d) {return 25})
+              .attr("width", function(d) {return 10})
+              .attr("fill", function(d) {
+              return smolscale(Math.log(100000*maxs[scope.colorTax])/100*d);
+              })
+              var bandlabel = d3.scaleLog()
+              .domain([0.00001, 100])
+              .range([0, 350]);
               b.append("g")
-              .attr("transform", "translate(20,65)")
-              .call(d3.axisBottom(band)
+              .attr("transform", "translate(20,35)")
+              .call(d3.axisBottom(bandlabel)
               .ticks(8)
               );
-              legend.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", logscale(0))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "20%")
-                .attr("stop-color", smolscale(Math.log(maxs[scope.colorTax])*(1/5)))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "70%")
-                .attr("stop-color", logscale((Math.log(maxs[scope.colorTax])*0.7)))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", logscale(Math.log(maxs[scope.colorTax])))
-                .attr("stop-opacity", 1);
-              b.append('rect')
-              .attr("transform", "translate(20,35)")
-              .attr("x1", 30)
-              .attr("y1", 30)
-              .attr("height", 25)
-              .attr("width", 600)
-              .attr("fill", 'url(#gradient)');
-              b.append("text")
-              .attr("text-anchor", "middle")
-              .attr("transform", "translate(300,25)")
-              .text("Average node " + scope.colorTax)
-              .attr("font-family","sans-serif");
-            }else if (scope.colorTax == 'percentage'){
-              var legend = b.append("defs")
-                .append("svg:linearGradient")
-                .attr("id", "gradient")
-                .attr("x1", "0%")
-                .attr("y1", "100%")
-                .attr("x2", "100%")
-                .attr("y2", "100%")
-                .attr("spreadMethod", "pad");
-              var band = d3.scaleLog()
-                  .domain([.0001, 100])
-                  .range([0, 600])
-                  ;
-              b.append("g")
-              .attr("transform", "translate(20,65)")
-              .call(d3.axisBottom(band)
-              .ticks(4)
-            );
-              legend.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", smolscale(0))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "20%")
-                .attr("stop-color", smolscale(Math.log(100000*maxs[scope.colorTax])/5))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "80%")
-                .attr("stop-color", smolscale(Math.log(100000*maxs[scope.colorTax]*0.8)))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", smolscale(Math.log(100000*maxs[scope.colorTax])))
-                .attr("stop-opacity", 1);
-              b.append('rect')
-              .attr("transform", "translate(20,35)")
-              .attr("x1", 30)
-              .attr("y1", 30)
-              .attr("height", 25)
-              .attr("width", 600)
-              .attr("fill", 'url(#gradient)');
-              b.append("text")
-              .attr("text-anchor", "middle")
-              .attr("transform", "translate(300,25)")
-              .text("Average node " + scope.colorTax)
-              .attr("font-family","sans-serif");
+              d3.select("#labeltext").remove();
+              z.append("text")
+                .attr("y", 20)
+                .attr("x", 20)
+                .attr("id", "labeltext")
+                .attr("text-anchor", "left")
+                .text("Average " + scope.colorTax+ ":");
             }else{
               var legend = b.append("defs")
                 .append("svg:linearGradient")
@@ -527,42 +580,58 @@ scope.expandinate = function () {
                 .attr("y2", "100%")
                 .attr("spreadMethod", "pad");
               var band = d3.scaleLog()
-                  .domain([0.000001, 1])
-                  .range([0, 600])
+                  .domain([0, 1])
+                  .range([0, 350])
                   ;
               b.append("g")
-              .attr("transform", "translate(20,65)")
+              .attr("transform", "translate(20,35)")
               .call(d3.axisBottom(band)
               .ticks(4)
             );
-              legend.append("stop")
-                .attr("offset", "0%")
-                .attr("stop-color", smolscale(0))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "20%")
-                .attr("stop-color", smolscale(Math.log(100000*maxs[scope.colorTax])/5))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "80%")
-                .attr("stop-color", smolscale(Math.log(100000*maxs[scope.colorTax]*0.8)))
-                .attr("stop-opacity", 1);
-              legend.append("stop")
-                .attr("offset", "100%")
-                .attr("stop-color", smolscale(Math.log(100000*maxs[scope.colorTax])))
-                .attr("stop-opacity", 1);
-              b.append('rect')
-              .attr("transform", "translate(20,35)")
-              .attr("x1", 30)
-              .attr("y1", 30)
-              .attr("height", 25)
-              .attr("width", 600)
-              .attr("fill", 'url(#gradient)');
-              b.append("text")
-              .attr("text-anchor", "middle")
-              .attr("transform", "translate(300,25)")
-              .text("Average node " + scope.colorTax)
-              .attr("font-family","sans-serif");
+
+            var domain = band.domain;
+            var range = band.range;
+            var colour_range = logscale.range;
+
+            var logScale =  d3.scaleLog().domain(domain).range(range)
+            var linearScale = d3.scaleLinear().domain(domain).range(range)
+
+            var num_colours = colour_range.length
+            var diff = range[1] - range[0]
+
+            var step = 10
+            var for_inversion = d3.range(num_colours).map(function(d) {return range[0] + d*step})
+            var log_colour_values = for_inversion.map(logScale.invert)
+            var num_rectangles = 100
+
+            var step = diff/num_rectangles
+            var rect_data = d3.range(num_rectangles);
+
+            b.selectAll("rect").data(rect_data).enter()
+            .append("rect")
+            .attr("transform", "translate(20,5)")
+            .attr("x", function(d) {return 3.5*d})
+            .attr("y", function(d) {return 0})
+            .attr("height", function(d) {return 25})
+            .attr("width", function(d) {return 10})
+            .attr("fill", function(d) {
+            return smolscale(Math.log(100000*maxs[scope.colorTax])/100*d);
+            })
+            var bandlabel = d3.scaleLog()
+            .domain([0, 1])
+            .range([0, 350]);
+            b.append("g")
+            .attr("transform", "translate(20,35)")
+            .call(d3.axisBottom(bandlabel)
+            .ticks(8)
+            );
+            d3.select("#labeltext").remove();
+            z.append("text")
+              .attr("y", 20)
+              .attr("x", 20)
+              .attr("id", "labeltext")
+              .attr("text-anchor", "left")
+              .text("Node" + scope.colorTax+ ":");
             }
           }
         }
@@ -588,8 +657,9 @@ scope.expandinate = function () {
     markOpac(root);
 	  var duration = 600;
 	  link = g.selectAll(".link")
-	      .data(links, function(d) { return d.id});
+	      .data(links, function(d) { return d.id || (d.id = ++i);});
 	  linkEnter = link.enter().append("path")
+        .lower()
 	      .attr("class", "link")
 	      .attr("d", connector)
         .attr("stroke", function (d) {
@@ -626,10 +696,12 @@ scope.expandinate = function () {
                 return 1.5
               }
             });
-
     var linkExit = link.exit()
+       .remove();
+    linkExit.select('link')
     .attr('d', connector)
     .remove();
+
       var i = 0
 	  var node = g.selectAll(".node").data(nodes, function(d) {return d.id || (d.id = ++i); });
 	  var nodeEnter = node.enter().append("g")
@@ -734,7 +806,6 @@ scope.expandinate = function () {
         .attr("transform", function(d, i){
           return  "translate(" + i * barWidth + ",0)";
       });
-      console.log(typeof d[scope.colorTax])
       var textbar = t.selectAll("textbar")
         .data(dataset)
         .enter().append("svg:g")
@@ -756,7 +827,7 @@ scope.expandinate = function () {
         .text(function(d, i){
           if (scope.colorTax == 'percentage') {
             if(d.percentage > 0.5){
-              return d.percentage*100;
+              return Math.round(d.percentage*10000)/100;
             }else {
               return  format(d.percentage*100);
             }
@@ -854,11 +925,53 @@ scope.expandinate = function () {
     }
 	  });
 
+    nodeEnter.append("text")
+    .attr("class", "nodelabels")
+    .attr("dy", function (d) {
+      if(d.data.rank[0]=="superkingdom" && d.children){
+        return 12;
+      }else if (d.data.rank[0]=="phylum" && d.children && scope.colorTax == 'rank'){
+        return -3;
+      }
+      else{
+        return 3;
+      }
+    })
+      .attr("x", function(d) { if (scope.mapFilter && !d.children) {
+        return databox.length*gridSize*2 + gridSize*3;
+      }else {
+        return d.children ? -8 : 8;
+      }})
+      .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+      .text(function(d) {
+          if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum" && scope.colorTax == 'rank')){
+      return d.data.name[0];
+          }
+          return d.children ? "" : d.data.name[0];
+      })
+      .style('stroke-width', 0.5)
+      .style("opacity", 0)
+      .style('stroke', function (d) {
+        if (d.class1 === "found") {
+            return "#3884ff";
+        }
+      });
+
 	  var nodeUpdate = node.merge(nodeEnter);
 
     nodeUpdate.transition()
           .duration(duration)
-          .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+          .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+          .select(".nodelabels").style("opacity", function (d) {
+      if (scope.opacsupress) {
+        if (d.class3) {
+          return 1;
+        }else {
+          return 0.2;
+    }
+    }
+  })
+
 	  nodeUpdate.select("circle")
     .attr("r", function (d) {
           return 5;
@@ -989,7 +1102,7 @@ scope.expandinate = function () {
             }})
         .attr("stroke", "#000")
         .attr("fill", function(d){
-          return bigscale(Math.log(d.percentage/rootready * 10000000));})
+          return bigscale(Math.log(d.percentage/rootready * 3000000));})
         .attr("opacity", function (d) {
             if (scope.opacsupress) {
               if (d.class3) {
@@ -1004,57 +1117,16 @@ scope.expandinate = function () {
 
           mapUpdate1.attr("width", function(d){
             if(d.children.length == 0 && scope.mapFilter){
-                return  gridSize;
+                return gridSize;
               }else{
                 return 0;
               }
-          })  .attr("height", gridSize)
+          }).attr("height", gridSize)
           .attr("fill", function(d){
-            return bigscale(Math.log(d.percentage/rootready *10000000));})
+            return bigscale(Math.log(d.percentage/rootready * 3000000));})
           });
 
-      nodeEnter.append("text")
-      .attr("class", "nodelabels")
-      .attr("dy", function (d) {
-        if(d.data.rank[0]=="superkingdom" && d.children){
-          return 12;
-        }else if (d.data.rank[0]=="phylum" && d.children && scope.colorTax == 'rank'){
-          return -3;
-        }
-        else{
-          return 3;
-        }
-      })
-        .attr("x", function(d) { if (scope.mapFilter && !d.children) {
-          return databox.length*gridSize*2.2;
-        }else {
-          return d.children ? -8 : 8;
-        }})
-  	    .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
-  	    .text(function(d) {
-            if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum" && scope.colorTax == 'rank')){
-        return d.data.name[0];
-            }
-            return d.children ? "" : d.data.name[0];
-  	    })
-        .style('stroke-width', 0.5)
-        .style("opacity", function (d) {
-          if (scope.opacsupress) {
-            if (d.class3) {
-              return 1;
-            }else {
-              return 0.2;
-        }
-        }
-      })
-        .style('stroke', function (d) {
-          if (d.class1 === "found") {
-              return "#3884ff";
-          }
-        });
-
-  	  nodeUpdate.select("text").style("text-anchor", function(d) {
-      return d.children ? "end" : "start"; })
+  	  nodeUpdate.select("text")
       .attr("dy", function (d) {
         if(d.data.rank[0]=="superkingdom" && d.children){
           return 12;
@@ -1065,43 +1137,47 @@ scope.expandinate = function () {
         }
       })
       .attr("x", function(d) { if (scope.mapFilter && !d.children) {
-        return databox.length*gridSize*2.7;
+        return databox.length*gridSize*2 + gridSize*3;
       }else {
         return d.children ? -8 : 8;
       }})
-  	    .text(function(d) {
-          if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum"&& scope.colorTax == 'rank')){
-   return d.data.name[0];
-       }
-       return d.children ? "" : d.data.name[0];
-     })
-     .style('stroke-width', 0.5)
-     .style('stroke', function (d) {
-         if (d.class1 === "found") {
-             return "#3884ff";
-         }
-       })
-       .style("opacity", function (d) {
-         if (scope.opacsupress) {
-           if (d.class3) {
-             return 1;
-           }else {
-             return 0.2;
-       }
-       }
-     });
+      .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+      .text(function(d) {
+          if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum" && scope.colorTax == 'rank')){
+      return d.data.name[0];
+          }
+          return d.children ? "" : d.data.name[0];
+      })
+      .style('stroke-width', 0.5)
+      .style('stroke', function (d) {
+        if (d.class1 === "found") {
+            return "#3884ff";
+        }
+      });
+     //   .style("opacity", function (d) {
+     //     if (scope.opacsupress) {
+     //       if (d.class3) {
+     //         return 1;
+     //       }else {
+     //         return 0.2;
+     //   }
+     //   }
+     // });
    nodes.forEach(function (d) {
      d.x0 = d.x;
      d.y0 = d.y;
    });
-   var nodeExit = node.exit().transition()
+
+   node.exit().select(".nodelabels").style("opacity", 0);
+
+      var nodeExit = node.exit()
+      .transition()
       .duration(duration)
       .attr("transform", function(d) {
           return "translate(" + source.y + "," + source.x + ")";
       })
       .remove();
-    nodeExit.select('circle')
-    .attr('r', 1e-6);
+
 
     nodecounter = 0
     countNodes(root);
@@ -1189,11 +1265,12 @@ scope.expandinate = function () {
       d.children = null;
     } else {
       expandAll(d);
-      // d.class2 = "null"
-      // d.children = d._children;
-      // d._children = null;
     }
     update(d);
+    if(d.depth<6){
+      resetZoom();
+      adjustSVG(root);
+    }
     }
 
   function collapseLevel(d) {
@@ -1210,6 +1287,7 @@ scope.expandinate = function () {
           d.children.forEach(collapseLevel);
       }
   }
+
   function collapseAll(d) {
     if(d.children){
     d._children = d.children;
@@ -1233,7 +1311,9 @@ scope.expandinate = function () {
   }
   update(root);
   updatelabel(root);
+  scope.updateColors();
   adjustSVG(root);
+  resetZoom(root);
 });
 }
 scope.runTree();
