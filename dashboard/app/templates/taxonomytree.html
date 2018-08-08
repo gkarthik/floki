@@ -1,4 +1,4 @@
-<h3></h3>
+<h3 class="header"></h3>
 <div class="topbar" id="menu">
 <table class="table">
   <tr>
@@ -52,6 +52,14 @@
     <td>
       <form class="form-inline md-form form-sm">
       <div class='inputgroup'>
+      <input type="checkbox" ng-model="zoomEnabled" value ='True' ng-change="zoomToggle()">
+      Zoom
+    </div>
+    </form>
+    </td>
+    <td>
+      <form class="form-inline md-form form-sm">
+      <div class='inputgroup'>
       <input type="checkbox" ng-model="pinBar" value ='False'>
       pin
     </div>
@@ -77,18 +85,21 @@
         &nbsp;
         <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
         Collapse search
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       </label>
     </div>
     &nbsp;
       <input type="checkbox" ng-model="showchart" value = "showchart" ng-change="togglebars()" />
        Mouseover chart
-       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       &nbsp;
     </td>
     <td>
       <div class="checkbox">
-      <input type="checkbox" ng-model="opacsupress" value = "false" ng-change="opacityFilters()" />
+      <input type="checkbox" ng-model="opacsuppress" value = "false" ng-change="opacityFilters()" />
      Hide common nodes:&nbsp;
          </div>
+       <input type="checkbox" ng-model="collapsepatho" value = "false" ng-change="collapsePathogens()" />
+        pathogenic focus
     </td>
     <td>
       <div class='inputgroup'>
@@ -113,6 +124,7 @@
       <tr>
   <td> &nbsp;Color By:
     <select ng-model="colorTax" ng-change="updateColors()">
+      <option value="pathogenic">Pathogenic</option>
       <option value="rank">Taxonomic Rank</option>
       <option value="shared"># of samples passed</option>
       <option value="reads"># of Reads</option>

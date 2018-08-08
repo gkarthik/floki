@@ -20,17 +20,19 @@ angular.module('dashboardApp')
 	scope.ratioThreshold = 1;
 	scope.taxFilter = "nofilter";
 	scope.fdrFilter = true;
+  scope.collapsepatho = false;
   scope.allFilter = true;
   scope.redFilter = false;
   scope.mapFilter = true;
-  scope.opacsupress = false;
-  scope.colorTax = "reads";
+  scope.opacsuppress = false;
+  scope.colorTax = "percentage";
   scope.searchText = "";
   scope.seperation = 3.30;
   scope.searchcollapse = false;
   scope.showchart = false;
   scope.pinBar = true;
   scope.readsHidden = 10;
+  scope.zoomEnabled = true;
 	var ranks = ["superkingdom", "species", "genus"];
   var root;
   var nodes;
@@ -41,8 +43,10 @@ angular.module('dashboardApp')
   var searchingTimer;
   var t;
   var z;
+  var pathcheck = 0;
   var nodesharecount = 0;
   var nodecounter = 0;
+  var maxdepth = 0;
   var rootready;
 	var jsonFile = scope.jsonFile;
 	var padding = 20;
@@ -54,13 +58,14 @@ angular.module('dashboardApp')
   var sharescale;
   var rawSvg = element.find("#svg1")[0];
   var zoom;
+  var path;
   var svg = d3.select(rawSvg);
   var svglabel = element.find("#svg2")[0];
   var svgname = element.find("#svg3")[0];
   var label1 = d3.select(svglabel);
   var namelabel = d3.select(svgname);
   var stickycheck=false;
-	d3.select(element.find("h3")[0]).html(jsonFile.split("/")[1].replace(".json", ""));
+	d3.select(element.find("h3")[0]).html('&nbsp;&nbsp;' + jsonFile.split("/")[1].replace(".json", ""));
 	var base = 100;
   svg.attr("width", width);
   svg.attr("height", 1000 + margin.top + margin.bottom);
@@ -109,7 +114,7 @@ function stickyBar() {
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
-    zoom.translateBy(svg, 30, (20 + nodecounter * 15.7/3 * scope.seperation)/1.11);
+    zoom.translateBy(svg, 30, (nodecounter * 15.79/3.3 * scope.seperation + 10));
     }
   }
 
@@ -132,7 +137,7 @@ d3.json(scope.jsonFile, function(error, data){
       clearAll(root);
       markOpac(root);
       makescales(root);
-      updatelabel(root);
+      updatelable(root);
       root.children.forEach(collapseLevel);
       update(root);
       resetZoom();
@@ -150,8 +155,35 @@ d3.json(scope.jsonFile, function(error, data){
       label1.attr("height", 70);
     }
       makescales(root);
-      updatelabel(root);
+      updatelable(root);
+      if(scope.colorTax == 'pathogenic'){
+        searchPatho(root);
+        if(scope.collapsepatho == true) {
+          root.children.forEach(scope.collapsePathogens);
+        }
+      }
+      if(pathcheck==1){
+        pathcheck=0;
+        scope.opacityFilters();
+      }else if(scope.colorTax == "pathogenic"){
+        pathcheck = 1;
+        scope.opacityFilters();
+      }else {
       update(root);
+      }
+  }
+
+  scope.collapsePathogens = function () {
+    scope.colorTax="pathogenic"
+    expandAll(root);
+    scope.opacityFilters();
+    if(scope.collapsepatho){
+      searchPatho(root);
+      collapsepathends(root);
+    }
+    update(root);
+    resetZoom();
+    adjustSVG(root);
   }
 
   scope.opacityFilters = function () {
@@ -252,22 +284,30 @@ function countNodes(d){
   if(d.children){
     d.children.forEach(countNodes);
   } else {
+    if(d.depth >= maxdepth){
+      maxdepth = d.depth;
+    }
     nodecounter = nodecounter + 1
     return nodecounter;
   }
 }
-
+scope.zoomToggle = function (){
+  adjustZoom();
+}
 function adjustZoom() {
-  height = nodecounter * 15.7/3 * scope.seperation;
+  height = nodecounter * 15.79/3.3 * scope.seperation + 1000;
   width = $window.innerWidth;
   svg.attr("width", width);
-  svg.attr("height", height +300 + margin.top + margin.bottom);
+  svg.attr("height", height);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[-width/3, -height], [width - 20,  height/5]])
-      .extent([[0, 0], [width, height]])
+      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  15.79/3.3 * scope.seperation)]])
       .on("zoom", zoomed);
-      svg.call(zoom);
+      if(scope.zoomEnabled){
+        svg.call(zoom);
+      }else {
+        svg.on('.zoom', null);
+      }
 }
 function adjustSVG(d) {
   adjustZoom();
@@ -303,11 +343,11 @@ function clearAll(d) {
 function markOpac(d){
   if(d._children){
     d._children.forEach(markOpac)
-    d._children.forEach(function (d) {
-      if (d.class3) {
-        d.parent.class3 = d.class3;
-      }
-    })
+    // d._children.forEach(function (d) {
+    //   if (d.class3) {
+    //     d.parent.class3 = d.class3;
+    //   }
+    // })
   }else if(d.children){
     d.children.forEach(markOpac)
     d.children.forEach(function (d) {
@@ -337,7 +377,7 @@ function markOpac(d){
 scope.runSearch = function(){
   clearTimeout(typingTimer);
   typingTimer = setTimeout(function() {
-    if (scope.searchcollapse && scope.searchText.length > 0) {
+    if (scope.searchcollapse && scope.searchText.length) {
       expandAll(root);
       scope.taxFilter = "nofilter";
       clearAll(root);
@@ -346,6 +386,7 @@ scope.runSearch = function(){
       update(root);
       adjustSVG(root);
     }else {
+      // expandAll(root);
       clearSearch(root);
       searchTree(root);
       update(root);
@@ -359,6 +400,46 @@ scope.runFilters = function(){
   typingTimer = setTimeout(function() {
     scope.runTree();
   }, doneTypingInterval);
+}
+function searchPatho(d) {
+  if(scope.colorTax == 'pathogenic'){
+      if (d.children){
+        d.children.forEach(searchPatho);
+      }
+      else if (d._children){
+        d._children.forEach(searchPatho);
+      }
+      if (d.data.pathogenic==true) {
+        var ancestors = [];
+        var parent = d;
+        while (parent) {
+            ancestors.push(parent);
+            parent.class4 = "pathogenic";
+            parent = parent.parent;
+        }
+      }
+    }
+}
+
+function collapsepathends(d) {
+  path = 0;
+  if(d.children){
+    d.children.forEach(nochildpath);
+  }
+  if(path == 0){
+    collapseAll(d);
+  }else {
+    d.children.forEach(collapsepathends);
+  }
+}
+
+function nochildpath(d) {
+  if (d.class4 == "pathogenic"){
+    path = path + 1;
+  }
+  if (d.children) {
+    d.children.forEach(nochildpath);
+  }
 }
 
 function searchTree(d) {
@@ -379,6 +460,26 @@ function searchTree(d) {
     }
   }
 }
+// function collapsenotfound(d) {
+//   path = 0;
+//   if(d.children){
+//     d.children.forEach(nochildfound);
+//   }
+//   if(path == 0){
+//     collapseAll(d);
+//   }else {
+//     d.children.forEach(collapsenotfound);
+//   }
+// }
+//
+// function nochildfound(d) {
+//   if (d.class1 == "found"){
+//     path = path + 1;
+//   }
+//   if (d.children) {
+//     d.children.forEach(nochildpath);
+//   }
+// }
 
 function collapsenotfound(d) {
   if (d.children) {
@@ -410,7 +511,7 @@ scope.expandinate = function () {
   adjustSVG(root);
 }
 
-  function updatelabel(d) {
+  function updatelable(d) {
     var num_rectangles = 100;
     if(typeof(b) !== 'undefined'){
       b.remove();
@@ -441,9 +542,9 @@ scope.expandinate = function () {
             d3.select("#labeltext").remove();
             z.append("text")
               .attr("y", 20)
-              .attr("x", 20)
+              .attr("x", 200)
               .attr("id", "labeltext")
-              .attr("text-anchor", "right")
+              .attr("text-anchor", "end")
               .text("Number of samples passing:");
         }else if (typeof d.data[scope.colorTax][0]== 'string') {
           var band = d3.scaleBand()
@@ -472,11 +573,47 @@ scope.expandinate = function () {
               d3.select("#labeltext").remove();
               z.append("text")
                 .attr("y", 20)
-                .attr("x", 20)
+                .attr("x", 200)
                 .attr("id", "labeltext")
-                .attr("text-anchor", "right")
+                .attr("text-anchor", "end")
                 .text("Node " + scope.colorTax +":");
-            } else {
+            } else if (typeof(d.data[scope.colorTax])=='boolean') {
+              var band = d3.scaleBand()
+                  .domain(['True', "False"])
+                  .range([0, 350]);
+              b.append("rect")
+                  .attr("transform", "translate(20,5)")
+                  .attr("class", "boxen")
+                  .attr("x", function(d, i) { return 0; })
+                  .attr("y", 0)
+                  .attr("height", 25)
+                  .attr("width", 350/2 - 8)
+                  .style("fill", '#8b0000');
+              b.append("rect")
+                  .attr("transform", "translate(20,5)")
+                  .attr("class", "boxen")
+                  .attr("x", function(d, i) { return 350/2; })
+                  .attr("y", 0)
+                  .attr("height", 25)
+                  .attr("width", 350/2 - 8)
+                  .style("fill", '#CDE7F0');
+                b.append("g")
+                  .attr("transform", "translate(20,35)")
+                  .call(d3.axisBottom(band)
+                  ).selectAll("text")
+                  .attr("y", 0)
+                  .attr("x", 9)
+                  .attr("dy", ".35em")
+                  .attr("transform", "rotate(45)")
+                  .style("text-anchor", "start");
+                  d3.select("#labeltext").remove();
+                  z.append("text")
+                    .attr("y", 20)
+                    .attr("x", 200)
+                    .attr("id", "labeltext")
+                    .attr("text-anchor", "end")
+                    .text("Node " + scope.colorTax +":");
+            }else {
             if (maxs[scope.colorTax]>=10000){
   var band = d3.scaleLog()
     .domain([1, maxs[scope.colorTax]])
@@ -518,9 +655,9 @@ scope.expandinate = function () {
   d3.select("#labeltext").remove();
   z.append("text")
     .attr("y", 20)
-    .attr("x", 20)
+    .attr("x", 200)
     .attr("id","labeltext")
-    .attr("text-anchor", "right")
+    .attr("text-anchor", "end")
     .text("Average "+scope.colorTax +":");
             }else if (scope.colorTax == 'percentage'){
               var band = d3.scaleLog()
@@ -566,9 +703,9 @@ scope.expandinate = function () {
               d3.select("#labeltext").remove();
               z.append("text")
                 .attr("y", 20)
-                .attr("x", 20)
+                .attr("x", 200)
                 .attr("id", "labeltext")
-                .attr("text-anchor", "left")
+                .attr("text-anchor", "end")
                 .text("Average " + scope.colorTax+ ":");
             }else{
               var legend = b.append("defs")
@@ -628,9 +765,9 @@ scope.expandinate = function () {
             d3.select("#labeltext").remove();
             z.append("text")
               .attr("y", 20)
-              .attr("x", 20)
+              .attr("x", 200)
               .attr("id", "labeltext")
-              .attr("text-anchor", "left")
+              .attr("text-anchor", "end")
               .text("Node" + scope.colorTax+ ":");
             }
           }
@@ -665,6 +802,8 @@ scope.expandinate = function () {
         .attr("stroke", function (d) {
           if (d.class1 === "found") {
               return '#3884ff';
+          }else if (scope.colorTax==="pathogenic" && d.class4){
+              return '#8b0000';
           }else{
             return "#000" ;
           }
@@ -672,8 +811,12 @@ scope.expandinate = function () {
         .attr("stroke-width", function (d) {
           if (d.class1 === "found") {
             return 3;
+          }else if (scope.colorTax==="pathogenic" && d.class4!=false){
+              return 3;
           }else if(d.class2 === "collapsed") {
             return 1.5
+          }else {
+            return 0.5
           }
         });
 
@@ -685,13 +828,17 @@ scope.expandinate = function () {
             .attr("stroke", function (d) {
               if (d.class1 === "found") {
                   return "#3884ff";
-              }else{
+                }else if (scope.colorTax==="pathogenic" && d.class4){
+                    return '#8b0000';
+                }else{
                 return "#000" ;
               }
             })
             .attr("stroke-width", function (d) {
               if (d.class1 === "found") {
                 return 3;
+              }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
+                  return 3;
               }else if(d.class2 === "collapsed") {
                 return 1.5
               }
@@ -722,14 +869,16 @@ scope.expandinate = function () {
     .style("stroke-width", function (d) {
       if (d.class1 === "found") {
           return 3;
-      }else if (d.class2 === "collapsed"){
+        }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
+            return 3;
+        }else if (d.class2 === "collapsed"){
         return 2.5
       }else {
         return 0.5
       }
     })
     .style("opacity", function (d) {
-      if (scope.opacsupress) {
+      if (scope.opacsuppress) {
         if (d.class3) {
           return 1;
         }else {
@@ -738,7 +887,13 @@ scope.expandinate = function () {
     }
   })
     .style("fill", function(d) {
-      if (scope.colorTax=="shared") {
+      if(scope.colorTax=="pathogenic"){
+        if(d.data.pathogenic!=false){
+          return '#8b0000';
+        }else {
+            return '#CDE7F0';
+          }
+        }else if (scope.colorTax=="shared") {
               nodesharecount = 0
               for (var q=0; q<d.data.percentage.length; q++){
             if (d.data.reads[q] >= scope.readsThreshold) {
@@ -768,7 +923,45 @@ scope.expandinate = function () {
 
       var gridSize = 10
 	  nodeEnter.on("mouseover", function(d, i){
-      if(scope.showchart && scope.colorTax != 'shared'){
+      if(scope.showchart && scope.colorTax =="pathogenic"){
+        var t = g.append("svg:g")
+          .attr("class","tool-tip")
+    	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
+         t.append("rect")
+         .attr("width", function () {
+           if (d.data.disease==false) {
+             return 175;
+           }else {
+             return 100 + d.data.disease.length*10;
+           }
+         })
+         .attr("height",30)
+         .attr("stroke", "#000")
+         .attr("fill", "#FFF");
+         t.append("text")
+         .attr("text-anchor", "start")
+         .attr("transform", "translate(20,20)")
+         .text(function () {
+           if(d.data.disease==false){
+             return "Disease: unknown";
+           }else {
+             return "Known disease: " + d.data.disease;
+           }
+         })
+         .style('stroke-width', 0.5)
+         .style('stroke', function () {
+             if(scope.colorTax=="pathogenic"){
+               if(d.data.disease!==false){
+                 return '#8b0000';
+               }else {
+                   return '#CDE7F0';
+                 }
+               }
+           if (d.class1 === "found") {
+               return "#3884ff";
+           }
+         });
+      }else if(scope.showchart && scope.colorTax != 'shared'){
       var dataset = [];
       var colors = d3.schemeSet1;
       for (var q=0; q<d.data.percentage.length; q++){
@@ -952,6 +1145,13 @@ scope.expandinate = function () {
       .style('stroke-width', 0.5)
       .style("opacity", 0)
       .style('stroke', function (d) {
+          if(scope.colorTax=="pathogenic"){
+            if(d.data.pathogenic!=false){
+              return '#8b0000';
+            }else {
+                return '#CDE7F0';
+              }
+            }
         if (d.class1 === "found") {
             return "#3884ff";
         }
@@ -963,7 +1163,7 @@ scope.expandinate = function () {
           .duration(duration)
           .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
           .select(".nodelabels").style("opacity", function (d) {
-      if (scope.opacsupress) {
+      if (scope.opacsuppress) {
         if (d.class3) {
           return 1;
         }else {
@@ -993,7 +1193,7 @@ scope.expandinate = function () {
         }
       })
       .style("opacity", function (d) {
-        if (scope.opacsupress) {
+        if (scope.opacsuppress) {
           if (d.class3) {
             return 1;
           }else {
@@ -1002,7 +1202,13 @@ scope.expandinate = function () {
       }
     })
       .style("fill", function(d) {
-        if (scope.colorTax=="shared") {
+        if(scope.colorTax=="pathogenic"){
+          if(d.data.pathogenic!=false){
+            return '#8b0000';
+          }else {
+              return '#CDE7F0';
+            }
+          }else if (scope.colorTax=="shared") {
                 nodesharecount = 0
                 for (var q=0; q<d.data.percentage.length; q++){
               if (d.data.reads[q] >= scope.readsThreshold) {
@@ -1013,7 +1219,8 @@ scope.expandinate = function () {
             }
               else if (typeof d.data[scope.colorTax][0]== 'string') {
                 return striscale(String(d.data[scope.colorTax][0]));
-              } else {
+              }
+              else {
                 if (maxs[scope.colorTax]>=10000){
                   nodedata=0
                   for (var q=0; q<d.data[scope.colorTax].length; q++){
@@ -1034,6 +1241,7 @@ scope.expandinate = function () {
         databox = [];
         for (var q=0; q<nodeData.data.percentage.length; q++){
           databox[q]={}
+          databox[q]["pathogenic"]=nodeData.data.pathogenic;
           databox[q]["children"]= (nodeData.children) ? nodeData.children : [];
         databox[q]["percentage"] = nodeData.data.percentage[q];
         databox[q]["reads"] = nodeData.data.reads[q];
@@ -1062,7 +1270,14 @@ scope.expandinate = function () {
             })]);
             return scalio(d.percentage);})
           .style("opacity", function (d) {
-              if (scope.opacsupress) {
+            if (scope.colorTax == "pathogenic"){
+              if (d.pathogenic){
+                return 1;
+              }else {
+                return 0.4;
+              }
+            }
+              if (scope.opacsuppress) {
                 if (d.class3) {
                   return 1;
                 }else {
@@ -1104,7 +1319,14 @@ scope.expandinate = function () {
         .attr("fill", function(d){
           return bigscale(Math.log(d.percentage/rootready * 3000000));})
         .attr("opacity", function (d) {
-            if (scope.opacsupress) {
+            if (scope.colorTax == "pathogenic"){
+              if (d.class4=="pathogenic"){
+                return 1;
+              }else {
+                return 0.4;
+              }
+            }
+            if (scope.opacsuppress) {
               if (d.class3) {
                 return 1;
               }else {
@@ -1150,12 +1372,19 @@ scope.expandinate = function () {
       })
       .style('stroke-width', 0.5)
       .style('stroke', function (d) {
+        if(scope.colorTax=="pathogenic"){
+          if(d.data.pathogenic!=false){
+            return '#8b0000';
+          }else {
+              return '#CDE7F0';
+            }
+          }
         if (d.class1 === "found") {
             return "#3884ff";
         }
       });
      //   .style("opacity", function (d) {
-     //     if (scope.opacsupress) {
+     //     if (scope.opacsuppress) {
      //       if (d.class3) {
      //         return 1;
      //       }else {
@@ -1180,6 +1409,7 @@ scope.expandinate = function () {
 
 
     nodecounter = 0
+    maxdepth = 0
     countNodes(root);
     adjustZoom();
 	}
@@ -1272,7 +1502,6 @@ scope.expandinate = function () {
       adjustSVG(root);
     }
     }
-
   function collapseLevel(d) {
       d.class2 = "null"
       if (d._children){
@@ -1290,6 +1519,7 @@ scope.expandinate = function () {
 
   function collapseAll(d) {
     if(d.children){
+    d.class2="collapsed";
     d._children = d.children;
     d._children.forEach(collapseAll);
     d.children = null;
@@ -1299,7 +1529,7 @@ scope.expandinate = function () {
   getSignificantNodes(data);
   root = d3.hierarchy(data);
   root.x0 = 30;
-  root.y0 = ((20 + nodecounter * 15.7/3 * scope.seperation)/1.11);
+  root.y0 = nodecounter * 15.79/3.3 * scope.seperation;
   createKeys(root);
   getkeyScales(root);
   createminmax(root);
@@ -1310,7 +1540,7 @@ scope.expandinate = function () {
       rootready = rootready + root.data.percentage[q];
   }
   update(root);
-  updatelabel(root);
+  updatelable(root);
   scope.updateColors();
   adjustSVG(root);
   resetZoom(root);

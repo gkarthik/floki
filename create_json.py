@@ -229,7 +229,6 @@ if __name__=="__main__":
     a = json.dumps(complete_json,ignore_nan=True)
     f = open("json_output/complete_json.json", "w")
     f.write(a)
-
     
     # Blast to analysis matrix
     

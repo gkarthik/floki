@@ -1,0 +1,71 @@
+{"NCBITaxon_2":{"DOID_label":"disease by infectious agent","DOID":"DOID_0050117","NCBITaxon_label":"Bacteria <prokaryote>","Property":"has material basis in"}}
+{"NCBITaxon_2":{"DOID_label":"bacterial infectious disease","DOID":"DOID_104","NCBITaxon_label":"Bacteria <prokaryote>","Property":"has material basis in"}}
+{"NCBITaxon_2":{"DOID_label":"typhus","DOID":"DOID_11256","NCBITaxon_label":"Bacteria <prokaryote>","Property":"has material basis in"}}
+{"NCBITaxon_2":{"DOID_label":"Mycobacterium avium complex disease","DOID":"DOID_2755","NCBITaxon_label":"Bacteria <prokaryote>","Property":"transmitted by"}}
+{"NCBITaxon_1392":{"DOID_label":"oropharyngeal anthrax","DOID":"DOID_0050059","NCBITaxon_label":"Bacillus anthracis","Property":"has material basis in"}}
+{"NCBITaxon_1392":{"DOID_label":"gastrointestinal anthrax","DOID":"DOID_13386","NCBITaxon_label":"Bacillus anthracis","Property":"has material basis in"}}
+{"NCBITaxon_1392":{"DOID_label":"anthrax disease","DOID":"DOID_7427","NCBITaxon_label":"Bacillus anthracis","Property":"has material basis in"}}
+{"NCBITaxon_1392":{"DOID_label":"cutaneous anthrax","DOID":"DOID_7426","NCBITaxon_label":"Bacillus anthracis","Property":"has material basis in"}}
+{"NCBITaxon_1280":{"DOID_label":"toxic shock syndrome","DOID":"DOID_14115","NCBITaxon_label":"Staphylococcus aureus","Property":"has material basis in"}}
+{"NCBITaxon_1280":{"DOID_label":"staphyloenterotoxemia","DOID":"DOID_96","NCBITaxon_label":"Staphylococcus aureus","Property":"has material basis in"}}
+{"NCBITaxon_1637":{"DOID_label":"listeriosis","DOID":"DOID_11573","NCBITaxon_label":"Listeria","Property":"transmitted by"}}
+{"NCBITaxon_1513":{"DOID_label":"tetanus","DOID":"DOID_11338","NCBITaxon_label":"Clostridium tetani","Property":"has material basis in"}}
+{"NCBITaxon_36830":{"DOID_label":"intestinal botulism","DOID":"DOID_0050141","NCBITaxon_label":"Clostridium botulinum E","Property":"has material basis in"}}
+{"NCBITaxon_36830":{"DOID_label":"botulism","DOID":"DOID_11976","NCBITaxon_label":"Clostridium botulinum E","Property":"has material basis in"}}
+{"NCBITaxon_36830":{"DOID_label":"foodborne botulism","DOID":"DOID_0050352","NCBITaxon_label":"Clostridium botulinum E","Property":"has material basis in"}}
+{"NCBITaxon_36830":{"DOID_label":"wound botulism","DOID":"DOID_0050353","NCBITaxon_label":"Clostridium botulinum E","Property":"has material basis in"}}
+{"NCBITaxon_1502":{"DOID_label":"gas gangrene","DOID":"DOID_9159","NCBITaxon_label":"Clostridium perfringens","Property":"has material basis in"}}
+{"NCBITaxon_1648":{"DOID_label":"erysipeloid","DOID":"DOID_0050061","NCBITaxon_label":"Erysipelothrix rhusiopathiae","Property":"has material basis in"}}
+{"NCBITaxon_1750":{"DOID_label":"actinomycosis","DOID":"DOID_8478","NCBITaxon_label":"Propionibacterium propionicum","Property":"has material basis in"}}
+{"NCBITaxon_730":{"DOID_label":"chancroid","DOID":"DOID_13778","NCBITaxon_label":"[Haemophilus] ducreyi","Property":"has material basis in"}}
+{"NCBITaxon_747":{"DOID_label":"pasteurellosis","DOID":"DOID_11055","NCBITaxon_label":"Pasteurella multocida","Property":"has material basis in"}}
+{"NCBITaxon_263":{"DOID_label":"tularemia","DOID":"DOID_2123","NCBITaxon_label":"Francisella tularensis","Property":"has material basis in"}}
+{"NCBITaxon_446":{"DOID_label":"legionellosis","DOID":"DOID_10458","NCBITaxon_label":"Legionella pneumophila","Property":"has material basis in"}}
+{"NCBITaxon_948":{"DOID_label":"human granulocytic anaplasmosis","DOID":"DOID_0050025","NCBITaxon_label":"Anaplasma phagocytophilum","Property":"has material basis in"}}
+{"NCBITaxon_948":{"DOID_label":"ehrlichiosis","DOID":"DOID_10242","NCBITaxon_label":"Anaplasma phagocytophilum","Property":"has material basis in"}}
+{"NCBITaxon_780":{"DOID_label":"spotted fever","DOID":"DOID_11104","NCBITaxon_label":"Rickettsia","Property":"has material basis in"}}
+{"NCBITaxon_780":{"DOID_label":"typhus","DOID":"DOID_11256","NCBITaxon_label":"Rickettsia","Property":"has material basis in"}}
+{"NCBITaxon_786":{"DOID_label":"rickettsialpox","DOID":"DOID_11103","NCBITaxon_label":"Rickettsia akari","Property":"has material basis in"}}
+{"NCBITaxon_784":{"DOID_label":"scrub typhus","DOID":"DOID_13371","NCBITaxon_label":"Orientia tsutsugamushi","Property":"has material basis in"}}
+{"NCBITaxon_803":{"DOID_label":"trench fever","DOID":"DOID_11101","NCBITaxon_label":"Bartonella quintana","Property":"has material basis in"}}
+{"NCBITaxon_774":{"DOID_label":"Carrion's disease","DOID":"DOID_0050398","NCBITaxon_label":"Bartonella bacilliformis","Property":"has material basis in"}}
+{"NCBITaxon_56426":{"DOID_label":"cat-scratch disease","DOID":"DOID_11258","NCBITaxon_label":"Bartonella clarridgeiae","Property":"has material basis in"}}
+{"NCBITaxon_197":{"DOID_label":"campylobacteriosis","DOID":"DOID_13622","NCBITaxon_label":"Campylobacter jejuni","Property":"has material basis in"}}
+{"NCBITaxon_519":{"DOID_label":"pertussis","DOID":"DOID_1116","NCBITaxon_label":"Bordetella parapertussis","Property":"has material basis in"}}
+{"NCBITaxon_520":{"DOID_label":"pertussis","DOID":"DOID_1116","NCBITaxon_label":"Bordetella pertussis","Property":"has material basis in"}}
+{"NCBITaxon_485":{"DOID_label":"gonorrhea","DOID":"DOID_7551","NCBITaxon_label":"Neisseria gonorrhoeae","Property":"has material basis in"}}
+{"NCBITaxon_171":{"DOID_label":"leptospirosis","DOID":"DOID_2297","NCBITaxon_label":"Leptospira","Property":"has material basis in"}}
+{"NCBITaxon_813":{"DOID_label":"trachoma","DOID":"DOID_11265","NCBITaxon_label":"Chlamydia trachomatis","Property":"has material basis in"}}
+{"NCBITaxon_813":{"DOID_label":"inclusion conjunctivitis","DOID":"DOID_13800","NCBITaxon_label":"Chlamydia trachomatis","Property":"has material basis in"}}
+{"NCBITaxon_813":{"DOID_label":"lymphogranuloma venereum","DOID":"DOID_13819","NCBITaxon_label":"Chlamydia trachomatis","Property":"has material basis in"}}
+{"NCBITaxon_34105":{"DOID_label":"Haverhill fever","DOID":"DOID_13238","NCBITaxon_label":"Streptobacillus moniliformis","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"primary systemic mycosis","DOID":"DOID_0050292","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"endothrix infectious disease","DOID":"DOID_0050105","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"tinea corporis","DOID":"DOID_12179","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"disease by infectious agent","DOID":"DOID_0050117","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"superficial mycosis","DOID":"DOID_0050133","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"fungal infectious disease","DOID":"DOID_1564","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"cutaneous mycosis","DOID":"DOID_0050134","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"subcutaneous mycosis","DOID":"DOID_0050135","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"opportunistic mycosis","DOID":"DOID_2473","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"tinea cruris","DOID":"DOID_11917","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"dermatomycosis","DOID":"DOID_1563","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"tinea unguium","DOID":"DOID_13074","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4751":{"DOID_label":"tinea manuum","DOID":"DOID_13369","NCBITaxon_label":"Fungi","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"dermatophytosis","DOID":"DOID_8913","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"endothrix infectious disease","DOID":"DOID_0050105","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"tinea corporis","DOID":"DOID_12179","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"tinea cruris","DOID":"DOID_11917","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"dermatomycosis","DOID":"DOID_1563","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"tinea unguium","DOID":"DOID_13074","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_4890":{"DOID_label":"tinea manuum","DOID":"DOID_13369","NCBITaxon_label":"Ascomycota","Property":"has material basis in"}}
+{"NCBITaxon_5658":{"DOID_label":"parasitic protozoa infectious disease","DOID":"DOID_2789","NCBITaxon_label":"Leishmania","Property":"has material basis in"}}
+{"NCBITaxon_5658":{"DOID_label":"leishmaniasis","DOID":"DOID_9065","NCBITaxon_label":"Leishmania","Property":"has material basis in"}}
+{"NCBITaxon_5820":{"DOID_label":"parasitic protozoa infectious disease","DOID":"DOID_2789","NCBITaxon_label":"Plasmodium","Property":"has material basis in"}}
+{"NCBITaxon_5820":{"DOID_label":"malaria","DOID":"DOID_12365","NCBITaxon_label":"Plasmodium","Property":"has material basis in"}}
+{"NCBITaxon_5833":{"DOID_label":"malaria","DOID":"DOID_12365","NCBITaxon_label":"Plasmodium falciparum","Property":"has material basis in"}}
+{"NCBITaxon_5833":{"DOID_label":"Plasmodium falciparum malaria","DOID":"DOID_14067","NCBITaxon_label":"Plasmodium falciparum","Property":"has material basis in"}}
+{"NCBITaxon_10239":{"DOID_label":"viral infectious disease","DOID":"DOID_934","NCBITaxon_label":"Viruses","Property":"has material basis in"}}
+{"NCBITaxon_10239":{"DOID_label":"disease by infectious agent","DOID":"DOID_0050117","NCBITaxon_label":"Viruses","Property":"has material basis in"}}
+{"NCBITaxon_10376":{"DOID_label":"Epstein-Barr virus hepatitis","DOID":"DOID_0050204","NCBITaxon_label":"Human herpesvirus 4","Property":"has material basis in"}}
+{"NCBITaxon_10376":{"DOID_label":"infectious mononucleosis","DOID":"DOID_8568","NCBITaxon_label":"Human herpesvirus 4","Property":"has material basis in"}}
