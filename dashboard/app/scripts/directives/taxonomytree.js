@@ -110,14 +110,12 @@ function stickyBar() {
   scope.recenterZoom = function () {
     resetZoom();
   }
-
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
     zoom.translateBy(svg, 30, (nodecounter * 15.79/3.3 * scope.seperation + 10));
     }
   }
-
   scope.runTree = function(){
     if (scope.mapFilter){
     tree = d3.cluster()
@@ -131,7 +129,6 @@ function stickyBar() {
     tree.separation(function separation(a, b) {
       return a.parent == b.parent ? 5: 5;
     })}
-
 d3.json(scope.jsonFile, function(error, data){
 	scope.updateFilters = function(){
       clearAll(root);
@@ -172,7 +169,6 @@ d3.json(scope.jsonFile, function(error, data){
       }
       console.log(pathcheck)
   }
-
   scope.collapsePathogens = function () {
     scope.colorTax="pathogenic"
     expandAll(root);
@@ -185,7 +181,6 @@ d3.json(scope.jsonFile, function(error, data){
     resetZoom();
     adjustSVG(root);
   }
-
   scope.opacityFilters = function () {
     g.selectAll(".box1").remove()
     g.selectAll(".box").remove()
@@ -226,7 +221,6 @@ d3.json(scope.jsonFile, function(error, data){
     }
     }
 }
-
   function createKeys(d){
     for (var key in d.data){
       if (key != 'children'){
@@ -236,7 +230,6 @@ d3.json(scope.jsonFile, function(error, data){
       }
       }
       }
-
   function createminmax(d) {
     for (var key in d.data) {
         if (key != "children"){
@@ -248,7 +241,6 @@ d3.json(scope.jsonFile, function(error, data){
     }
     d.children.forEach(createDomains);
   }
-
   function createDomains(d){
     for (var key in d.data){
         if (key != "children"){
@@ -266,7 +258,6 @@ d3.json(scope.jsonFile, function(error, data){
     d.children.forEach(createDomains);
   }
   }
-
   function getkeyScales(d){
         if (d.children){
           d.children.forEach(getkeyScales);
@@ -279,7 +270,6 @@ d3.json(scope.jsonFile, function(error, data){
           }
         }
       }
-
 function countNodes(d){
   if(d.children){
     d.children.forEach(countNodes);
@@ -382,13 +372,13 @@ scope.runSearch = function(){
       scope.taxFilter = "nofilter";
       clearAll(root);
       searchTree(root);
-      root.children.forEach(collapsenotfound);
+      root.children.forEach(collapsesearchends);
       update(root);
       adjustSVG(root);
     }else {
       // expandAll(root);
       clearSearch(root);
-      searchTree(root);
+      searchTree(root)
       update(root);
       adjustSVG(root);
     }
@@ -460,36 +450,25 @@ function searchTree(d) {
     }
   }
 }
-// function collapsenotfound(d) {
-//   path = 0;
-//   if(d.children){
-//     d.children.forEach(nochildfound);
-//   }
-//   if(path == 0){
-//     collapseAll(d);
-//   }else {
-//     d.children.forEach(collapsenotfound);
-//   }
-// }
-//
-// function nochildfound(d) {
-//   if (d.class1 == "found"){
-//     path = path + 1;
-//   }
-//   if (d.children) {
-//     d.children.forEach(nochildpath);
-//   }
-// }
 
-function collapsenotfound(d) {
+function collapsesearchends(d) {
+  path = 0;
+  if(d.children){
+    d.children.forEach(nochildsearch);
+  }
+  if(path == 0){
+    collapseAll(d);
+  }else {
+    d.children.forEach(collapsesearchends);
+  }
+}
+
+function nochildsearch(d) {
+  if (d.class1 == "found"){
+    path = path + 1;
+  }
   if (d.children) {
-    if (d.class1 !== "found") {
-        d._children = d.children;
-        d._children.forEach(collapsenotfound);
-        d.children = null;
-        d.class2 = "collapsed";
-} else
-        d.children.forEach(collapsenotfound);
+    d.children.forEach(nochildsearch);
   }
 }
 
@@ -499,9 +478,10 @@ function expandAll(d) {
       d.children.forEach(expandAll);
       d._children = null;
       d.class2 = null;
-  } else if (d.children)
-      d.children.forEach(expandAll);
-      d.class2 = null;
+  } else if (d.children){
+    d.children.forEach(expandAll);
+    d.class2 = null;
+  }
 }
 
 scope.expandinate = function () {
@@ -809,14 +789,14 @@ scope.expandinate = function () {
           }
         })
         .attr("stroke-width", function (d) {
-          if (d.class1 === "found") {
+          if (d.class1==="found") {
             return 3;
-          }else if (scope.colorTax==="pathogenic" && d.class4!=false){
+          }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
               return 3;
-          }else if(d.class2 === "collapsed") {
-            return 1.5
+          }else if(d.class2==="collapsed") {
+            return 1.5;
           }else {
-            return 0.5
+            return 1;
           }
         });
 
@@ -840,7 +820,9 @@ scope.expandinate = function () {
               }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
                   return 3;
               }else if(d.class2 === "collapsed") {
-                return 1.5
+                return 1.5;
+              }else {
+                return 1;
               }
             });
     var linkExit = link.exit()
@@ -867,14 +849,14 @@ scope.expandinate = function () {
       }
     })
     .style("stroke-width", function (d) {
-      if (d.class1 === "found") {
-          return 3;
-        }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
-            return 3;
-        }else if (d.class2 === "collapsed"){
-        return 2.5
-      }else {
-        return 0.5
+      if (d.class2 === "collapsed"){
+      return 3;
+    }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
+            return 1;
+    }else if (d.class1 === "found") {
+          return 1;
+    }else {
+        return 0.5;
       }
     })
     .style("opacity", function (d) {
@@ -1184,11 +1166,13 @@ scope.expandinate = function () {
         }
       })
       .style("stroke-width", function (d) {
-        if (d.class1 === "found") {
-            return 3;
-        }else if (d.class2 === "collapsed"){
-          return 2.5
-        }else {
+        if (d.class2 === "collapsed"){
+        return 3;
+      }else if (scope.colorTax==="pathogenic" && d.class4==="pathogenic"){
+              return 1;
+      }else if (d.class1 === "found") {
+            return 1;
+      }else {
           return 0.5
         }
       })
