@@ -147,7 +147,6 @@ d3.json(scope.jsonFile, function(error, data){
     if(root.data[scope.colorTax]){
       if (typeof(root.data[scope.colorTax][0])=="string") {
         label1.attr("height", 160);
-
       }else {
         label1.attr("height", 70);
       }
@@ -162,15 +161,16 @@ d3.json(scope.jsonFile, function(error, data){
           root.children.forEach(scope.collapsePathogens);
         }
       }
-      if(pathcheck==1){
-        pathcheck=0;
-        scope.opacityFilters();
-      }else if(scope.colorTax == "pathogenic"){
+      if(scope.colorTax=="pathogenic"){
         pathcheck = 1;
+        scope.opacityFilters();
+      }else if(pathcheck==1||scope.colorTax!="pathogenic"){
+        pathcheck = 0;
         scope.opacityFilters();
       }else {
       update(root);
       }
+      console.log(pathcheck)
   }
 
   scope.collapsePathogens = function () {
@@ -1320,10 +1320,12 @@ scope.expandinate = function () {
           return bigscale(Math.log(d.percentage/rootready * 3000000));})
         .attr("opacity", function (d) {
             if (scope.colorTax == "pathogenic"){
-              if (d.class4=="pathogenic"){
-                return 1;
-              }else {
-                return 0.4;
+              if (scope.colorTax == "pathogenic"){
+                if (d.pathogenic){
+                  return 1;
+                }else {
+                  return 0.4;
+                }
               }
             }
             if (scope.opacsuppress) {
