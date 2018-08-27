@@ -25,11 +25,11 @@ angular.module('dashboardApp')
   scope.redFilter = false;
   scope.mapFilter = true;
   scope.opacsuppress = false;
-  scope.colorTax = "percentage";
+  scope.colorTax = "pathogenic";
   scope.searchText = "";
   scope.seperation = 3.30;
   scope.searchcollapse = false;
-  scope.showchart = false;
+  scope.showchart = true;
   scope.pinBar = true;
   scope.readsHidden = 10;
   scope.zoomEnabled = true;
@@ -52,7 +52,7 @@ angular.module('dashboardApp')
 	var padding = 20;
 	var d3 = $window.d3;
   var margin = {top: 10, right: 0, bottom: 200, left: 30};
-	var width = $window.innerWidth;
+	var width = $window.innerWidth - 20;
   var height = 10000;
   var sharednodecount = 0;
   var sharescale;
@@ -137,6 +137,7 @@ d3.json(scope.jsonFile, function(error, data){
       updatelable(root);
       root.children.forEach(collapseLevel);
       update(root);
+      scope.updateColors();
       resetZoom();
       adjustSVG(root);
 	}
@@ -167,7 +168,6 @@ d3.json(scope.jsonFile, function(error, data){
       }else {
       update(root);
       }
-      console.log(pathcheck)
   }
   scope.collapsePathogens = function () {
     scope.colorTax="pathogenic"
@@ -182,8 +182,36 @@ d3.json(scope.jsonFile, function(error, data){
     adjustSVG(root);
   }
   scope.opacityFilters = function () {
-    g.selectAll(".box1").remove()
-    g.selectAll(".box").remove()
+    g.selectAll(".box1").attr("opacity", function (d) {
+                if (scope.colorTax == "pathogenic"){
+                    if (d.pathogenic){
+                      return 1;
+                    }else {
+                      return 0.1;
+                  }
+                }else if (scope.opacsuppress) {
+                  if (d.class3) {
+                    return 1;
+                  }else {
+                    return 0.2;
+              }
+              }
+            });
+    g.selectAll(".box").attr("opacity", function (d) {
+                if (scope.colorTax == "pathogenic"){
+                    if (d.pathogenic){
+                      return 1;
+                    }else {
+                      return 0.1;
+                  }
+                }else if (scope.opacsuppress) {
+                  if (d.class3) {
+                    return 1;
+                  }else {
+                    return 0.2;
+              }
+              }
+            });
     update(root);
   }
 
@@ -286,7 +314,7 @@ scope.zoomToggle = function (){
 }
 function adjustZoom() {
   height = nodecounter * 15.79/3.3 * scope.seperation + 1000;
-  width = $window.innerWidth;
+  width = $window.innerWidth - 20;
   svg.attr("width", width);
   svg.attr("height", height);
   zoom = d3.zoom()
@@ -906,6 +934,18 @@ scope.expandinate = function () {
       var gridSize = 10
 	  nodeEnter.on("mouseover", function(d, i){
       if(scope.showchart && scope.colorTax =="pathogenic"){
+      //   var diseases = [];
+      //   var symptoms = {};
+      //   for (var q=0; q<d.data.disease.length; q++){
+      //     diseases[q] = d.data.disease[q];
+      //     console.log(d.data.symptom)
+      //     for (var x in d.data.symptom[d.data.doid[q]]){
+      //       console.log(x)
+      //       symptoms[q].append(x);
+      //     }
+      // }
+      // console.log(diseases)
+      // console.log(symptoms)
         var t = g.append("svg:g")
           .attr("class","tool-tip")
     	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
@@ -914,7 +954,7 @@ scope.expandinate = function () {
            if (d.data.disease==false) {
              return 175;
            }else {
-             return 100 + d.data.disease.length*10;
+             return 150 + d.data.disease.length*150;
            }
          })
          .attr("height",30)
@@ -927,7 +967,7 @@ scope.expandinate = function () {
            if(d.data.disease==false){
              return "Disease: unknown";
            }else {
-             return "Known disease: " + d.data.disease;
+             return d.data.disease + ":";
            }
          })
          .style('stroke-width', 0.5)
@@ -1222,7 +1262,7 @@ scope.expandinate = function () {
             });
 
     nodeUpdate.each(function(nodeData){
-        databox = [];
+        databox = []
         for (var q=0; q<nodeData.data.percentage.length; q++){
           databox[q]={}
           databox[q]["pathogenic"]=nodeData.data.pathogenic;
@@ -1252,23 +1292,7 @@ scope.expandinate = function () {
           .attr("fill", function(d){
             var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
             })]);
-            return scalio(d.percentage);})
-          .style("opacity", function (d) {
-            if (scope.colorTax == "pathogenic"){
-              if (d.pathogenic){
-                return 1;
-              }else {
-                return 0.4;
-              }
-            }
-              if (scope.opacsuppress) {
-                if (d.class3) {
-                  return 1;
-                }else {
-                  return 0.2;
-            }
-            }
-          });
+            return scalio(d.percentage);});
 
             var mapUpdate = map_.merge(mapEnter);
 
@@ -1301,25 +1325,7 @@ scope.expandinate = function () {
             }})
         .attr("stroke", "#000")
         .attr("fill", function(d){
-          return bigscale(Math.log(d.percentage/rootready * 3000000));})
-        .attr("opacity", function (d) {
-            if (scope.colorTax == "pathogenic"){
-              if (scope.colorTax == "pathogenic"){
-                if (d.pathogenic){
-                  return 1;
-                }else {
-                  return 0.4;
-                }
-              }
-            }
-            if (scope.opacsuppress) {
-              if (d.class3) {
-                return 1;
-              }else {
-                return 0.2;
-          }
-          }
-        });
+          return bigscale(Math.log(d.percentage/rootready * 3000000));});
 
           var mapUpdate1 = _map.merge(mapEnter1);
 
