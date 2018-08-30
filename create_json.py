@@ -5,6 +5,8 @@ import statsmodels.stats.multitest as smm
 import simplejson as json
 from scipy.stats import fisher_exact
 
+taxidList = []
+
 class Node:
 
     reads = 0
@@ -116,7 +118,7 @@ class Node:
                 n = self.children[i].search_children(id)
                 i += 1
         return n
-
+    
     def populate_with_taxonomy(self, df, reads_df, pvalue_df, ctrl_df):
         for j in reads_df.index:
             _i = j
@@ -227,7 +229,6 @@ if __name__=="__main__":
     a = json.dumps(complete_json,ignore_nan=True)
     f = open("json_output/complete_json.json", "w")
     f.write(a)
-
     
     # Blast to analysis matrix
     
