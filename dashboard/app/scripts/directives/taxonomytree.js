@@ -19,7 +19,7 @@ angular.module('dashboardApp')
 	scope.readsThreshold = 10;
 	scope.ratioThreshold = 1;
 	scope.taxFilter = "nofilter";
-	scope.fdrFilter = true;
+	// scope.fdrFilter = true;
   scope.collapsepatho = false;
   scope.allFilter = true;
   scope.redFilter = false;
@@ -1406,27 +1406,23 @@ scope.expandinate = function () {
     adjustZoom();
 	}
 
-  	function colorFill(d){
-        return colorScale((d.data.percentage[0]+d.data.percentage[1]+d.data.percentage[2]+d.data.percentage[3]+d.data.percentage[4]));
-	}
-
 	function runThresholdFilters(node){
     t = 0
-    if(!scope.allFilter){
-	  if(scope.fdrFilter){
-	    for (var q=0; q<node.percentage.length; q++){
-      if (!node.pass_fdr_test[q]) {
-        return 0;
-      }else if (node.uncorrected_pvalue[q] > scope.pvalueThreshold) {
-        return 0;
-      }else if (node.reads[q] <= scope.readsThreshold) {
-        return 0;
-      }else if (node.percentage[q]<= node.ctrl_percentage[q]*scope.ratioThreshold) {
-        return 0;
-      }
-    }
-  	  return 1;
-  }else {
+  //   if(!scope.allFilter){
+	//   if(scope.fdrFilter){
+	//     for (var q=0; q<node.percentage.length; q++){
+  //     if (!node.pass_fdr_test[q]) {
+  //       return 0;
+  //     }else if (node.uncorrected_pvalue[q] > scope.pvalueThreshold) {
+  //       return 0;
+  //     }else if (node.reads[q] <= scope.readsThreshold) {
+  //       return 0;
+  //     }else if (node.percentage[q]<= node.ctrl_percentage[q]*scope.ratioThreshold) {
+  //       return 0;
+  //     }
+  //   }
+  // 	  return 1;
+  // }else {
     for (var q=0; q<node.percentage.length; q++){
   if (node.uncorrected_pvalue[q] > scope.pvalueThreshold) {
     return 0;
@@ -1437,28 +1433,28 @@ scope.expandinate = function () {
   }
 }
   	  return 1;
-    }
-    }else {
-      if(scope.fdrFilter){
-        for (var q=0; q<node.percentage.length; q++){
-        if (node.pass_fdr_test[q] && node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold) {
-          t = 1;
-        }
-      }
-      if (t == 0){
-        return 0;
-      }
-      }else {
-      for (var q=0; q<node.percentage.length; q++){
-    if (node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold) {
-      t = 1;
-    }
-  }
-  if (t == 0){
-    return 0;
-  }
-  }
-  }
+    // }
+  //   }else {
+  //     if(scope.fdrFilter){
+  //       for (var q=0; q<node.percentage.length; q++){
+  //       if (node.pass_fdr_test[q] && node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold) {
+  //         t = 1;
+  //       }
+  //     }
+  //     if (t == 0){
+  //       return 0;
+  //     }
+  //     }else {
+  //     for (var q=0; q<node.percentage.length; q++){
+  //   if (node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold) {
+  //     t = 1;
+  //   }
+  // }
+  // if (t == 0){
+  //   return 0;
+  // }
+  // }
+  // }
 }
 
 	function getSignificantNodes(node){
