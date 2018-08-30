@@ -1,6 +1,5 @@
 taxdmp/*
 *~
-json_output/*
 .DS_Store
 dashboard/app/json_output/*
 dashboard/app/.DS_Store

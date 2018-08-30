@@ -1,57 +1,207 @@
-<h3></h3>
-<table>
+<h3 class="header"></h3>
+<div class="topbar" id="menu">
+<table class="table">
   <tr>
     <td>
-      Pvalue Threshold
+      <div class='inputgroup'>
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">P Value</span>
+        </div>
+        <input class="form-control" type="text" id="pvalue-threshold" ng-model="pvalueThreshold"/>
+        <!-- ng-change="runFilters()" -->
     </td>
     <td>
-      <input type="text" id="pvalue-threshold" ng-model="pvalueThreshold" />
+            <div class='inputgroup'>
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-sm">Reads</span>
+              </div>
+              <input class="form-control" type="text" id="reads-threshold" ng-model="readsThreshold"/>
+            </div>
+      </div>
+            </td>
+            <td>
+            <div class='inputgroup'>
+              <div class="input-group-prepend">
+                <span class="input-group-text" id="inputGroup-sizing-sm">Ratio</span>
+              </div>
+              <input class="form-control" type="text" id="ratio-threshold" ng-model="ratioThreshold"/>
+            </div>
+            </td>
+    <td>
+      <input class="btn" type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
     </td>
     <td>
-      <input type="checkbox" ng-model="fdrFilter" value="false" ng-change="updateFilters()">
-      &nbsp;False Discovery Rate
-    </td>
-  </tr>
-  <tr>
-    <td>
-      Reads Threshold
-    </td>
-    <td>
-      <input type="text" id="reads-threshold" ng-model="readsThreshold" />
-    </td>
-  </tr>
-  <tr>
-    <td>
-      Ratio Threshold
+      <div class='inputgroup'>
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="inputGroup-sizing-sm">Taxon</span>
+        </div>
+        <select ng-model="taxFilter" ng-change="updateFilters()">
+          <option value="superkingdom">Superkingdom</option>
+          <option value="phylum">Phylum</option>
+          <option value="genus">Genus</option>
+          <option value="species">Species</option>
+          <option value="nofilter">No Filter</option>
+        </select>
+      </div>
     </td>
     <td>
-      <input type="text" id="ratio-threshold" ng-model="ratioThreshold" />
+      &nbsp;
+      <input type="checkbox" ng-model="fdrFilter" value="True" ng-change="runTree()">
+      &nbsp;False Disovery Rate
     </td>
-  </tr>
-  <tr>
     <td>
-      <input type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
+      <form class="form-inline md-form form-sm">
+      <div class='inputgroup'>
+      <input type="checkbox" ng-model="zoomEnabled" value ='True' ng-change="zoomToggle()">
+      Zoom
+    </div>
+    </form>
+    </td>
+    <td>
+      <form class="form-inline md-form form-sm">
+      <div class='inputgroup'>
+      <input type="checkbox" ng-model="pinBar" value ='False'>
+      pin
+    </div>
+    </form>
     </td>
   </tr>
 </table>
-<form>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="genus" ng-change="updateFilters()">
-    Genus
-  </label><br/>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="species" ng-change="updateFilters()">
-    Species
-  </label><br/>
-  <label>
-    <input type="radio" ng-model="taxFilter" value="nofilter" ng-change="updateFilters()">
-    None
-  </label><br/>
- </form>
- <tr>
+<div id="stickyHeader">
+<table class="floatedTable">
+  <tr valign="top">
+    <td height="50">
+    <form class="form-inline md-form form-sm">
+    &nbsp;
+        <span class="glyphicon glyphicon-search">
+    <i class="fa fa-search" aria-hidden="true">
+    <input type='text' class="form-control form-control-sm ml-3 w-75" type="text" placeholder="Search" aria-label=""  id="searchText" ng-model="searchText" ng-change="runSearch()"/>
+    </i>
+</form>
+    </td>
+    <td>
+      <div class="checkbox">
+      <label>
+        &nbsp;
+        <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
+        Collapse search
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </label>
+    </div>
+    &nbsp;
+      <input type="checkbox" ng-model="showchart" value = "showchart" ng-change="togglebars()" />
+       Mouseover chart
+       &nbsp;
+    </td>
+    <td>
+      <div class="checkbox">
+      <input type="checkbox" ng-model="opacsuppress" value = "false" ng-change="opacityFilters()" />
+     Hide common nodes:&nbsp;
+         </div>
+       <input type="checkbox" ng-model="collapsepatho" value = "false" ng-change="collapsePathogens()" />
+        collapse to pathogens
+    </td>
+    <td>
+      <div class='inputgroup'>
+        <input class="form-control" type="text" id="reads-threshold" ng-model="readsHidden" ng-change='runOpac()' style="width:50px"/>
+        <div class="input-group-append">
+  <span class="input-group-text">reads</span>
+</div>
+      </div>
+    </td>
+    <td>
+      &nbsp;
+      <input class="btn" type="button" id="Expand-All" value="Recenter" ng-click="recenterZoom()" />
+    </td>
+    <td>
+      <div class="slidecontainer">
+          Seperation
+        <input type="range" min="2.1" max="10.5" class="slider" id="myRange" ng-model="seperation" ng-change="slideR()" step="0.05" width="80%">
+      </div>
+    </td>
+    </table>
+    <table class="floatedTable">
+      <tr>
+  <td> &nbsp;Color By:
+    <select ng-model="colorTax" ng-change="updateColors()">
+      <option value="pathogenic">Pathogenic</option>
+      <option value="rank">Taxonomic Rank</option>
+      <option value="shared"># of samples passed</option>
+      <option value="reads"># of Reads</option>
+      <option value="percentage">Sample %</option>
+    </select>
+      &nbsp;
+  </td>
+</tr>
+<td>
+  <svg id="svg3">
+</td>
+</table>
+<table class="floatedTable2">
+  <td>
+    <svg id="svg2" class="label">
+    </svg>
+  </td>
+  </tr>
+</table>
+</div>
+ <!-- <table>
+   <tr>
+     &nbsp;
+   </tr> -->
+   <!-- <tr> -->
+     <!-- <td>
+       &nbsp;
+       Search:
+     </td>
+     <td>
+       &nbsp;
+       <input type="text" id="searchText" ng-model="searchText" ng-change="runSearch()"/>
+     </td>
+     <td>
+       &nbsp;
+       <input type="checkbox" ng-model="searchcollapse" value = "false" ng-change="runSearch()" />
+       &nbsp; Expand found nodes, collapse not found
+     </td>
+     <td>
+       &nbsp;
+       <input type="button" id="Expand-All" value="Expand All" ng-click="expandinate()" />
+     </td> -->
+     <!-- <td>
+       <input type="button" id="searchbutton" value="Search" ng-click="runSearch()" />
+     </td> -->
+   <!-- </tr> -->
+ <!-- </table> -->
+ <!-- <table>
+   <tr>
    <td>
-     <input type="button" id="display-reads" value="Display Reads" ng-click="displayReads()" />
+      &nbsp;
+     <input type="checkbox" ng-model="freezoom" value = "false" />
+    Free zoom
    </td>
  </tr>
- <svg>
+ </table> -->
+</div>
+ <!-- <br>
+   <label> Difference between two samples: </label> -->
+ <!-- </br>
+ <tr>
+   <select name="select1">
+    <option value="sample1">Sample 1</option>
+    <option value="sample2">Sample 2</option>
+    <option value="sample3">Sample 3</option>
+    <option value="sample4">Sample 4</option>
+    <option value="sample5">Sample 5</option>
+  </select>
+  <select name="select2">
+   <option value="sample1">Sample 1</option>
+   <option value="sample2">Sample 2</option>
+   <option value="sample3">Sample 3</option>
+   <option value="sample4">Sample 4</option>
+   <option value="sample5">Sample 5</option>
+ </select>
+</br>
+  <input type="button" id="toggle-compare" ng-click=""> -->
+ </tr>
+ <svg id="svg1" class="canvas">
  </svg>
