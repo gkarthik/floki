@@ -31,6 +31,8 @@ imp.reload(taxon_tree)
 root = taxon_tree.Node(1, None, "Root", "no rank")
 root.populate_taxonomy(centrifuge_output, nodes_df, names_df, root)
 root.populate_annotations(annotations)
+
+# Dump computed object as pickle
 root.dump_object()
 
 # Batch samples
@@ -45,3 +47,16 @@ root.populate_reads_at_taxon()
 
 root.compute_pvalues()
 d = root.to_dict()
+_str = json.dumps(d)
+with open("./dashboard/app/json_output/centrifuge_2018.08.06.json", "w") as f:
+    f.write(_str)
+
+f.close()
+
+def get_type(n):
+    print(n["tax_id"], n["taxon_name"])
+    for i in n.keys():
+        if type(n[i]) == np.int64:
+            print(i)
+    for i in n["children"]:
+        get_type(i)

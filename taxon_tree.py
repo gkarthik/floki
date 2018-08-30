@@ -29,7 +29,7 @@ class Node:
         self.unique_reads = []
         self.file = []
         self.pvalue = []
-        self.odssratio = []
+        self.oddsratio = []
         self.uncorrected_pvalue = []
 
         # Ontology Annotations
@@ -111,20 +111,19 @@ class Node:
     def init_new_sample(self, name):
         if name == None:
             name = "Sample " + str(len(self.file) + 1)
-        self.reads.append(None)
-        self.percentage.append(None)
-        self.unique_reads.append(None)
+        self.reads.append(0)
+        self.percentage.append(0)
+        self.unique_reads.append(0)
         self.file.append(name)
-        self.pvalue.append(None)
-        self.uncorrected_pvalue.append(None)
+        self.pvalue.append(0)
+        self.uncorrected_pvalue.append(0)
         for i in self.children:
             i.init_new_sample(name)
 
     def get_total_reads(self):
         _ = [0] * len(self.reads)
         for i in range(len(self.reads)):
-            if self.reads[i] != None:
-                _[i] += self.reads[i]
+            _[i] += self.reads[i]
         for i in self.children:
             for _k, k in enumerate(i.get_total_reads()):
                 _[_k] += k
@@ -144,11 +143,7 @@ class Node:
             n = self.get_node(_["taxID"])
             if n == None:
                 continue
-            if n.reads[-1] == None:
-                n.reads[-1] = 0
             n.reads[-1] += _["numReads"]
-            if n.unique_reads[-1] == None:
-                n.unique_reads[-1] = 0
             n.unique_reads[-1] += _["numUniqueReads"]
         if self.tax_id == 1:
             self.populate_percentage(self.get_total_reads())
@@ -176,8 +171,6 @@ class Node:
             n = self.get_node(_["taxID"])
             if n == None:
                 continue
-            if n.ctrl_reads == None:
-                n.ctrl_reads = 0
             n.ctrl_reads += _["numReads"]
         if self.tax_id == 1:
             total = self.get_total_ctrl_reads()
@@ -227,37 +220,37 @@ class Node:
             oddsratio[_i] = _[0]
             pval[_i] = _[1]
         self.pvalue = pval
-        self.odssratio = oddsratio
+        self.oddsratio = oddsratio
         for i in self.children:
             i.compute_pvalues()
 
     def to_dict(self):
         d = {
             # Taxonomy
-        "tax_id": self.tax_id,
+            "tax_id": np.asscalar(np.int64(self.tax_id)),
             "taxon_name": self.taxon_name,
-            "parent": self.parent.to_dict() if self.parent != None else None,
+            "parent": np.asscalar(np.int64(self.parent.tax_id)) if self.parent != None else None,
             "depth": self.depth,
             "rank": self.rank,
             # Ctrl
-        "ctrl_reads": self.ctrl_reads,
-            "ctrl_percentage": self.ctrl_percentage,
+            "ctrl_reads": np.asscalar(np.int64(self.ctrl_reads)),
+            "ctrl_percentage": np.asscalar(np.int64(self.ctrl_percentage)),
             # Sample
-        "reads": self.reads,
-            "taxon_reads": self.taxon_reads,
-            "percentage": self.percentage,
-            "unique_reads": self.unique_reads,
+            "reads": [np.asscalar(np.int64(i)) for i in self.reads],
+            "taxon_reads": [np.asscalar(np.int64(i)) for i in self.taxon_reads],
+            "percentage": [np.asscalar(np.int64(i)) for i in self.percentage],
+            "unique_reads": [np.asscalar(np.int64(i)) for i in self.unique_reads],
             "file": self.file,
-            "pvalue": self.pvalue,
-            "oddsratio": self.oddsratio,
-            "uncorrected_pvalue": self.pvalue, # For now no multiple hypothesis testing. To add.
+            "pvalue": [np.asscalar(np.int64(i)) for i in self.pvalue],
+            "oddsratio": [np.asscalar(np.int64(i)) if not np.isnan(i) and i != np.float('Inf') else -1 for i in self.oddsratio],
+            "uncorrected_pvalue": [np.asscalar(np.int64(i)) for i in self.pvalue], # For now no multiple hypothesis testing. To add.
             # Ontology Annotation
-        "disease": self.disease,
+            "disease": self.disease,
             "disease_label": self.disease_label,
             "pathogenic": self.pathogenic,
             "symptom": self.symptom,
             "symptom_label": self.symptom_label,
-            "genomoe_size": self.genome_size,
+            "genomoe_size": np.asscalar(np.int64(self.genome_size)),
             "children": [i.to_dict() for i in self.children]
         }
         return d
