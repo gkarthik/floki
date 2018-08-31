@@ -15,9 +15,9 @@ angular.module('dashboardApp')
 	jsonFile: "@"
       },
       link: function postLink(scope, element, attrs) {
-	scope.pvalueThreshold = 0.05,
+	scope.pvalueThreshold = 0,
 	scope.readsThreshold = 10;
-	scope.ratioThreshold = 1;
+	scope.ratioThreshold = 0;
 	scope.taxFilter = "nofilter";
 	// scope.fdrFilter = true;
   scope.collapsepatho = false;
@@ -25,7 +25,7 @@ angular.module('dashboardApp')
   scope.redFilter = false;
   scope.mapFilter = true;
   scope.opacsuppress = false;
-  scope.colorTax = "pathogenic";
+  scope.colorTax = "taxon_reads";
   scope.searchText = "";
   scope.seperation = 3.30;
   scope.searchcollapse = false;
@@ -117,18 +117,11 @@ function stickyBar() {
     }
   }
   scope.runTree = function(){
-    if (scope.mapFilter){
     tree = d3.cluster()
       tree.nodeSize([scope.seperation,(width/70)])
       tree.separation(function separation(a, b) {
         return a.parent == b.parent ? 5: 5;
     });
-    }else {
-    tree = d3.tree()
-    tree.nodeSize([scope.seperation,(width/70)])
-    tree.separation(function separation(a, b) {
-      return a.parent == b.parent ? 5: 5;
-    })}
 d3.json(scope.jsonFile, function(error, data){
 	scope.updateFilters = function(){
       clearAll(root);
@@ -149,7 +142,7 @@ d3.json(scope.jsonFile, function(error, data){
         label1.attr("height", 70);
       }
     }else {
-      label1.attr("height", 70);
+        label1.attr("height", 70);
     }
       makescales(root);
       updatelable(root);
@@ -160,9 +153,11 @@ d3.json(scope.jsonFile, function(error, data){
         }
       }
       if(scope.colorTax=="pathogenic"){
+        update(root);
         pathcheck = 1;
         scope.opacityFilters();
       }else if(pathcheck==1||scope.colorTax!="pathogenic"){
+        update(root);
         pathcheck = 0;
         scope.opacityFilters();
       }else {
@@ -172,12 +167,12 @@ d3.json(scope.jsonFile, function(error, data){
   scope.collapsePathogens = function () {
     scope.colorTax="pathogenic"
     expandAll(root);
-    scope.opacityFilters();
     if(scope.collapsepatho){
       searchPatho(root);
       collapsepathends(root);
     }
     update(root);
+    scope.opacityFilters();
     resetZoom();
     adjustSVG(root);
   }
@@ -212,13 +207,13 @@ d3.json(scope.jsonFile, function(error, data){
               }
               }
             });
-    update(root);
   }
 
   scope.runOpac = function(){
     clearTimeout(typingTimer);
     typingTimer = setTimeout(function() {
-      scope.opacityFilters();
+      update(root);
+      scope.updateColors();
     }, doneTypingInterval);
   }
 
@@ -251,7 +246,7 @@ d3.json(scope.jsonFile, function(error, data){
 }
   function createKeys(d){
     for (var key in d.data){
-      if (key != 'children'){
+      if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
         if (typeof d.data[key][0] == 'string'){
         keys[key]=[]
         }
@@ -260,18 +255,18 @@ d3.json(scope.jsonFile, function(error, data){
       }
   function createminmax(d) {
     for (var key in d.data) {
-        if (key != "children"){
+        if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
           if (typeof d.data[key][0] != 'string'){
             mins[key]=d3.min(d.data[key]);
             maxs[key]=d3.max(d.data[key]);
     }
     }
     }
-    d.children.forEach(createDomains);
+    d.data.children.forEach(createDomains);
   }
   function createDomains(d){
     for (var key in d.data){
-        if (key != "children"){
+        if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
       if (typeof d.data[key][0] != 'string'){
         if (mins[key]>d3.min(d.data[key])) {
             mins[key] = d3.min(d.data[key]);
@@ -466,7 +461,7 @@ function searchTree(d) {
         d.children.forEach(searchTree);
     else if (d._children)
         d._children.forEach(searchTree);
-    var searchFieldValue = d.data.name[0];
+    var searchFieldValue = d.data.taxon_name;
     if (searchFieldValue && (searchFieldValue.toUpperCase()).match(scope.searchText.toUpperCase())) {
             var ancestors = [];
             var parent = d;
@@ -796,6 +791,9 @@ scope.expandinate = function () {
   }
 
 	function update(source){
+    if(root.data.taxon_reads.length==1){
+      scope.mapFilter = false;
+    }
 	  var treedata = tree(root);
     nodes = treedata.descendants();
     var links = treedata.descendants().slice(1);
@@ -944,8 +942,6 @@ scope.expandinate = function () {
       //       symptoms[q].append(x);
       //     }
       // }
-      // console.log(diseases)
-      // console.log(symptoms)
         var t = g.append("svg:g")
           .attr("class","tool-tip")
     	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
@@ -984,15 +980,15 @@ scope.expandinate = function () {
            }
          });
       }else if(scope.showchart && scope.colorTax != 'shared'){
-      var dataset = [];
-      var colors = d3.schemeSet1;
-      for (var q=0; q<d.data.percentage.length; q++){
-        dataset[q]={}
-        for (var x in d.data){
-          dataset[q][x]=d.data[x][q];
+        // if(scope.colorTax=='percentage'){
+          var dataset = [];
+          var colors = d3.schemeSet1;
+          for (var q=0; q<d.data.percentage.length; q++){
+            dataset[q]={}
+            dataset[q]['taxon_reads']=d.data[taxon_reads][q];
+            dataset[q]["color"] = colors[q];
         }
-        dataset[q]["color"] = colors[q];
-    }
+    // }
       var barWidth = 50;
       var x = d3.scaleBand()
           .range([0, 250])
@@ -1115,7 +1111,7 @@ scope.expandinate = function () {
           "translate(" + (d.data.file.length*70)/2 + " , 25)")
     .style("text-anchor", "middle")
     .text(function () {
-      return d.data.name[0];
+      return d.data.taxon_name;
     })
     .attr("font-family","sans-serif");
 
@@ -1124,7 +1120,7 @@ scope.expandinate = function () {
           "translate(10 ,12 )")
     .style("text-anchor", "left")
     .text(function () {
-      return "rank: "+ d.data.rank[0];
+      return "rank: "+ d.data.rank;
     })
     .attr("font-family","sans-serif");
 
@@ -1143,9 +1139,9 @@ scope.expandinate = function () {
     nodeEnter.append("text")
     .attr("class", "nodelabels")
     .attr("dy", function (d) {
-      if(d.data.rank[0]=="superkingdom" && d.children){
+      if(d.rank=="superkingdom" && d.children){
         return 12;
-      }else if (d.data.rank[0]=="phylum" && d.children && scope.colorTax == 'rank'){
+      }else if (d.rank=="phylum" && d.children && scope.colorTax == 'rank'){
         return -3;
       }
       else{
@@ -1153,16 +1149,16 @@ scope.expandinate = function () {
       }
     })
       .attr("x", function(d) { if (scope.mapFilter && !d.children) {
-        return databox.length*gridSize*2 + gridSize*3;
+        return databox.length*gridSize*2 + gridSize*3 ;
       }else {
-        return d.children ? -8 : 8;
+        return databox.length * gridSize + gridSize * 3 ;
       }})
       .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
       .text(function(d) {
-          if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum" && scope.colorTax == 'rank')){
-      return d.data.name[0];
+          if(d.data.rank=="superkingdom"||(d.data.rank=="phylum" && scope.colorTax == 'rank')){
+      return d.data.taxon_name;
           }
-          return d.children ? "" : d.data.name[0];
+          return d.children ? "" : d.data.taxon_name;
       })
       .style('stroke-width', 0.5)
       .style("opacity", 0)
@@ -1235,7 +1231,7 @@ scope.expandinate = function () {
           }else if (scope.colorTax=="shared") {
                 nodesharecount = 0
                 for (var q=0; q<d.data.percentage.length; q++){
-              if (d.data.reads[q] >= scope.readsThreshold) {
+              if (d.data.taxon_reads[q] >= scope.readsThreshold) {
                 nodesharecount = nodesharecount + 1
               }
             }
@@ -1268,83 +1264,84 @@ scope.expandinate = function () {
           databox[q]["pathogenic"]=nodeData.data.pathogenic;
           databox[q]["children"]= (nodeData.children) ? nodeData.children : [];
         databox[q]["percentage"] = nodeData.data.percentage[q];
-        databox[q]["reads"] = nodeData.data.reads[q];
+        databox[q]["taxon_reads"] = nodeData.data.taxon_reads[q];
         databox[q]["class3"] = nodeData.class3;
       }
       var map_ = d3.select(this).selectAll(".box");
         var mapEnter = map_.data(databox)
        .enter().append("svg:g")
+       .append("rect")
+      .attr("x", function(d) {return 20+(gridSize * databox.length);})
        .attr("transform", function(d, i){
-       return  "translate(10 , "+(-5)+")";
-     }).append("rect")
-         .attr("transform", function(d, i){
-           return  "translate(" + i * gridSize + ", 0)";
-       })
+         return  "translate(" +i * gridSize + ", "+(-5)+")";})
           .attr("class","box")
           .attr("height", gridSize)
           .attr("width", function (d, i) {
-            if(d.children.length == 0 && scope.mapFilter){
+            if(d.children.length == 0  && scope.mapFilter){
                 return  gridSize;
               }else{
                 return 0;
               }})
           .attr("stroke", "#000")
           .attr("fill", function(d){
-            var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+            var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
             })]);
             return scalio(d.percentage);});
 
             var mapUpdate = map_.merge(mapEnter);
 
             mapUpdate.attr("width", function(d){
-              if(d.children.length == 0 && scope.mapFilter){
-                  return  gridSize;
+              if(d.children.length == 0  && scope.mapFilter){
+                  return gridSize;
                 }else{
                   return 0;
                 }
-            })  .attr("height", gridSize)
+            }).attr("height", gridSize)
             .attr("fill", function(d){
-              var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+              var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
               })]);
               return scalio(d.percentage);})
 
       var _map = d3.select(this).selectAll(".box1");
         var mapEnter1 = _map.data(databox)
        .enter().append("svg:g")
+       .attr("transform", function(d, i){
+       return  "translate(10 , "+(-5)+")";
+     })
      .append("rect")
-      .attr("x", function(d) {return 20+(gridSize * databox.length);})
-     .attr("transform", function(d, i){
-       return  "translate(" +i * gridSize + ", "+(-5)+")";})
+         .attr("transform", function(d, i){
+           return  "translate(" + i * gridSize + ", 0)";
+       })
         .attr("class","box1")
         .attr("height", gridSize)
         .attr("width", function (d, i) {
-          if(d.children.length == 0 && scope.mapFilter){
+          if(d.children.length == 0){
               return  gridSize;
             }else{
               return 0;
             }})
         .attr("stroke", "#000")
         .attr("fill", function(d){
-          return bigscale(Math.log(d.percentage/rootready * 3000000));});
+          return bigscale(Math.log(d.taxon_reads/rootready * 3000000));});
 
           var mapUpdate1 = _map.merge(mapEnter1);
 
           mapUpdate1.attr("width", function(d){
-            if(d.children.length == 0 && scope.mapFilter){
+            if(d.children.length == 0){
                 return gridSize;
               }else{
                 return 0;
               }
           }).attr("height", gridSize)
           .attr("fill", function(d){
-            return bigscale(Math.log(d.percentage/rootready * 3000000));})
+            return bigscale(Math.log(d.taxon_reads/rootready * 3000000));})
           });
 
   	  nodeUpdate.select("text")
       .attr("dy", function (d) {
-        if(d.data.rank[0]=="superkingdom" && d.children){
+        if(d.data.rank=="superkingdom" && d.children){
           return 12;
-        }else if (d.data.rank[0]=="phylum" && d.children && scope.colorTax == 'rank') {
+        }else if (d.data.rank=="phylum" && d.children && scope.colorTax == 'rank') {
           return -3;
         }else{
           return 3;
@@ -1353,14 +1350,14 @@ scope.expandinate = function () {
       .attr("x", function(d) { if (scope.mapFilter && !d.children) {
         return databox.length*gridSize*2 + gridSize*3;
       }else {
-        return d.children ? -8 : 8;
+        return databox.length * gridSize + gridSize * 3 ;
       }})
       .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
       .text(function(d) {
-          if(d.data.rank[0]=="superkingdom"||(d.data.rank[0]=="phylum" && scope.colorTax == 'rank')){
-      return d.data.name[0];
+          if(d.data.rank=="superkingdom"||(d.data.rank=="phylum" && scope.colorTax == 'rank')){
+      return d.data.taxon_name;
           }
-          return d.children ? "" : d.data.name[0];
+          return d.children ? "" : d.data.taxon_name;
       })
       .style('stroke-width', 0.5)
       .style('stroke', function (d) {
@@ -1408,53 +1405,16 @@ scope.expandinate = function () {
 
 	function runThresholdFilters(node){
     t = 0
-  //   if(!scope.allFilter){
-	//   if(scope.fdrFilter){
-	//     for (var q=0; q<node.percentage.length; q++){
-  //     if (!node.pass_fdr_test[q]) {
-  //       return 0;
-  //     }else if (node.uncorrected_pvalue[q] > scope.pvalueThreshold) {
-  //       return 0;
-  //     }else if (node.reads[q] <= scope.readsThreshold) {
-  //       return 0;
-  //     }else if (node.percentage[q]<= node.ctrl_percentage[q]*scope.ratioThreshold) {
-  //       return 0;
-  //     }
-  //   }
-  // 	  return 1;
-  // }else {
     for (var q=0; q<node.percentage.length; q++){
-  if (node.uncorrected_pvalue[q] > scope.pvalueThreshold) {
-    return 0;
-  } else if (node.reads[q] <= scope.readsThreshold) {
-    return 0;
-  }else if (node.percentage[q]<= node.ctrl_percentage[q]*scope.ratioThreshold) {
-    return 0;
+  if (node.taxon_reads[q] >=scope.readsThreshold){
+    // node.uncorrected_pvalue[q] < scope.pvalueThreshold &&
+    // node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold
+    t = 1;
   }
 }
-  	  return 1;
-    // }
-  //   }else {
-  //     if(scope.fdrFilter){
-  //       for (var q=0; q<node.percentage.length; q++){
-  //       if (node.pass_fdr_test[q] && node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold) {
-  //         t = 1;
-  //       }
-  //     }
-  //     if (t == 0){
-  //       return 0;
-  //     }
-  //     }else {
-  //     for (var q=0; q<node.percentage.length; q++){
-  //   if (node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold) {
-  //     t = 1;
-  //   }
-  // }
-  // if (t == 0){
-  //   return 0;
-  // }
-  // }
-  // }
+if (t == 0){
+  return 0;
+}
 }
 
 	function getSignificantNodes(node){
@@ -1484,7 +1444,14 @@ scope.expandinate = function () {
     } else {
       expandAll(d);
     }
-    update(d);
+    if(scope.colorTax=='pathogenic'){
+      update(d);
+      pathcheck = 1;
+      scope.updateColors();
+      // scope.opacityFilters();
+    }else {
+      update(d);
+    }
     if(d.depth<6){
       resetZoom();
       adjustSVG(root);
@@ -1496,7 +1463,7 @@ scope.expandinate = function () {
         d.children = d._children;
         d._children = null;
       }
-      if (d.children && d.data.rank[0] == scope.taxFilter) {
+      if (d.children && d.data.rank == scope.taxFilter) {
           d.class2 = "collapsed";
           d._children = d.children;
           d.children = null;
@@ -1513,7 +1480,6 @@ scope.expandinate = function () {
     d.children = null;
   }
   }
-
   getSignificantNodes(data);
   root = d3.hierarchy(data);
   root.x0 = 30;
@@ -1525,8 +1491,9 @@ scope.expandinate = function () {
   root.children.forEach(collapseLevel);
   rootready = 0
   for (var q=0; q<root.data.reads.length; q++){
-      rootready = rootready + root.data.percentage[q];
+      rootready = rootready + root.data.taxon_reads[q];
   }
+  createKeys(root);
   update(root);
   updatelable(root);
   scope.updateColors();

@@ -35,7 +35,7 @@
         <div class="input-group-prepend">
           <span class="input-group-text" id="inputGroup-sizing-sm">Taxon</span>
         </div>
-        <select ng-model="taxFilter" ng-change="updateFilters()">
+        <select ng-model="taxFilter" ng-change="runTree()">
           <option value="superkingdom">Superkingdom</option>
           <option value="phylum">Phylum</option>
           <option value="genus">Genus</option>
@@ -95,7 +95,7 @@
     </td>
     <td>
       <div class="checkbox">
-      <input type="checkbox" ng-model="opacsuppress" value = "false" ng-change="opacityFilters()" />
+      <input type="checkbox" ng-model="opacsuppress" value = "false" ng-change="updateColors()" />
      Hide common nodes:&nbsp;
          </div>
        <input type="checkbox" ng-model="collapsepatho" value = "false" ng-change="collapsePathogens()" />
@@ -127,7 +127,7 @@
       <option value="pathogenic">Pathogenic</option>
       <option value="rank">Taxonomic Rank</option>
       <option value="shared"># of samples passed</option>
-      <option value="reads"># of Reads</option>
+      <option value="taxon_reads"># of Reads</option>
       <option value="percentage">Sample %</option>
     </select>
       &nbsp;
