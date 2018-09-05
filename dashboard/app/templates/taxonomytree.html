@@ -28,6 +28,11 @@
             </div>
             </td>
     <td>
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="inputGroup-sizing-sm">
+          &nbsp;
+        </span>
+      </div>
       <input class="btn" type="button" id="update-filters" value="Update Filters" ng-click="runTree()" />
     </td>
     <td>
@@ -95,7 +100,7 @@
     </td>
     <td>
       <div class="checkbox">
-      <input type="checkbox" ng-model="opacsuppress" value = "false" ng-change="updateColors()" />
+      <input type="checkbox" ng-model="opacsuppress" value = "false" ng-change="hidecommon()" />
      Hide common nodes:&nbsp;
          </div>
        <input type="checkbox" ng-model="collapsepatho" value = "false" ng-change="collapsePathogens()" />

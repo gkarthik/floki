@@ -29,7 +29,7 @@ angular.module('dashboardApp')
   scope.searchText = "";
   scope.seperation = 3.30;
   scope.searchcollapse = false;
-  scope.showchart = true;
+  scope.showchart = false;
   scope.pinBar = true;
   scope.readsHidden = 10;
   scope.zoomEnabled = true;
@@ -95,7 +95,7 @@ function stickyBar() {
   g.attr("transform", d3.event.transform);
 }
 	var colorScale = d3.scaleSequential(d3.interpolateRdYlBu);
-  var bigscale = d3.scaleSequential(d3.interpolateReds).domain([0, 8]);
+  var bigscale;
   var tree;
   var keys = {};
   var mins = {};
@@ -113,7 +113,7 @@ function stickyBar() {
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
-    zoom.translateBy(svg, 30, (nodecounter * 15.79/3.3 * scope.seperation + 10));
+    zoom.translateBy(svg, 30, (nodecounter * 13/3.3 * scope.seperation));
     }
   }
   scope.runTree = function(){
@@ -127,13 +127,17 @@ d3.json(scope.jsonFile, function(error, data){
       clearAll(root);
       markOpac(root);
       makescales(root);
-      updatelable(root);
+      updatelabel(root);
       root.children.forEach(collapseLevel);
       update(root);
       scope.updateColors();
       resetZoom();
       adjustSVG(root);
 	}
+  scope.hidecommon=function () {
+    update(root);
+    scope.opacityFilters();
+  }
   scope.updateColors = function(){
     if(root.data[scope.colorTax]){
       if (typeof(root.data[scope.colorTax][0])=="string") {
@@ -145,7 +149,7 @@ d3.json(scope.jsonFile, function(error, data){
         label1.attr("height", 70);
     }
       makescales(root);
-      updatelable(root);
+      updatelabel(root);
       if(scope.colorTax == 'pathogenic'){
         searchPatho(root);
         if(scope.collapsepatho == true) {
@@ -228,7 +232,7 @@ d3.json(scope.jsonFile, function(error, data){
       .domain([0, root.data.reads.length])
     }
     if (typeof d.data[scope.colorTax] !== 'undefined') {
-      if (typeof d.data[scope.colorTax][0]== 'string') {
+      if (typeof d.data[scope.colorTax]== 'string') {
         striscale = d3.scaleOrdinal(d3.schemePaired)
         .domain(keys[scope.colorTax]);
       } else {
@@ -245,13 +249,14 @@ d3.json(scope.jsonFile, function(error, data){
     }
 }
   function createKeys(d){
-    for (var key in d.data){
-      if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
-        if (typeof d.data[key][0] == 'string'){
-        keys[key]=[]
-        }
-      }
-      }
+    keys['rank']=[]
+    keys['taxon_reads']=[]
+    keys['percentage']=[]
+      // if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
+      //   if (typeof d.data[key][0] == 'string'){
+      //   keys[key]=[]
+      //   }
+      // }
       }
   function createminmax(d) {
     for (var key in d.data) {
@@ -286,10 +291,16 @@ d3.json(scope.jsonFile, function(error, data){
           d.children.forEach(getkeyScales);
         }
         for (var key in keys){
-          for (var q=0; q<d.data[key].length; q++){
-          if (keys[key].includes(d.data[key][q])==false){
-            keys[key].push(d.data[key][q])
-          }
+          if (key == "rank") {
+            if (keys[key].includes(d.data[key])==false){
+              keys[key].push(d.data[key])
+            }
+          }else {
+            for (var q=0; q<d.data[key].length; q++){
+            if (keys[key].includes(d.data[key][q])==false){
+              keys[key].push(d.data[key][q])
+            }
+            }
           }
         }
       }
@@ -308,13 +319,13 @@ scope.zoomToggle = function (){
   adjustZoom();
 }
 function adjustZoom() {
-  height = nodecounter * 15.79/3.3 * scope.seperation + 1000;
+  height = nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter;
   width = $window.innerWidth - 20;
   svg.attr("width", width);
   svg.attr("height", height);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  15.79/3.3 * scope.seperation)]])
+      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  15/3.3 * scope.seperation + 7*nodecounter)]])
       .on("zoom", zoomed);
       if(scope.zoomEnabled){
         svg.call(zoom);
@@ -514,7 +525,7 @@ scope.expandinate = function () {
   adjustSVG(root);
 }
 
-  function updatelable(d) {
+  function updatelabel(d) {
     var num_rectangles = 100;
     if(typeof(b) !== 'undefined'){
       b.remove();
@@ -549,7 +560,7 @@ scope.expandinate = function () {
               .attr("id", "labeltext")
               .attr("text-anchor", "end")
               .text("Number of samples passing:");
-        }else if (typeof d.data[scope.colorTax][0]== 'string') {
+        }else if (typeof d.data[scope.colorTax]== 'string') {
           var band = d3.scaleBand()
               .domain(keys[scope.colorTax])
               .range([0, 350]);
@@ -562,8 +573,8 @@ scope.expandinate = function () {
               .attr("y", 0)
               .attr("height", 25)
               .attr("width", 350/keys[scope.colorTax].length - 8)
-              .style("fill", function(d, i ) {
-                return striscale(keys[scope.colorTax][d]); });
+              .style("fill", function(i) {
+                return striscale(keys[scope.colorTax][i]); });
             b.append("g")
               .attr("transform", "translate(20,35)")
               .call(d3.axisBottom(band)
@@ -891,7 +902,12 @@ scope.expandinate = function () {
           return 1;
         }else {
           return 0.2;
-    }
+    }}if (scope.colorTax=="pathogenic") {
+      if(d.data.pathogenic!=false){
+        return 1;
+      }else {
+        return 0.2;
+      }
     }
   })
     .style("fill", function(d) {
@@ -910,8 +926,8 @@ scope.expandinate = function () {
           }
             return sharescale(nodesharecount);
           }
-            else if (typeof d.data[scope.colorTax][0]== 'string') {
-              return striscale(String(d.data[scope.colorTax][0]));
+            else if (typeof d.data[scope.colorTax]== 'string') {
+              return striscale(d.data[scope.colorTax]);
             } else {
               if (maxs[scope.colorTax]>=10000){
                 nodedata=0
@@ -936,9 +952,7 @@ scope.expandinate = function () {
       //   var symptoms = {};
       //   for (var q=0; q<d.data.disease.length; q++){
       //     diseases[q] = d.data.disease[q];
-      //     console.log(d.data.symptom)
       //     for (var x in d.data.symptom[d.data.doid[q]]){
-      //       console.log(x)
       //       symptoms[q].append(x);
       //     }
       // }
@@ -975,20 +989,47 @@ scope.expandinate = function () {
                    return '#CDE7F0';
                  }
                }
-           if (d.class1 === "found") {
-               return "#3884ff";
-           }
+         });
+      }else if (scope.showchart && scope.mapFilter==false) {
+        dataset={}
+        dataset['name']=d.data.namelabel;
+        dataset['taxon_reads']=d.data.taxon_reads;
+        dataset['p-value']=d.data.uncorrected_pvalue;
+        dataset['rank']=d.data.rank;
+        dataset['percentage']=(d.data.taxon_reads/root.data.taxon_reads);
+        var t = g.append("svg:g")
+          .attr("class","tool-tip")
+          .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
+         t.append("rect")
+
+         .attr("width", 300)
+         .attr("height", 200)
+         .attr("stroke", "#000")
+         .attr("fill", "#FFF");
+         var textbar = t.selectAll("textbar")
+           .data(dataset)
+           .enter().append("svg:g")
+           .attr("transform", function(d, i){
+             return translate(20,20*i);
          });
       }else if(scope.showchart && scope.colorTax != 'shared'){
-        // if(scope.colorTax=='percentage'){
-          var dataset = [];
+        if(d.data.percentage.length==1){
+          dataset[0]={};
+          for (var x in d.data){
+            dataset[0][x]=d.data[x]
+          }
           var colors = d3.schemeSet1;
-          for (var q=0; q<d.data.percentage.length; q++){
-            dataset[q]={}
-            dataset[q]['taxon_reads']=d.data[taxon_reads][q];
-            dataset[q]["color"] = colors[q];
+        }else {
+          var dataset = [];
+        var colors = d3.schemeSet1;
+        for (var q=0; q<d.data.percentage.length; q++){
+          dataset[q]={}
+          for (var x in d.data){
+            dataset[q][x]=d.data[x][q];
+          }
+          dataset[q]["color"] = colors[q];
         }
-    // }
+    }
       var barWidth = 50;
       var x = d3.scaleBand()
           .range([0, 250])
@@ -996,11 +1037,11 @@ scope.expandinate = function () {
       var y = d3.scaleLinear()
      				.domain([0, d3.max(d3.values(dataset), function(d){
               if(scope.colorTax == 'percentage'){
-                return d.percentage;
+                return d.taxon_reads/root.taxon_reads;
               }else if (typeof d[scope.colorTax] != 'string'){
                 return d[scope.colorTax];
               }else {
-               return d.percentage;
+               return d.taxon_reads/root.taxon_reads;
               }})])
      				.range([0, 140]);
       var t = g.append("svg:g")
@@ -1218,7 +1259,12 @@ scope.expandinate = function () {
             return 1;
           }else {
             return 0.2;
-      }
+      }}if (scope.colorTax=="pathogenic") {
+        if(d.data.pathogenic!=false){
+          return 1;
+        }else {
+          return 0.2;
+        }
       }
     })
       .style("fill", function(d) {
@@ -1237,8 +1283,8 @@ scope.expandinate = function () {
             }
               return sharescale(nodesharecount);
             }
-              else if (typeof d.data[scope.colorTax][0]== 'string') {
-                return striscale(String(d.data[scope.colorTax][0]));
+            else if (typeof d.data[scope.colorTax]== 'string') {
+              return striscale(d.data[scope.colorTax]);
               }
               else {
                 if (maxs[scope.colorTax]>=10000){
@@ -1284,7 +1330,7 @@ scope.expandinate = function () {
               }})
           .attr("stroke", "#000")
           .attr("fill", function(d){
-            var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
+            var scalio = d3.scaleSequential(d3.interpolateReds).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
             })]);
             return scalio(d.percentage);});
 
@@ -1298,7 +1344,7 @@ scope.expandinate = function () {
                 }
             }).attr("height", gridSize)
             .attr("fill", function(d){
-              var scalio = d3.scaleSequential(d3.interpolateBlues).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
+              var scalio = d3.scaleSequential(d3.interpolateReds).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
               })]);
               return scalio(d.percentage);})
 
@@ -1322,7 +1368,7 @@ scope.expandinate = function () {
             }})
         .attr("stroke", "#000")
         .attr("fill", function(d){
-          return bigscale(Math.log(d.taxon_reads/rootready * 3000000));});
+          return bigscale(Math.log(d.taxon_reads));});
 
           var mapUpdate1 = _map.merge(mapEnter1);
 
@@ -1334,7 +1380,7 @@ scope.expandinate = function () {
               }
           }).attr("height", gridSize)
           .attr("fill", function(d){
-            return bigscale(Math.log(d.taxon_reads/rootready * 3000000));})
+            return bigscale(Math.log(d.taxon_reads));})
           });
 
   	  nodeUpdate.select("text")
@@ -1406,11 +1452,17 @@ scope.expandinate = function () {
 	function runThresholdFilters(node){
     t = 0
     for (var q=0; q<node.percentage.length; q++){
-  if (node.taxon_reads[q] >=scope.readsThreshold){
-    // node.uncorrected_pvalue[q] < scope.pvalueThreshold &&
-    // node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold
-    t = 1;
+  if(scope.mapFilter==true){
+    if (node.taxon_reads[q] >=scope.readsThreshold){
+      t = 1;
+    }
+  }else {
+    if (node.taxon_reads[q] >=scope.readsThreshold && node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.percentage >= node.ctrl_percentage[q]*scope.ratioThreshold){
+      t = 1;
+    }
   }
+    //  &&
+    // node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold
 }
 if (t == 0){
   return 0;
@@ -1483,19 +1535,22 @@ if (t == 0){
   getSignificantNodes(data);
   root = d3.hierarchy(data);
   root.x0 = 30;
-  root.y0 = nodecounter * 15.79/3.3 * scope.seperation;
+  root.y0 = nodecounter * 13/3.3 * scope.seperation + 5*nodecounter;
   createKeys(root);
   getkeyScales(root);
   createminmax(root);
   makescales(root);
+  updatelabel(root);
   root.children.forEach(collapseLevel);
   rootready = 0
+  // for (var q=0; q<root.data.taxon_reads.length; q++){
+  //   rootready[q] = root.data.taxon_reads;
+  // }
   for (var q=0; q<root.data.reads.length; q++){
       rootready = rootready + root.data.taxon_reads[q];
   }
-  createKeys(root);
+ bigscale = d3.scaleSequential(d3.interpolateBlues).domain([0, Math.log(rootready)]);
   update(root);
-  updatelable(root);
   scope.updateColors();
   adjustSVG(root);
   resetZoom(root);
