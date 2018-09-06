@@ -260,7 +260,10 @@ d3.json(scope.jsonFile, function(error, data){
       }
   function createminmax(d) {
     for (var key in d.data) {
-        if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
+      if(key=="percentage"){
+        mins[key]=d3.min(d.data.taxon_reads/rootready);
+        maxs[key]=1;
+      }else if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
           if (typeof d.data[key][0] != 'string'){
             mins[key]=d3.min(d.data[key]);
             maxs[key]=d3.max(d.data[key]);
@@ -271,7 +274,14 @@ d3.json(scope.jsonFile, function(error, data){
   }
   function createDomains(d){
     for (var key in d.data){
-        if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
+      if(key=="percentage"){
+        if(mins[key]>d3.min(d.data.taxon_reads/rootready)){
+          mins[key]=d3.min(d.data.taxon_reads/rootready);
+        }
+        if (maxs[key]<d3.max(d.data.taxon_reads/rootready)) {
+          maxs[key]=d3.max(d.data.taxon_reads/rootready);
+        }
+      }else if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
       if (typeof d.data[key][0] != 'string'){
         if (mins[key]>d3.min(d.data[key])) {
             mins[key] = d3.min(d.data[key]);
@@ -295,6 +305,8 @@ d3.json(scope.jsonFile, function(error, data){
             if (keys[key].includes(d.data[key])==false){
               keys[key].push(d.data[key])
             }
+          }else if(key == "percent"){
+            keys[key].push(d.data[taxon_reads][q]/rootready)
           }else {
             for (var q=0; q<d.data[key].length; q++){
             if (keys[key].includes(d.data[key][q])==false){
@@ -674,6 +686,7 @@ scope.expandinate = function () {
     .attr("text-anchor", "end")
     .text("Average "+scope.colorTax +":");
             }else if (scope.colorTax == 'percentage'){
+              console.log(maxs['percentage'])
               var band = d3.scaleLog()
                 .domain([1, maxs[scope.colorTax]])
                 .range([0, 350]);
@@ -996,7 +1009,7 @@ scope.expandinate = function () {
         dataset['taxon_reads']=d.data.taxon_reads;
         dataset['p-value']=d.data.uncorrected_pvalue;
         dataset['rank']=d.data.rank;
-        dataset['percentage']=(d.data.taxon_reads/root.data.taxon_reads);
+        dataset['percentage']=(d.data.taxon_reads/rootready);
         var t = g.append("svg:g")
           .attr("class","tool-tip")
           .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
@@ -1286,7 +1299,14 @@ scope.expandinate = function () {
             else if (typeof d.data[scope.colorTax]== 'string') {
               return striscale(d.data[scope.colorTax]);
               }
-              else {
+              else if(scope.colorTax=='percentage'){
+                nodedata=0
+                console.log(d.data.taxon_reads.length)
+                for (var q=0; q<d.data.taxon_reads.length; q++){
+                    nodedata = nodedata + d.data.taxon_reads[q]/rootready;
+                }
+                return smolscale(Math.log(100000*nodedata/(d.data.taxon_reads.length)));
+              } {
                 if (maxs[scope.colorTax]>=10000){
                   nodedata=0
                   for (var q=0; q<d.data[scope.colorTax].length; q++){
@@ -1549,6 +1569,7 @@ if (t == 0){
   for (var q=0; q<root.data.reads.length; q++){
       rootready = rootready + root.data.taxon_reads[q];
   }
+console.log(rootready)
  bigscale = d3.scaleSequential(d3.interpolateBlues).domain([0, Math.log(rootready)]);
   update(root);
   scope.updateColors();
