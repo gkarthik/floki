@@ -130,7 +130,7 @@ class Node:
         return _
 
     def populate_percentage(self, total_count):
-        for _i, i in enumerate(self.reads):
+        for _i, i in enumerate(self.taxon_reads):
             if i != None:
                 self.percentage[_i] = i/total_count[_i]
         for i in self.children:
@@ -145,8 +145,6 @@ class Node:
                 continue
             n.reads[-1] += _["numReads"]
             n.unique_reads[-1] += _["numUniqueReads"]
-        if self.tax_id == 1:
-            self.populate_percentage(self.get_total_reads())
 
     def print_read_metrics(self):
         for i in range(len(self.reads)):

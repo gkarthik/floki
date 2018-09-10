@@ -51,6 +51,8 @@ root.populate_ctr_reads(centrifuge_output2)
 # Compute reads at every taxon level
 root.populate_reads_at_taxon()
 
+root.populate_percentage(root.get_total_reads())
+
 root.compute_pvalues()
 d = root.to_dict()
 _str = json.dumps(d)
