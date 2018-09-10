@@ -1581,11 +1581,10 @@ if (t == 0){
     }else {
       update(d);
     }
-    if(d.depth<6){
       resetZoom();
       adjustSVG(root);
     }
-    }
+    
   function collapseLevel(d) {
       d.class2 = "null"
       if (d._children){
