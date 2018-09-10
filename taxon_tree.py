@@ -234,11 +234,11 @@ class Node:
             "rank": self.rank,
             # Ctrl
             "ctrl_reads": np.asscalar(np.int64(self.ctrl_reads)),
-            "ctrl_percentage": np.asscalar(np.int64(self.ctrl_percentage)),
+            "ctrl_percentage": np.float(self.ctrl_percentage),
             # Sample
             "reads": [np.asscalar(np.int64(i)) for i in self.reads],
             "taxon_reads": [np.asscalar(np.int64(i)) for i in self.taxon_reads],
-            "percentage": [np.asscalar(np.int64(i)) for i in self.percentage],
+            "percentage": [np.float(i) for i in self.percentage],
             "unique_reads": [np.asscalar(np.int64(i)) for i in self.unique_reads],
             "file": self.file,
             "pvalue": [np.asscalar(np.int64(i)) for i in self.pvalue],

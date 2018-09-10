@@ -6,8 +6,14 @@ import numpy as np
 import taxon_tree
 import json
 
+# Sample dataframes
 centrifuge_output = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report.tsv")
 centrifuge_output2 = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report_2.tsv")
+
+# Control dataframe
+ctrl_output = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report_2.tsv")
+
+# Annotations
 annotations = pd.read_csv("./merged_disease_pathogen_symptom_annotations.csv")
 annotations = annotations.fillna("")
 
