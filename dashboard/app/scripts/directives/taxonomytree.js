@@ -17,7 +17,7 @@ angular.module('dashboardApp')
       link: function postLink(scope, element, attrs) {
 	scope.pvalueThreshold = 0,
 	scope.readsThreshold = 10;
-	scope.ratioThreshold = 0;
+	scope.ratioThreshold = 1;
 	scope.taxFilter = "species";
 	// scope.fdrFilter = true;
   scope.collapsepatho = false;
@@ -1404,8 +1404,8 @@ scope.expandinate = function () {
               }})
           .attr("stroke", "#000")
           .attr("fill", function(d){
-            var scalio = d3.scaleSequential(d3.interpolateReds).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
-            })]);
+            var scalio = d3.scaleSequential(d3.interpolateReds).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+           })]);
             return scalio(d.percentage);});
 
             var mapUpdate = map_.merge(mapEnter);
@@ -1418,8 +1418,8 @@ scope.expandinate = function () {
                 }
             }).attr("height", gridSize)
             .attr("fill", function(d){
-              var scalio = d3.scaleSequential(d3.interpolateReds).domain([0, d3.max(d3.values(databox),function (d){return d.reads_taxon/rootready;
-              })]);
+              var scalio = d3.scaleSequential(d3.interpolateReds).domain([0, d3.max(d3.values(databox),function (d){return d.percentage;
+           })]);
               return scalio(d.percentage);})
 
       var _map = d3.select(this).selectAll(".box1");
@@ -1531,7 +1531,7 @@ scope.expandinate = function () {
       t = 1;
     }
   }else {
-    if (node.taxon_reads[q] >=scope.readsThreshold && node.uncorrected_pvalue[q] < scope.pvalueThreshold && node.percentage >= node.ctrl_percentage[q]*scope.ratioThreshold){
+    if (node.taxon_reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage*scope.ratioThreshold){
       t = 1;
     }
   }
