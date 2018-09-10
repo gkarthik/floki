@@ -18,7 +18,7 @@ angular.module('dashboardApp')
 	scope.pvalueThreshold = 0,
 	scope.readsThreshold = 10;
 	scope.ratioThreshold = 1;
-	scope.taxFilter = "species";
+	scope.taxFilter = "nofilter";
 	// scope.fdrFilter = true;
   scope.collapsepatho = false;
   scope.allFilter = true;
@@ -32,7 +32,7 @@ angular.module('dashboardApp')
   scope.showchart = false;
   scope.pinBar = true;
   scope.readsHidden = 10;
-  scope.zoomEnabled = true;
+  scope.zoomEnabled = false;
 	var ranks = ["superkingdom", "species", "genus"];
   var root;
   var nodes;
@@ -308,8 +308,8 @@ d3.json(scope.jsonFile, function(error, data){
             if (keys[key].includes(d.data[key])==false){
               keys[key].push(d.data[key])
             }
-          }else if(key == "percent"){
-            keys[key].push(d.data[taxon_reads][q]/rootready)
+          // }else if(key == "percent"){
+          //   keys[key].push(d.data[taxon_reads][q]/rootready)
           }else {
             for (var q=0; q<d.data[key].length; q++){
             if (keys[key].includes(d.data[key][q])==false){
@@ -334,7 +334,11 @@ scope.zoomToggle = function (){
   adjustZoom();
 }
 function adjustZoom() {
-  height = nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter;
+  if(nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter > 800){
+      height = nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter;
+  }else {
+    height = 800
+  }
   width = $window.innerWidth - 20;
   svg.attr("width", width);
   svg.attr("height", height);
@@ -689,7 +693,6 @@ scope.expandinate = function () {
     .attr("text-anchor", "end")
     .text("Average "+scope.colorTax +":");
             }else if (scope.colorTax == 'percentage'){
-              console.log(maxs['percentage'])
               var band = d3.scaleLog()
                 .domain([1, maxs[scope.colorTax]])
                 .range([0, 350]);
