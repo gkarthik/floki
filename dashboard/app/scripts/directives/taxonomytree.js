@@ -964,14 +964,25 @@ scope.expandinate = function () {
       var gridSize = 10
 	  nodeEnter.on("mouseover", function(d, i){
       if(scope.showchart && scope.colorTax =="pathogenic"){
+
       //   var diseases = [];
       //   var symptoms = {};
-      //   for (var q=0; q<d.data.disease.length; q++){
-      //     diseases[q] = d.data.disease[q];
-      //     for (var x in d.data.symptom[d.data.doid[q]]){
-      //       symptoms[q].append(x);
-      //     }
-      // }
+      var mouseoverbox=[]
+        for (var q=0; q<d.data.disease.length; q++){
+          if(d.data.disease_label[q]){
+            if(d.data.symptom_label[q]){
+              mouseoverbox[q] = {'disease': d.data.disease_label[q], 'symptom': d.data.symptom_label[q]};
+            }else {
+              mouseoverbox[q] = {'disease': d.data.disease_label[q], 'symptom': 'not in database'};
+            }
+          }else {
+              mouseoverbox[q] = {'disease': 'unknown', 'symptom': 'not in database'};
+          }
+
+          // if (d.data.symptom[q]){
+          //   mouseoverbox[q] = {'symptom': d.data.symptoms[q]};
+          // }
+        }
         var t = g.append("svg:g")
           .attr("class","tool-tip")
     	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
@@ -980,12 +991,35 @@ scope.expandinate = function () {
            if (d.data.disease==false) {
              return 175;
            }else {
-             return 150 + d.data.disease.length * 150;
+             return 150 + d.data.disease.length * 100;
            }
          })
          .attr("height",30)
          .attr("stroke", "#000")
          .attr("fill", "#FFF");
+
+         // var table = t.append('table');
+         //
+         //  var tr = table.selectAll('tr')
+         //    .data(mouseoverbox).enter()
+         //    .append('tr');
+
+         // t.append("text")
+         // .attr("text-anchor", "start")
+         // .attr("transform", "translate(20,20)")
+         //   .text(function () {
+         //   for (var q=0; q<d.data.disease_label.length; q++){
+         //     if(d.data.disease==false){
+         //       return "Disease: unknown";
+         //     }else {
+         //       console.log(d.data.disease_label[q])
+         //       return d.data.disease_label[q];
+         //     }}
+         //   })
+         //   .attr("transform", function(){
+         //    for (var q=0; q<d.data.disease_label.length; q++){
+         //     return  "translate( 0 ,"+ 25*q +")";
+         // }});
          t.append("text")
          .attr("text-anchor", "start")
          .attr("transform", "translate(20,20)")
@@ -993,7 +1027,7 @@ scope.expandinate = function () {
            if(d.data.disease==false){
              return "Disease: unknown";
            }else {
-             return d.data.disease_label + ":";
+             return d.data.disease_label;
            }
          })
          .style('stroke-width', 0.5)
@@ -1006,28 +1040,44 @@ scope.expandinate = function () {
                  }
                }
          });
-      }else if (scope.showchart && scope.mapFilter==false) {
-        dataset={}
-        dataset['name']=d.data.namelabel;
-        dataset['taxon_reads']=d.data.taxon_reads;
-        dataset['p-value']=d.data.uncorrected_pvalue;
-        dataset['rank']=d.data.rank;
-        dataset['percentage']=d.data.percentage;
-        var t = g.append("svg:g")
-          .attr("class","tool-tip")
-          .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
-         t.append("rect")
-
-         .attr("width", 300)
-         .attr("height", 200)
-         .attr("stroke", "#000")
-         .attr("fill", "#FFF");
-         var textbar = t.selectAll("textbar")
-           .data(dataset)
-           .enter().append("svg:g")
-           .attr("transform", function(d, i){
-             return translate(20,20*i);
-         });
+      // }else if (scope.showchart && scope.mapFilter==false) {
+      //   // dataset={}
+      //   // dataset['name']=d.data.namelabel[0];
+      //   // dataset['taxon_reads']=d.data.taxon_reads[0];
+      //   // dataset['p-value']=d.data.uncorrected_pvalue[0];
+      //   // dataset['rank']=d.data.rank[0];
+      //   // dataset['percentage']=d.data.percentage[0];
+      //   var t = g.append("svg:g")
+      //     .attr("class","tool-tip")
+      //     .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
+      //    t.append("rect")
+      //    .attr("width", 300)
+      //    .attr("height", 200)
+      //    .attr("stroke", "#000")
+      //    .attr("fill", "#FFF");
+      //
+      //    t.append("text")
+      //    .attr("text-anchor", "start")
+      //    .attr("transform", "translate(20,20)")
+      //    .text(function () {
+      //      return
+      //    })
+      //    .style('stroke-width', 0.5)
+      //    .style('stroke', function () {
+      //        if(scope.colorTax=="pathogenic"){
+      //          if(d.data.disease!==false){
+      //            return '#8b0000';
+      //          }else {
+      //              return '#CDE7F0';
+      //            }
+      //          }
+      //
+      //    // var textbar = t.selectAll("textbar")
+      //    //   .data(dataset)
+      //    //   .enter().append("svg:g")
+      //    //   .attr("transform", function(d, i){
+      //    //     return translate(20,20*i);
+      //    // });
       }else if(scope.showchart && scope.colorTax != 'shared'){
         if(d.data.percentage.length==1){
           dataset[0]={};
@@ -1038,7 +1088,7 @@ scope.expandinate = function () {
         }else {
           var dataset = [];
         var colors = d3.schemeSet1;
-        for (var q=0; q<d.data.percentage.length; q++){
+        for (var q=0; q<d.data.taxon_reads.length; q++){
           dataset[q]={}
           for (var x in d.data){
             dataset[q][x]=d.data[x][q];
@@ -1046,7 +1096,7 @@ scope.expandinate = function () {
           dataset[q]["color"] = colors[q];
         }
     }
-      var barWidth = 50;
+      var barWidth = 250/d.data.taxon_reads.length;
       var x = d3.scaleBand()
           .range([0, 250])
           .padding(0.1);
@@ -1065,7 +1115,7 @@ scope.expandinate = function () {
         .attr("class","tool-tip")
   	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
        t.append("rect")
-       .attr("width", d.data.file.length*70)
+       .attr("width", 350)
        .attr("height", 250)
        .attr("stroke", "#000")
        .attr("fill", "#FFF");
