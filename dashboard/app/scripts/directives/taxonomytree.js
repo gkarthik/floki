@@ -113,7 +113,7 @@ function stickyBar() {
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
-    zoom.translateBy(svg, 30, (nodecounter* 55 * scope.seperation + 7*nodecounter));
+    zoom.translateBy(svg, 30, (nodecounter* 7/3.3 * scope.seperation + 7*nodecounter));
     }
   }
   scope.runTree = function(){
@@ -326,8 +326,8 @@ function countNodes(d){
   } else {
     if(d.depth >= maxdepth){
       maxdepth = d.depth;
-      nodecounter = nodecounter + 1
     }
+    nodecounter = nodecounter + 1
     return nodecounter;
   }
 }
@@ -335,8 +335,8 @@ scope.zoomToggle = function (){
   adjustZoom();
 }
 function adjustZoom() {
-  if(nodecounter * 122 * scope.seperation + 7*nodecounter > 800){
-      height = nodecounter * 122 * scope.seperation + 7*nodecounter;
+  if(nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter > 800){
+      height = nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter;
   }else {
     height = 800
   }
@@ -345,7 +345,7 @@ function adjustZoom() {
   svg.attr("height", height);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  110.1 * scope.seperation + 7*nodecounter)]])
+      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  15/3.3 * scope.seperation + 7*nodecounter)]])
       .on("zoom", zoomed);
       if(scope.zoomEnabled){
         svg.call(zoom);
@@ -557,7 +557,7 @@ scope.expandinate = function () {
     if (scope.colorTax=="shared") {
       var band = d3.scaleBand()
           .domain(d3.range(d.data.reads.length+1))
-          .range([0, 350]);
+          .range([0, 500]);
       b.append("g")
         .attr("transform", "translate(20,35)")
         .call(d3.axisBottom(band)
@@ -567,10 +567,10 @@ scope.expandinate = function () {
         .enter().append("rect")
           .attr("transform", "translate(20,5)")
           .attr("class", "boxen")
-          .attr("x", function(i) { return i * (350/(d.data.reads.length+1));})
+          .attr("x", function(i) { return i * (500/(d.data.reads.length+1));})
           .attr("y", 0)
           .attr("height", 25)
-          .attr("width", 350/(d.data.reads.length+1))
+          .attr("width", 500/(d.data.reads.length+1))
           .style("fill", function(d, i) {
             return sharescale(i); });
             d3.select("#labeltext").remove();
@@ -583,16 +583,16 @@ scope.expandinate = function () {
         }else if (typeof d.data[scope.colorTax]== 'string') {
           var band = d3.scaleBand()
               .domain(keys[scope.colorTax])
-              .range([0, 350]);
+              .range([0, 500]);
           var boxen = b.selectAll('.boxen')
             .data(d3.range(keys[scope.colorTax].length))
             .enter().append("rect")
               .attr("transform", "translate(20,5)")
               .attr("class", "boxen")
-              .attr("x", function(d, i) { return i * (350/keys[scope.colorTax].length); })
+              .attr("x", function(d, i) { return i * (500/keys[scope.colorTax].length); })
               .attr("y", 0)
               .attr("height", 25)
-              .attr("width", 350/keys[scope.colorTax].length - 8)
+              .attr("width", 500/keys[scope.colorTax].length - 8)
               .style("fill", function(i) {
                 return striscale(keys[scope.colorTax][i]); });
             b.append("g")
@@ -614,22 +614,22 @@ scope.expandinate = function () {
             } else if (typeof(d.data[scope.colorTax])=='boolean') {
               var band = d3.scaleBand()
                   .domain(['True', "False"])
-                  .range([0, 350]);
+                  .range([0, 500]);
               b.append("rect")
                   .attr("transform", "translate(20,5)")
                   .attr("class", "boxen")
                   .attr("x", function(d, i) { return 0; })
                   .attr("y", 0)
                   .attr("height", 25)
-                  .attr("width", 350/2 - 8)
+                  .attr("width", 500/2 - 8)
                   .style("fill", '#8b0000');
               b.append("rect")
                   .attr("transform", "translate(20,5)")
                   .attr("class", "boxen")
-                  .attr("x", function(d, i) { return 350/2; })
+                  .attr("x", function(d, i) { return 500/2; })
                   .attr("y", 0)
                   .attr("height", 25)
-                  .attr("width", 350/2 - 8)
+                  .attr("width", 500/2 - 8)
                   .style("fill", '#CDE7F0');
                 b.append("g")
                   .attr("transform", "translate(20,35)")
@@ -651,7 +651,7 @@ scope.expandinate = function () {
             if (maxs[scope.colorTax]>=10000){
   var band = d3.scaleLog()
     .domain([1, maxs[scope.colorTax]])
-    .range([0, 350]);
+    .range([0, 500]);
 
   var domain = band.domain;
   var range = band.range;
@@ -696,7 +696,7 @@ scope.expandinate = function () {
             }else if (scope.colorTax == 'percentage'){
               var band = d3.scaleLog()
                 .domain([1, maxs[scope.colorTax]])
-                .range([0, 350]);
+                .range([0, 500]);
 
               var domain = band.domain;
               var range = band.range;
@@ -728,7 +728,7 @@ scope.expandinate = function () {
               })
               var bandlabel = d3.scaleLog()
               .domain([0.00001, 100])
-              .range([0, 350]);
+              .range([0, 500]);
               b.append("g")
               .attr("transform", "translate(20,35)")
               .call(d3.axisBottom(bandlabel)
@@ -752,7 +752,7 @@ scope.expandinate = function () {
                 .attr("spreadMethod", "pad");
               var band = d3.scaleLog()
                   .domain([0, 1])
-                  .range([0, 350])
+                  .range([0, 500])
                   ;
               b.append("g")
               .attr("transform", "translate(20,35)")
@@ -790,7 +790,7 @@ scope.expandinate = function () {
             })
             var bandlabel = d3.scaleLog()
             .domain([0, 1])
-            .range([0, 350]);
+            .range([0, 500]);
             b.append("g")
             .attr("transform", "translate(20,35)")
             .call(d3.axisBottom(bandlabel)
@@ -1158,9 +1158,9 @@ scope.expandinate = function () {
           dataset[q]["color"] = colors[q];
         }
     }
-      var barWidth = 250/d.data.taxon_reads.length;
+      var barWidth = 350/d.data.taxon_reads.length;
       var x = d3.scaleBand()
-          .range([0, 250])
+          .range([0, 350])
           .padding(0.1);
       var y = d3.scaleLinear()
      				.domain([0, d3.max(d3.values(dataset), function(d){
@@ -1177,7 +1177,7 @@ scope.expandinate = function () {
         .attr("class","tool-tip")
   	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
        t.append("rect")
-       .attr("width", 350)
+       .attr("width", 500)
        .attr("height", 250)
        .attr("stroke", "#000")
        .attr("fill", "#FFF");
@@ -1278,7 +1278,7 @@ scope.expandinate = function () {
 
     t.append("text")
     .attr("transform",
-          "translate(" + 350/2 + " , 25)")
+          "translate(" + 500/2 + " , 25)")
     .attr("text-anchor", "middle")
     .text(function () {
       return d.data.taxon_name;
@@ -1296,7 +1296,7 @@ scope.expandinate = function () {
 
     t.append("text")
     .attr("transform",
-          "translate(" + 350/2 + " ,230)")
+          "translate(" + 500/2 + " ,230)")
     .style("text-anchor", "middle")
     .text("Samples").attr("font-family","sans-serif");
   }});
@@ -1671,7 +1671,7 @@ if (t == 0){
   root = d3.hierarchy(data);
   root.children.forEach(collapseLevel);
   root.x0 = 30;
-  root.y0 = nodecounter * 122 * scope.seperation + 7*nodecounter;
+  root.y0 = nodecounter* 15/3.3 * scope.seperation + 7*nodecounter;
   createKeys(root);
   getkeyScales(root);
   createminmax(root);
