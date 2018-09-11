@@ -113,7 +113,7 @@ function stickyBar() {
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
-    zoom.translateBy(svg, 30, (nodecounter * 13/3.3 * scope.seperation));
+    zoom.translateBy(svg, 30, (nodecounter* 55 * scope.seperation + 7*nodecounter));
     }
   }
   scope.runTree = function(){
@@ -253,13 +253,13 @@ d3.json(scope.jsonFile, function(error, data){
     keys['rank']=[]
     keys['taxon_reads']=[]
     keys['percentage']=[]
-    for (var key in d.data) {
-      if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
-        if (typeof d.data[key][0] == 'string'){
-        keys[key]=[]
-        }
-      }
-    }
+    // for (var key in d.data) {
+    //   if (key != 'children' && key != 'parent' && key !='tax_id' && key != 'taxon_name' && key != 'depth' && key != 'rank' && key != 'ctrl_reads' && key != 'ctrl_percentage'){
+    //     if (typeof d.data[key][0] == 'string'){
+    //     keys[key]=[]
+    //     }
+    //   }
+    // }
       }
   function createminmax(d) {
     for (var key in d.data) {
@@ -326,8 +326,8 @@ function countNodes(d){
   } else {
     if(d.depth >= maxdepth){
       maxdepth = d.depth;
+      nodecounter = nodecounter + 1
     }
-    nodecounter = nodecounter + 1
     return nodecounter;
   }
 }
@@ -335,8 +335,8 @@ scope.zoomToggle = function (){
   adjustZoom();
 }
 function adjustZoom() {
-  if(nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter > 800){
-      height = nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter;
+  if(nodecounter * 122 * scope.seperation + 7*nodecounter > 800){
+      height = nodecounter * 122 * scope.seperation + 7*nodecounter;
   }else {
     height = 800
   }
@@ -345,7 +345,7 @@ function adjustZoom() {
   svg.attr("height", height);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  15/3.3 * scope.seperation + 7*nodecounter)]])
+      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  110.1 * scope.seperation + 7*nodecounter)]])
       .on("zoom", zoomed);
       if(scope.zoomEnabled){
         svg.call(zoom);
@@ -1671,7 +1671,7 @@ if (t == 0){
   root = d3.hierarchy(data);
   root.children.forEach(collapseLevel);
   root.x0 = 30;
-  root.y0 = nodecounter * 13/3.3 * scope.seperation + 5*nodecounter;
+  root.y0 = nodecounter * 122 * scope.seperation + 7*nodecounter;
   createKeys(root);
   getkeyScales(root);
   createminmax(root);
