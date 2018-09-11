@@ -15,7 +15,7 @@ angular.module('dashboardApp')
 	jsonFile: "@"
       },
       link: function postLink(scope, element, attrs) {
-	scope.pvalueThreshold = 0,
+	scope.pvalueThreshold = 0.05,
 	scope.readsThreshold = 10;
 	scope.ratioThreshold = 1;
 	scope.taxFilter = "nofilter";
@@ -136,8 +136,9 @@ d3.json(scope.jsonFile, function(error, data){
 	}
   scope.hidecommon=function () {
     update(root);
-    scope.opacityFilters();
+    scope.updateColors();
   }
+
   scope.updateColors = function(){
     if(root.data[scope.colorTax]){
       if (typeof(root.data[scope.colorTax][0])=="string") {
@@ -386,11 +387,11 @@ function clearAll(d) {
 function markOpac(d){
   if(d._children){
     d._children.forEach(markOpac)
-    // d._children.forEach(function (d) {
-    //   if (d.class3) {
-    //     d.parent.class3 = d.class3;
-    //   }
-    // })
+    d._children.forEach(function (d) {
+      if (d.class3) {
+        d.parent.class3 = d.class3;
+      }
+    })
   }else if(d.children){
     d.children.forEach(markOpac)
     d.children.forEach(function (d) {
@@ -400,16 +401,16 @@ function markOpac(d){
     })
   }else {
     nodesharecount = 0
-    for (var q=0; q<d.data.reads.length; q++){
-      if (d.data.reads[q] >= scope.readsHidden){
+    for (var q=0; q<d.data.taxon_reads.length; q++){
+      if (d.data.taxon_reads[q] >= scope.readsHidden){
         nodesharecount = nodesharecount + 1
       }
-      if (nodesharecount == d.data.reads.length) {
+      if (nodesharecount == d.data.taxon_reads.length) {
         d.class3 = null;
       }
-      else if (nodesharecount == d.data.reads.length-1) {
-        d.class3 = null;
-      }
+      // else if (nodesharecount == d.data.taxon_reads.length-1) {
+      //   d.class3 = null;
+      // }
       else {
         d.class3 = "visible";
       }
@@ -971,6 +972,7 @@ scope.expandinate = function () {
       //   var diseases = [];
       //   var symptoms = {};
       var mouseoverbox=[]
+
         for (var q=0; q<d.data.disease.length; q++){
           if(d.data.disease_label[q]){
             if(d.data.symptom_label[q]){
@@ -986,20 +988,21 @@ scope.expandinate = function () {
           //   mouseoverbox[q] = {'symptom': d.data.symptoms[q]};
           // }
         }
+
         var t = g.append("svg:g")
           .attr("class","tool-tip")
     	    .attr("transform", "translate("+parseInt(d.y)+","+parseInt(d.x + 20)+")");
-         t.append("rect")
-         .attr("width", function () {
-           if (d.data.disease==false) {
-             return 175;
-           }else {
-             return 150 + d.data.disease.length * 100;
-           }
-         })
-         .attr("height",30)
-         .attr("stroke", "#000")
-         .attr("fill", "#FFF");
+         // t.append("rect")
+         // .attr("width", function () {
+         //   if (d.data.disease==false) {
+         //     return 170;
+         //   }else {
+         //     return 170 + d.data.disease.length * 100;
+         //   }
+         // })
+         // .attr("height", 170)
+         // .attr("stroke", "#000")
+         // .attr("fill", "#FFF");
 
          // var table = t.append('table');
          //
@@ -1023,26 +1026,82 @@ scope.expandinate = function () {
          //    for (var q=0; q<d.data.disease_label.length; q++){
          //     return  "translate( 0 ,"+ 25*q +")";
          // }});
-         t.append("text")
-         .attr("text-anchor", "start")
-         .attr("transform", "translate(20,20)")
-         .text(function () {
-           if(d.data.disease==false){
-             return "Disease: unknown";
-           }else {
-             return d.data.disease_label;
-           }
-         })
-         .style('stroke-width', 0.5)
-         .style('stroke', function () {
-             if(scope.colorTax=="pathogenic"){
-               if(d.data.disease!==false){
-                 return '#8b0000';
-               }else {
-                   return '#CDE7F0';
-                 }
-               }
-         });
+
+
+         function tabulate(data, columns) {
+        		var table = t.append("svg:foreignObject")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("width", 250)
+          .attr("height", 120)
+          .append("xhtml:body")
+          .append("table")
+          .attr("class", "table-bordered");
+        		var thead = table.append('thead')
+        		var	tbody = table.append('tbody');
+
+        		// append the header row
+        		thead.append('tr')
+        		  .selectAll('th')
+        		  .data(columns).enter()
+        		  .append('th')
+        		    .text(function (column) { return column; });
+
+        		// create a row for each object in the data
+        		var rows = tbody.selectAll('tr')
+        		  .data(data)
+        		  .enter()
+        		  .append('tr');
+
+        		// create a cell in each row for each column
+        		var cells = rows.selectAll('td')
+        		  .data(function (row) {
+        		    return columns.map(function (column) {
+        		      return {column: column, value: row[column]};
+        		    });
+        		  })
+        		  .enter()
+        		  .append('td')
+        		    .text(function (d) { return d.value; });
+
+        	  return table;
+        	}
+
+          tabulate(mouseoverbox, ['disease', 'symptom'])
+
+
+
+       //   var textappend = t.append("text")
+       //   // .data(mouseoverbox)
+       //   .attr("text-anchor", "start")
+       //   .text(function () {
+       //       for (var q=0; q<d.data.disease_label.length; q++){
+       //         console.log(d.data.disease_label[q])
+       //      return d.data.disease_label[q] + "," + d.data.symptom_label[q];
+       //   }})
+       //     // d.data.disease_lable , d.data.symptom_label)
+       //   //   function () {
+       //   //   if(d.data.disease==false){
+       //   //     return "Disease: unknown";
+       //   //   }else {
+       //   //     return d.data.disease_label;
+       //   //   }
+       //   // })
+       //   .style('stroke-width', 0.5)
+       //   .attr("transform", function(){
+       //     console.log(d.data.disease_label.length);
+       //    for (var q=0; q<d.data.disease_label.length; q++){
+       //     return  "translate( 20 ,"+ 25*q +")";
+       // }})
+       //   .style('stroke', function () {
+       //       if(scope.colorTax=="pathogenic"){
+       //         if(d.data.disease!==false){
+       //           return '#8b0000';
+       //         }else {
+       //             return '#CDE7F0';
+       //           }
+       //         }
+       //   });
       // }else if (scope.showchart && scope.mapFilter==false) {
       //   // dataset={}
       //   // dataset['name']=d.data.namelabel[0];
@@ -1219,8 +1278,8 @@ scope.expandinate = function () {
 
     t.append("text")
     .attr("transform",
-          "translate(" + (d.data.file.length*70)/2 + " , 25)")
-    .style("text-anchor", "middle")
+          "translate(" + 350/2 + " , 25)")
+    .attr("text-anchor", "middle")
     .text(function () {
       return d.data.taxon_name;
     })
@@ -1228,7 +1287,7 @@ scope.expandinate = function () {
 
     t.append("text")
     .attr("transform",
-          "translate(10 ,12 )")
+          "translate(10 ,10 )")
     .style("text-anchor", "left")
     .text(function () {
       return "rank: "+ d.data.rank;
@@ -1237,7 +1296,7 @@ scope.expandinate = function () {
 
     t.append("text")
     .attr("transform",
-          "translate(" + (d.data.file.length*70)/2 + " ,230)")
+          "translate(" + 350/2 + " ,230)")
     .style("text-anchor", "middle")
     .text("Samples").attr("font-family","sans-serif");
   }});
@@ -1534,11 +1593,11 @@ scope.expandinate = function () {
       t = 1;
     }
   }else {
-    if (node.taxon_reads[q] >=scope.readsThreshold && node.percentage[q] >= node.ctrl_percentage*scope.ratioThreshold){
+    if (node.taxon_reads[q] >=scope.readsThreshold &&  node.percentage[q] >= node.ctrl_percentage*scope.ratioThreshold){
       t = 1;
     }
   }
-    //  &&
+    //  && node.uncorrected_pvalue[q] > scope.pvalueThreshold &&
     // node.percentage[q] >= node.ctrl_percentage[q]*scope.ratioThreshold
 }
 if (t == 0){
@@ -1584,7 +1643,7 @@ if (t == 0){
       resetZoom();
       adjustSVG(root);
     }
-    
+
   function collapseLevel(d) {
       d.class2 = "null"
       if (d._children){
@@ -1610,7 +1669,6 @@ if (t == 0){
   }
   getSignificantNodes(data);
   root = d3.hierarchy(data);
-  console.log(root)
   root.children.forEach(collapseLevel);
   root.x0 = 30;
   root.y0 = nodecounter * 13/3.3 * scope.seperation + 5*nodecounter;
