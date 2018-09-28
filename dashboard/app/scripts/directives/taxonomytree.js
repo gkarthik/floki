@@ -27,7 +27,7 @@ angular.module('dashboardApp')
   scope.opacsuppress = false;
   scope.colorTax = "taxon_reads";
   scope.searchText = "";
-  scope.seperation = 3.30;
+  scope.seperation = 3.80;
   scope.searchcollapse = false;
   scope.showchart = false;
   scope.pinBar = true;
@@ -53,7 +53,7 @@ angular.module('dashboardApp')
 	var d3 = $window.d3;
   var margin = {top: 10, right: 0, bottom: 200, left: 30};
 	var width = $window.innerWidth - 20;
-  var height = 10000;
+  var height = 1000;
   var sharednodecount = 0;
   var sharescale;
   var rawSvg = element.find("#svg1")[0];
@@ -113,15 +113,15 @@ function stickyBar() {
   function resetZoom() {
     zoom.transform(svg, d3.zoomIdentity);
     if(nodecounter != 0){
-    zoom.translateBy(svg, 30, (nodecounter* 7/3.3 * scope.seperation + 7*nodecounter));
+    zoom.translateBy(svg, 30, 0);
     }
   }
   scope.runTree = function(){
     tree = d3.cluster()
-      tree.nodeSize([scope.seperation,(width/70)])
-      tree.separation(function separation(a, b) {
-        return a.parent == b.parent ? 5: 5;
-    });
+  //   tree.nodeSize([scope.seperation,(width/70)])
+  //   tree.separation(function separation(a, b) {
+  //     return a.parent == b.parent ? 3: 3;
+  // });
 d3.json(scope.jsonFile, function(error, data){
 	scope.updateFilters = function(){
       clearAll(root);
@@ -324,10 +324,12 @@ function countNodes(d){
   if(d.children){
     d.children.forEach(countNodes);
   } else {
+    if(!d.children){
+      nodecounter = nodecounter + 1
+    }
     if(d.depth >= maxdepth){
       maxdepth = d.depth;
     }
-    nodecounter = nodecounter + 1
     return nodecounter;
   }
 }
@@ -335,17 +337,22 @@ scope.zoomToggle = function (){
   adjustZoom();
 }
 function adjustZoom() {
-  if(nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter > 800){
-      height = nodecounter * 15.5/3.3 * scope.seperation + 7*nodecounter;
+  if((nodecounter-1) * 4.5 * scope.seperation>300){
+    height = (nodecounter-1) * 4.5 * scope.seperation;
   }else {
-    height = 800
+    height=300
   }
+
   width = $window.innerWidth - 20;
+  tree.size([height,width*0.6])
+  tree.separation(function separation(a, b) {
+      return a.parent == b.parent ? 3: 3;
+  });
   svg.attr("width", width);
-  svg.attr("height", height);
+  svg.attr("height", height+300);
   zoom = d3.zoom()
       .scaleExtent([1, 3])
-      .translateExtent([[(width/70*maxdepth + 29*databox.length)-width, -height], [width - 20,  (height - nodecounter *  15/3.3 * scope.seperation + 7*nodecounter)]])
+      .translateExtent([[-width/(3), -200], [width,  height+300]])
       .on("zoom", zoomed);
       if(scope.zoomEnabled){
         svg.call(zoom);
@@ -359,10 +366,6 @@ function adjustSVG(d) {
 }
 
 scope.slideR = function () {
-      tree.nodeSize([scope.seperation,(width/70)])
-      tree.separation(function separation(a, b) {
-        return a.parent == b.parent ? 5: 5;
-    });
     adjustSVG(root);
     spreadNodes(root);
 }
@@ -1554,15 +1557,6 @@ scope.expandinate = function () {
             return "#3884ff";
         }
       });
-     //   .style("opacity", function (d) {
-     //     if (scope.opacsuppress) {
-     //       if (d.class3) {
-     //         return 1;
-     //       }else {
-     //         return 0.2;
-     //   }
-     //   }
-     // });
    nodes.forEach(function (d) {
      d.x0 = d.x;
      d.y0 = d.y;
@@ -1671,7 +1665,7 @@ if (t == 0){
   root = d3.hierarchy(data);
   root.children.forEach(collapseLevel);
   root.x0 = 30;
-  root.y0 = nodecounter* 15/3.3 * scope.seperation + 7*nodecounter;
+  root.y0 = nodecounter* 13/3.3 * scope.seperation + 30*nodecounter;
   createKeys(root);
   getkeyScales(root);
   createminmax(root);
