@@ -5,13 +5,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import taxon_tree
 import json
+import os
 
 # Sample dataframes
-centrifuge_output = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report.tsv")
-centrifuge_output2 = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report_2.tsv")
+p="/Users/karthik/hpc_downloads/2018.09.24/samples/"
+dirs = sorted(os.listdir(p))
+
+centrifuge_output = []
+for f in dirs:
+    if f[-7:] == ".report":
+        print(f)
+        centrifuge_output.append(pd.read_table(p+f))
+
+# centrifuge_output = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report.tsv")
+# centrifuge_output2 = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report_2.tsv")
 
 # Control dataframe
-ctrl_output = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report_2.tsv")
+ctrl_output = pd.read_table("/Users/karthik/hpc_downloads/2018.09.24/W0004.centrifuge.report")
 
 # Annotations
 annotations = pd.read_csv("./merged_disease_pathogen_symptom_annotations.csv")
@@ -35,28 +45,33 @@ names_df = names_df.set_index("tax_id")
 
 imp.reload(taxon_tree)
 root = taxon_tree.Node(1, None, "Root", "no rank")
-root.populate_taxonomy(centrifuge_output, nodes_df, names_df, root)
+for i in centrifuge_output:
+    root.populate_taxonomy(i, nodes_df, names_df, root)
+
 root.populate_annotations(annotations)
 
 # Dump computed object as pickle
 root.dump_object()
 
 # Batch samples
-root.populate_with_reads(centrifuge_output)
-root.populate_with_reads(centrifuge_output2)
+for i in centrifuge_output:
+    root.populate_with_reads(i)
+# root.populate_with_reads(centrifuge_output2)
 
 # Ctrl reads
-root.populate_ctr_reads(centrifuge_output2)
+root.populate_ctr_reads(ctrl_output)
 
 # Compute reads at every taxon level
 root.populate_reads_at_taxon()
 
 root.populate_percentage(root.get_total_reads())
 
-root.compute_pvalues()
+# root.compute_pvalues()
+
+
 d = root.to_dict()
 _str = json.dumps(d)
-with open("./dashboard/app/json_output/centrifuge_2018.08.06.json", "w") as f:
+with open("./dashboard/app/json_output/centrifuge_2018.09.21.json", "w") as f:
     f.write(_str)
 
 f.close()
