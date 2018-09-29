@@ -25,6 +25,6 @@ angular.module('dashboardApp')
       // "json_output/BSG09_S3_L001_R1_001.trimmed.1.trimmed.json",
       // "json_output/BSG13_S4_L001_R1_001.trimmed.1.trimmed.json",
       // "json_output/BSG16_S5_L001_R1_001.trimmed.1.trimmed.json"
-      "json_output/data.json"
+      "json_output/centrifuge_2018.09.21.json"
     ];
   });
