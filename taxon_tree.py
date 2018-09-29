@@ -20,6 +20,7 @@ class Node:
 
         # Ctrl metrics
         self.ctrl_reads = 0
+        self.ctrl_taxon_reads = 0
         self.ctrl_percentage = 0
 
         # Sample metrics
@@ -187,6 +188,7 @@ class Node:
 
     def populate_reads_at_taxon(self):
         self.taxon_reads = self.get_total_reads()
+        self.ctrl_reads = self.get_total_ctrl_reads()
         for i in self.children:
             i.populate_reads_at_taxon()
 
@@ -248,7 +250,8 @@ class Node:
             "pathogenic": self.pathogenic,
             "symptom": self.symptom,
             "symptom_label": self.symptom_label,
-            "genomoe_size": np.asscalar(np.int64(self.genome_size)),
-            "children": [i.to_dict() for i in self.children]
+            "genome_size": np.asscalar(np.int64(self.genome_size))
         }
+        if len(self.children) > 0:
+            d["children"] =  [i.to_dict() for i in self.children]
         return d
