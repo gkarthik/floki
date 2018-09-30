@@ -17,18 +17,22 @@ angular.module('dashboardApp')
       link: function postLink(scope, element, attrs) {
 	var d3 = $window.d3,
 	    jQuery = $window.jQuery,
+	    canvas_wrapper = d3.select("#tree-view"),
 	    data_orig,
 	    context,
 	    height,
 	    width,
 	    node_size = 5,
-	    stroke_width = 2;
-
+	    stroke_width = 2,
+	    canvas_offset_x = 100,
+	    data;
+	
 	var color_scheme = {
 	  "fill": "#4682b4",
 	  "hover-fill": "red",
 	  "stroke-style": "#000000",
-	  "text-fill": "#000000"
+	  "text-fill": "#000000",
+	  "link-stroke-style": "#000000"
 	};
 	
 	function setupCanvas(id, width, height) {
@@ -45,8 +49,19 @@ angular.module('dashboardApp')
 	}
 
 	function draw_canvas(context, width, height){
-	  var canvas_wrapper = d3.select("#tree-view");
 	  context.clearRect(0, 0, width, height);
+	  canvas_wrapper.selectAll("custom-link").each(function(d){
+	    var _link = d3.select(this);
+	    context.beginPath();
+	    context.moveTo(_link.attr("sx"), _link.attr("sy"));
+	    context.lineTo(0.5 * (parseFloat(_link.attr("tx")) + parseFloat(_link.attr("sx"))), _link.attr("sy"));
+	    context.lineTo(0.5 * (parseFloat(_link.attr("tx")) + parseFloat(_link.attr("sx"))), _link.attr("ty"));
+	    context.lineTo(_link.attr("tx"), _link.attr("ty"));
+	    context.strokeStyle = _link.attr("stroke-style");
+	    context.lineWidth = _link.attr("line-width");
+	    context.stroke();
+	    context.closePath();
+	  });
 	  canvas_wrapper.selectAll("custom-node").each(function(d){
 	    var _node = d3.select(this);
 	    context.moveTo(_node.attr("x"), _node.attr("y"));
@@ -61,6 +76,7 @@ angular.module('dashboardApp')
 	    context.beginPath();
 	    context.font = "18px Helvetica";
 	    context.fillStyle = _node.attr("text-fill");
+	    context.textAlign = "left";
 	    context.textBaseline = 'middle';
 	    context.fillText(_node.text(),parseFloat(_node.attr("x")) + parseFloat(_node.attr("size")),parseFloat(_node.attr("y")));
 	    context.fill();
@@ -68,6 +84,23 @@ angular.module('dashboardApp')
 	  });
 	}
 
+	function draw_canvas_taxon_up(context, width, height){
+	  context.beginPath();
+	  context.globalAlpha = 0.3;
+	  context.fillStyle = "#000000";
+	  context.arc(0, height/2, canvas_offset_x, 0, 2 * Math.PI);
+	  context.fill();
+	  context.closePath();
+	  context.beginPath();
+	  context.globalAlpha = 1;
+	  context.fillStyle = "#000000";
+	  context.font = "30px Helvetica";
+	  context.textAlign = "center";
+	  context.textBaseline = "middle";
+	  context.fillText("Back", canvas_offset_x/2, height/2);
+	  context.closePath();
+	}
+	
 	function update(data, context, width, height){
 	  var root = d3.hierarchy(data, function(d){return d.children;});
 	  var tree_layout = d3.cluster().size([height, width - 300]);
@@ -75,7 +108,9 @@ angular.module('dashboardApp')
 	  var canvas_wrapper = d3.select("#tree-view");
 	  var nodes = tree.descendants();
 	  var links = tree.descendants().slice(1);
-	  console.log(links);
+	  nodes.forEach(function(d){
+	    d.y = (d.depth * 300) + canvas_offset_x;
+	  });
 	  
 	  var duration = 300;
 	  var node = canvas_wrapper.selectAll("custom-node").data(nodes, function(d){
@@ -102,7 +137,9 @@ angular.module('dashboardApp')
 	
 	  var nodeUpdate = nodeEnter.merge(node);
 
-	  nodeUpdate.attr("x", function(d){
+	  nodeUpdate.transition()
+	    .duration(duration)
+	    .attr("x", function(d){
 	      return d.y;
 	    })
 	    .attr("y", function(d){
@@ -116,11 +153,67 @@ angular.module('dashboardApp')
 	      .transition()
 	      .duration(duration)
 	      .attr("x", function(d){
-		return 0;
+		return d.parent.y;
 	      })
 	      .attr("y", function(d){
+		return d.parent.x;
+	      })
+	      .remove();
+
+	  var link = canvas_wrapper.selectAll("custom-link").data(links, function(d){
+	    return d.data.tax_id;
+	  });
+
+	  var linkEnter = link.enter()
+	      .append("custom-link")
+	      .classed("link", true)
+	      .attr("sx", function(d){
+		return d.parent.y;
+	      })
+	      .attr("sy", function(d){
+		return d.parent.x;
+	      })
+	      .attr("tx", function(d){
+		return d.y;
+	      })
+	      .attr("ty", function(d){
 		return d.x;
-	      })	  
+	      })
+	      .attr("line-width", stroke_width)
+	      .attr("stroke-style", color_scheme["link-stroke-style"]);
+
+	  var linkUpdate = linkEnter.merge(link);
+
+	  linkUpdate.transition()
+	    .duration(duration)
+	    .attr("sx", function(d){
+	      return d.parent.y;
+	    })
+	    .attr("sy", function(d){
+	      return d.parent.x;
+	    })
+	    .attr("tx", function(d){
+	      return d.y;
+	    })
+	    .attr("ty", function(d){
+	      return d.x;
+	    });
+	  
+	  var linkExit = link.exit()
+	      .transition()
+	      .duration(duration)
+	      .attr("sx", function(d){
+		return d.parent.y;
+	      })
+	      .attr("sy", function(d){
+		return d.parent.x;
+	      })
+	      .attr("tx", function(d){
+		return d.parent.y;
+	      })
+	      .attr("ty", function(d){
+		return d.parent.x;
+	      })
 	      .remove();
 
 	  var t = d3.timer(function(elapsed) {
@@ -144,13 +237,13 @@ angular.module('dashboardApp')
 	  return null;
 	}
 
-	function remove_children_at_depth(node, depth){
-	  if(depth == 0){
+	function remove_children_at_depth(node, depth, tax_id){
+	  if(depth == 0 || (depth == 1 && node.tax_id != tax_id && tax_id != 1)){
 	    delete node.children;
 	    return true;
 	  }
 	  for (var i = 0; i < node.children.length; i++) {
-	    remove_children_at_depth(node.children[i], depth - 1);
+	    remove_children_at_depth(node.children[i], depth - 1, tax_id);
 	  }
 	}
 
@@ -175,15 +268,25 @@ angular.module('dashboardApp')
 
 	function highlight_on_mouseover(coords){
 	  var n = null;
+	  var cursor_pointer = false;
 	  d3.selectAll("custom-node")
 	    .each(function(d){
 	      if(within_radius([d.y, d.x], coords, node_size+stroke_width)){
 		d3.select(this).attr("fill", "red");
+		cursor_pointer = true;
 	      } else {
 		d3.select(this).attr("fill", color_scheme.fill);
 	      }
 	    });
+	  if(cursor_pointer || coords[0] <= canvas_offset_x){
+	    canvas_wrapper.style("cursor", "pointer");
+	  } else {
+	    canvas_wrapper.style("cursor", "auto");
+	  }
 	  draw_canvas(context, width, height);
+	  if(coords[0] <= canvas_offset_x){
+	    draw_canvas_taxon_up(context, width, height);
+	  }
 	}
 
 	function set_view_port(node, tax_id){
@@ -192,7 +295,7 @@ angular.module('dashboardApp')
 	    return n;
 	  }
 	  var json = (n.parent == null) ? n : search_for_node(node, n.parent);
-	  remove_children_at_depth(json, 2);
+	  remove_children_at_depth(json, 2, tax_id);
 	  return json;
 	}
 
@@ -204,10 +307,18 @@ angular.module('dashboardApp')
 	  d3.select("#tree-view")
 	    .on("click", function(d){
 	      var coords = d3.mouse(this);
-	      var n = get_node_data_mouse_click(coords);
-	      var data = jQuery.extend(true, {}, data_orig);
-	      data = set_view_port(data, n.data.tax_id);
-	      update(data, context, width, height);
+	      var tax_id = -1;
+	      if(coords[0] <= canvas_offset_x){
+		tax_id = data.tax_id;
+	      } else {
+		var n = get_node_data_mouse_click(coords);
+		tax_id = (n!=null) ? n.data.tax_id: -1;
+	      }
+	      if(tax_id!=-1){
+		data = jQuery.extend(true, {}, data_orig);
+		data = set_view_port(data, tax_id);
+		update(data, context, width, height);
+	      }
 	    })
 	    .on("mousemove", function(d){
 	      var coords = d3.mouse(this);
