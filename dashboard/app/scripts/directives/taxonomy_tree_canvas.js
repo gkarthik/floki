@@ -76,12 +76,22 @@ angular.module('dashboardApp')
 	    context.beginPath();
 	    context.font = "18px Helvetica";
 	    context.fillStyle = _node.attr("text-fill");
-	    context.textAlign = "left";
-	    context.textBaseline = 'middle';
-	    context.fillText(_node.text(),parseFloat(_node.attr("x")) + parseFloat(_node.attr("size")),parseFloat(_node.attr("y")));
+	    if(d.children!=null){
+	      context.textAlign = "center";
+	      context.textBaseline = 'middle';
+	      context.fillText(_node.text(),parseFloat(_node.attr("x")),parseFloat(_node.attr("y")) + parseFloat(_node.attr("size")) + 5);
+	    } else {
+	      context.textAlign = "left";
+	      context.textBaseline = 'middle';
+	      context.fillText(_node.text(),parseFloat(_node.attr("x")) + parseFloat(_node.attr("size")) + 5,parseFloat(_node.attr("y")));
+	    }
 	    context.fill();
 	    context.closePath();
 	  });
+	}
+
+	function draw_heatmap(d){
+	  context.beginPath();
 	}
 
 	function draw_canvas_taxon_up(context, width, height){
@@ -137,8 +147,7 @@ angular.module('dashboardApp')
 	
 	  var nodeUpdate = nodeEnter.merge(node);
 
-	  nodeUpdate.transition()
-	    .duration(duration)
+	  nodeUpdate
 	    .attr("x", function(d){
 	      return d.y;
 	    })
@@ -150,14 +159,6 @@ angular.module('dashboardApp')
 	    });
 
 	  var nodeExit = node.exit()
-	      .transition()
-	      .duration(duration)
-	      .attr("x", function(d){
-		return d.parent.y;
-	      })
-	      .attr("y", function(d){
-		return d.parent.x;
-	      })
 	      .remove();
 
 	  var link = canvas_wrapper.selectAll("custom-link").data(links, function(d){
@@ -297,6 +298,18 @@ angular.module('dashboardApp')
 	  var json = (n.parent == null) ? n : search_for_node(node, n.parent);
 	  remove_children_at_depth(json, 2, tax_id);
 	  return json;
+	}
+
+	function get_range(_data, key, min, max){
+	  min = (_data[key] < min) ? _data[key] : min;
+	  max = (_data[key] < max) ? _data[key] : max;
+	  var m;
+	  for (var i = 0; i < _data.children.length; i++) {
+	    m = get_range(_data.children[i], key, min, max);
+	    min = m[0];
+	    max = m[1];
+	  }
+	  return [min, max];
 	}
 
 	d3.json(scope.jsonFile, function(error, data){
