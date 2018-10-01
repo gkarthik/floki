@@ -24,8 +24,12 @@ angular.module('dashboardApp')
 	    width,
 	    node_size = 5,
 	    stroke_width = 2,
-	    canvas_offset_x = 100,
+	    canvas_offset_x = window.innerWidth/12,
 	    data;
+
+	var heatmap = {
+	  "square_size": 10
+	};
 	
 	var color_scheme = {
 	  "fill": "#4682b4",
@@ -33,6 +37,22 @@ angular.module('dashboardApp')
 	  "stroke-style": "#000000",
 	  "text-fill": "#000000",
 	  "link-stroke-style": "#000000"
+	};
+
+	var scales = {
+	  "taxon_reads": [],
+	  "percentage": [],
+	  "pathogenic": [],
+	  "pvalue": []
+	};
+
+	var barchart = {
+	  "background": "#FFFFFF",
+	  "width": window.innerWidth/3,
+	  "height": window.innerHeight/6,
+	  "fill": "#4682b4",
+	  "ctrl": "red",
+	  "padding": 20
 	};
 	
 	function setupCanvas(id, width, height) {
@@ -46,6 +66,68 @@ angular.module('dashboardApp')
 	  var ctx = canvas.getContext('2d');
 	  ctx.scale(dpr, dpr);
 	  return ctx;
+	}
+
+	
+	function draw_barchart(d, key){
+	  var x = d3.scaleBand()
+	      .rangeRound([0, barchart.width])
+	      .padding(0.1);
+	  var y = d3.scaleLinear()
+	      .rangeRound([0, barchart.height]);
+	  var _x = d.y + 20;
+	  var _y = d.x + 20;
+	  x.domain(d.data["file"]);
+	  y.domain([Math.min.apply(Math, d.data[key]), Math.max.apply(Math, d.data[key])]);
+
+	  // Background
+	  context.beginPath();
+	  context.fillStyle = barchart.background;
+	  context.rect(_x, _y, (x.padding() + x.bandwidth()) * (d.data[key].length + 1) + barchart.padding * 2, barchart.height + 2 * barchart.padding);
+	  context.fill();
+	  context.strokeStyle = "#000000";
+	  context.stroke();
+
+	  // x-axis
+	  context.lineWidth = 2;
+	  context.strokeStyle = "#000000";
+	  context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height + 1);
+	  context.lineTo(_x + (x.padding() + x.bandwidth()) * (d.data[key].length + 1) + barchart.padding * 2, _y + barchart.padding + barchart.height + 1);
+	  context.moveTo(_x + barchart.padding, _y + barchart.padding+barchart.height + 2);
+	  context.lineTo(_x + barchart.padding, _y + barchart.padding);
+	  context.stroke();
+
+	  // xaxis ticks
+	  context.beginPath();
+	  x.domain().forEach(function(d) {
+	    context.moveTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height);
+	    context.lineTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height + 6);
+	    context.font="12px Helvetica";
+	    context.textAlign = "center";
+	    context.textBaseline = "top";
+	    context.fillStyle = "#000000";
+	    context.fillText(d, _x + barchart.padding + x(d) + x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+	  });
+	  context.strokeStyle = "#000000";
+	  context.stroke();
+
+	  // yxais ticks
+	  y.ticks(10).forEach(function(d) {
+	    context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    context.lineTo(_x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    context.textAlign = "right";
+	    context.textBaseline = "middle";
+	    context.fillText(d, _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	  });
+	  context.strokeStyle = "black";
+	  context.stroke();
+
+	  for (var i = 0; i < d.data[key].length; i++) {
+	    context.fillStyle = barchart.fill;
+	    context.rect(_x + barchart.padding + x(d.data["file"][i]), _y + barchart.padding + (barchart.height - y(d.data[key][i])), x.bandwidth(), y(d.data[key][i]));
+	    context.fill();
+	  }
+	  context.closePath();
 	}
 
 	function draw_canvas(context, width, height){
@@ -83,27 +165,52 @@ angular.module('dashboardApp')
 	    } else {
 	      context.textAlign = "left";
 	      context.textBaseline = 'middle';
-	      context.fillText(_node.text(),parseFloat(_node.attr("x")) + parseFloat(_node.attr("size")) + 5,parseFloat(_node.attr("y")));
+	      context.fillText(_node.text(),parseFloat(_node.attr("x")) + heatmap.square_size * (d.data.percentage.length + 1) + parseFloat(_node.attr("size")),parseFloat(_node.attr("y")));
 	    }
 	    context.fill();
 	    context.closePath();
+	    if(d.depth > 0){
+	      draw_heatmap(_node, d, "percentage");
+	    }
+	  });
+	  canvas_wrapper.selectAll("custom-node").each(function(d){
+	    var _node = d3.select(this);
+	    if(_node.attr("hover-status")=="active"){
+	      draw_barchart(d, "percentage");
+	    }
 	  });
 	}
 
-	function draw_heatmap(d){
-	  context.beginPath();
+	function draw_heatmap(_node, d, key){
+	  var start_x = parseFloat(_node.attr("x")) + heatmap.square_size,
+	      start_y = parseFloat(_node.attr("y"));
+	  if(d.children !=null){
+	    start_x = parseFloat(_node.attr("x")) - (heatmap.square_size * d.data[key].length)/2;
+	    start_y = start_y + 22;
+	  }
+	  for (var i = 0; i < d.data[key].length; i++) {
+	    context.beginPath();
+	    context.fillStyle = scales[key][d.depth-1](d.data[key][i]);
+	    context.moveTo(start_x + (heatmap.square_size * i), start_y - (heatmap.square_size/2));
+	    context.rect(start_x + (heatmap.square_size * i), start_y - (heatmap.square_size/2), heatmap.square_size, heatmap.square_size);
+	    context.fill();
+	    context.strokeStyle = "#000000";
+	    context.stroke();
+	    context.closePath();
+	  }
+	  return 0;
 	}
 
 	function draw_canvas_taxon_up(context, width, height){
 	  context.beginPath();
-	  context.globalAlpha = 0.3;
+	  context.globalAlpha = 0.4;
 	  context.fillStyle = "#000000";
 	  context.arc(0, height/2, canvas_offset_x, 0, 2 * Math.PI);
 	  context.fill();
 	  context.closePath();
 	  context.beginPath();
 	  context.globalAlpha = 1;
-	  context.fillStyle = "#000000";
+	  context.fillStyle = "#FFFFFF";
 	  context.font = "30px Helvetica";
 	  context.textAlign = "center";
 	  context.textBaseline = "middle";
@@ -119,7 +226,7 @@ angular.module('dashboardApp')
 	  var nodes = tree.descendants();
 	  var links = tree.descendants().slice(1);
 	  nodes.forEach(function(d){
-	    d.y = (d.depth * 300) + canvas_offset_x;
+	    d.y = (d.depth * width/6) + canvas_offset_x;
 	  });
 	  
 	  var duration = 300;
@@ -217,6 +324,14 @@ angular.module('dashboardApp')
 	      })
 	      .remove();
 
+	  var m1 = get_range_at_depth(data, "percentage", data.depth + 1);
+	  var m2 = get_range_at_depth(data, "percentage", data.depth + 2);
+
+	  scales.percentage[0] = d3.scaleSequential(d3.interpolateGreens)
+	    .domain([Math.min.apply(Math, m1[0]), Math.max.apply(Math, m1[1])]);
+	  scales.percentage[1] = d3.scaleSequential(d3.interpolateBlues)
+	    .domain([Math.min.apply(Math, m2[0]), Math.max.apply(Math, m2[1])]);
+	  
 	  var t = d3.timer(function(elapsed) {
 	    draw_canvas(context, width, height);
 	    if (elapsed > duration + (0.3 * duration)) t.stop();
@@ -259,12 +374,10 @@ angular.module('dashboardApp')
 	  d3.selectAll("custom-node")
 	    .each(function(d){
 	      if(within_radius([d.y, d.x], coords, node_size+stroke_width)){
-		// d3.select(this).attr("fill", "red");
 		n = d;
 	      }
 	    });
 	  return n;
-	  // draw_canvas(context, width, height);
 	}
 
 	function highlight_on_mouseover(coords){
@@ -273,9 +386,11 @@ angular.module('dashboardApp')
 	  d3.selectAll("custom-node")
 	    .each(function(d){
 	      if(within_radius([d.y, d.x], coords, node_size+stroke_width)){
-		d3.select(this).attr("fill", "red");
+		d3.select(this).attr("fill", color_scheme["hover-fill"]);
+		d3.select(this).attr("hover-status", "active");
 		cursor_pointer = true;
 	      } else {
+		d3.select(this).attr("hover-status", "inactive");
 		d3.select(this).attr("fill", color_scheme.fill);
 	      }
 	    });
@@ -300,12 +415,23 @@ angular.module('dashboardApp')
 	  return json;
 	}
 
-	function get_range(_data, key, min, max){
-	  min = (_data[key] < min) ? _data[key] : min;
-	  max = (_data[key] < max) ? _data[key] : max;
+	function get_range_at_depth(_data, key, depth, min, max){
+	  if(min == null || max == null){
+	    min = Array(_data[key].length).fill(Infinity);
+	    max = Array(_data[key].length).fill(-1);
+	  }
+	  if(_data.depth == depth){
+	    for (let i = 0; i < _data[key].length; i++) {
+	      min[i] = (_data[key][i] < min[i]) ? _data[key][i] : min[i];
+	      max[i] = (_data[key][i] > max[i]) ? _data[key][i] : max[i];
+	    }
+	  }
 	  var m;
-	  for (var i = 0; i < _data.children.length; i++) {
-	    m = get_range(_data.children[i], key, min, max);
+	  if(_data.children == null || _data.depth > depth){
+	    return [min, max];
+	  }
+	  for (let i = 0; i < _data.children.length; i++) {
+	    m = get_range_at_depth(_data.children[i], key, depth, min, max);
 	    min = m[0];
 	    max = m[1];
 	  }
