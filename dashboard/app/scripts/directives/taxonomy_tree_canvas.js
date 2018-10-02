@@ -28,6 +28,14 @@ angular.module('dashboardApp')
 	    canvas_offset_x = window.innerWidth/12,
 	    data;
 
+	var annotated_heatmap = {
+	  "square_size": 10,
+	  "width": window.innerWidth/2,
+	  "height": window.innerHeight * 2,
+	  "offset_x": window.innerWidth/6,
+	  "offset_y": window.innerHeight/6
+	};
+
 	var heatmap = {
 	  "square_size": 10
 	};
@@ -162,6 +170,7 @@ angular.module('dashboardApp')
 	    context.stroke();
 	    context.closePath();
 	  });
+	  
 	  canvas_wrapper.selectAll("custom-node").each(function(d){
 	    var _node = d3.select(this);
 	    context.moveTo(_node.attr("x"), _node.attr("y"));
@@ -197,6 +206,86 @@ angular.module('dashboardApp')
 	      draw_hover(d, ["percentage", "taxon_reads"]);
 	    }
 	  });
+	}
+
+	function get_all_annotated_nodes(n, key, annotated_nodes){
+	  annotated_nodes = annotated_nodes || [];
+	  if(n[key] && (n.rank == "species" || n.rank == "genus")){
+	    annotated_nodes.push(n);
+	  }
+	  for (var i = 0; i < n.children.length; i++) {
+	    annotated_nodes = get_all_annotated_nodes(n.children[i], key, annotated_nodes);
+	  }
+	  return annotated_nodes;
+	}
+
+	scope.drawPathogenHeatmap = function(){
+	  setupCanvas("tree-view", window.innerWidth, window.innerHeight * 2);
+	  draw_heatmap_annotated(jQuery.extend(true, {}, data_orig));
+	}
+
+	function draw_heatmap_annotated(d){
+	  // update({}, context, width, height);
+
+	  var annotated_nodes = get_all_annotated_nodes(d, "pathogenic");
+	  console.log(annotated_nodes);
+	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
+	    return d;
+	  });
+
+	  var y = d3.scaleBand()
+	      .rangeRound([0, annotated_heatmap.height])
+	      .domain(annotated_nodes.map(function(x){return x.taxon_name;}));
+
+	  var _min = Math.min.apply(Math, annotated_nodes.map(function(x){
+	    return Math.min.apply(Math, x.percentage);
+	  }));
+	  
+	  var _max = Math.max.apply(Math, annotated_nodes.map(function(x){
+	    return Math.max.apply(Math, x.percentage);
+	  }));
+	  
+	  var percentage_scale = d3.scaleSequential(d3.interpolateYlOrRd)
+	      .domain([_min, _max]);
+	  
+	  var nodeEnter = node.enter()
+	      .append("annotated-node")
+	      .classed("annotated-node", true)
+	      .attr("x", function(d){
+		return annotated_heatmap.offset_x;
+	      })
+	      .attr("y", function(d){
+		return y(d.taxon_name);
+	      })
+	      .text(function(d){
+		return d.taxon_name;
+	      });
+
+	  var nodeUpdate = nodeEnter.merge(node);
+
+	  var nodeExit = node.exit().remove();
+
+	  context.clearRect(0, 0, width, height);
+	  canvas_wrapper.selectAll(".annotated-node").each(function(d){
+	    var _node = d3.select(this);
+	    context.beginPath();
+	    context.strokeStyle = "#000000";
+	    context.lineWidth = 2;
+	    for (var i = 0; i < d.percentage.length; i++) {
+	      context.rect(annotated_heatmap.offset_x + (i*annotated_heatmap.square_size), y(_node.text()) - annotated_heatmap.square_size/2, annotated_heatmap.square_size, annotated_heatmap.square_size);
+	      context.fillStyle = percentage_scale(d.percentage[i]);
+	      context.fill();
+	      context.stroke();
+	    }
+	    context.fillStyle="#000000";
+	    context.font = "12px Helvetica";
+	    context.textAlign = "right";
+	    context.textBaseline = "middle";
+
+	    context.fillText(_node.text(), annotated_heatmap.offset_x, y(_node.text()));
+	    context.closePath();
+	  });
+	  
 	}
 
 	function draw_heatmap(_node, d, key){
