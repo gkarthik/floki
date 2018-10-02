@@ -18,6 +18,7 @@ angular.module('dashboardApp')
 	var d3 = $window.d3,
 	    jQuery = $window.jQuery,
 	    canvas_wrapper = d3.select("#tree-view"),
+	    breadcrumbs = d3.select("#breadcrumbs"),
 	    data_orig,
 	    context,
 	    height,
@@ -68,27 +69,22 @@ angular.module('dashboardApp')
 	  return ctx;
 	}
 
-	
-	function draw_barchart(d, key){
+	function draw_barchart(d, key, offset_x, offset_y, _color){
+	  offset_y = (offset_y == null) ? 0 : offset_y;
+	  offset_x = (offset_x == null) ? 0 : offset_x;
+
 	  var x = d3.scaleBand()
-	      .rangeRound([0, barchart.width])
+	      .rangeRound([0, barchart.width/2])
 	      .padding(0.1);
 	  var y = d3.scaleLinear()
 	      .rangeRound([0, barchart.height]);
-	  var _x = d.y + 20;
-	  var _y = d.x + 20;
+	  var _x = d.y + 20 + offset_x;
+	  var _y = d.x + 20 + offset_y;
 	  x.domain(d.data["file"]);
 	  y.domain([Math.min.apply(Math, d.data[key]), Math.max.apply(Math, d.data[key])]);
 
-	  // Background
-	  context.beginPath();
-	  context.fillStyle = barchart.background;
-	  context.rect(_x, _y, (x.padding() + x.bandwidth()) * (d.data[key].length + 1) + barchart.padding * 2, barchart.height + 2 * barchart.padding);
-	  context.fill();
-	  context.strokeStyle = "#000000";
-	  context.stroke();
-
 	  // x-axis
+	  context.beginPath();
 	  context.lineWidth = 2;
 	  context.strokeStyle = "#000000";
 	  context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height + 1);
@@ -96,21 +92,27 @@ angular.module('dashboardApp')
 	  context.moveTo(_x + barchart.padding, _y + barchart.padding+barchart.height + 2);
 	  context.lineTo(_x + barchart.padding, _y + barchart.padding);
 	  context.stroke();
+	  context.closePath();
 
 	  // xaxis ticks
 	  context.beginPath();
+	  context.fillStyle = "#000000";
 	  x.domain().forEach(function(d) {
 	    context.moveTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height);
 	    context.lineTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height + 6);
 	    context.font="12px Helvetica";
-	    context.textAlign = "center";
-	    context.textBaseline = "top";
-	    context.fillStyle = "#000000";
+	    context.save();
+	    context.translate(_x + barchart.padding + x(d) + x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+	    context.rotate(-Math.PI/2);
+	    context.translate( -1 * (_x + barchart.padding + x(d) + x.bandwidth() / 2) , -1 * (_y + barchart.padding + barchart.height + 6));
+	    context.textAlign = "right";
+	    context.textBaseline = "middle";
 	    context.fillText(d, _x + barchart.padding + x(d) + x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+	    context.restore();
 	  });
 	  context.strokeStyle = "#000000";
 	  context.stroke();
-
+	  
 	  // yxais ticks
 	  y.ticks(10).forEach(function(d) {
 	    context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height - y(d) + 0.5);
@@ -123,14 +125,30 @@ angular.module('dashboardApp')
 	  context.stroke();
 
 	  for (var i = 0; i < d.data[key].length; i++) {
-	    context.fillStyle = barchart.fill;
+	    context.fillStyle = _color;
 	    context.rect(_x + barchart.padding + x(d.data["file"][i]), _y + barchart.padding + (barchart.height - y(d.data[key][i])), x.bandwidth(), y(d.data[key][i]));
 	    context.fill();
 	  }
 	  context.closePath();
 	}
+	
+	function draw_hover(d, keys){	  
+	  // Background
+	  context.beginPath();
+	  context.fillStyle = barchart.background;
+	  context.rect(d.y + 20,d.x+20, barchart.width + barchart.padding * 2, barchart.height + 4 * barchart.padding);
+	  context.fill();
+	  context.strokeStyle = "#000000";
+	  context.stroke();
+	  context.closePath();
+	  
+	  var _width = barchart.width/keys.length;
+	  for (var i = 0; i < keys.length; i++) {
+	    draw_barchart(d, keys[i], (_width + barchart.padding) * i, 0, d3.schemeDark2[i]);
+	  }
+	}
 
-	function draw_canvas(context, width, height){
+	function draw_canvas(width, height){
 	  context.clearRect(0, 0, width, height);
 	  canvas_wrapper.selectAll("custom-link").each(function(d){
 	    var _link = d3.select(this);
@@ -176,7 +194,7 @@ angular.module('dashboardApp')
 	  canvas_wrapper.selectAll("custom-node").each(function(d){
 	    var _node = d3.select(this);
 	    if(_node.attr("hover-status")=="active"){
-	      draw_barchart(d, "percentage");
+	      draw_hover(d, ["percentage", "taxon_reads"]);
 	    }
 	  });
 	}
@@ -201,7 +219,7 @@ angular.module('dashboardApp')
 	  return 0;
 	}
 
-	function draw_canvas_taxon_up(context, width, height){
+	function draw_canvas_taxon_up(width, height){
 	  context.beginPath();
 	  context.globalAlpha = 0.4;
 	  context.fillStyle = "#000000";
@@ -333,24 +351,27 @@ angular.module('dashboardApp')
 	    .domain([Math.min.apply(Math, m2[0]), Math.max.apply(Math, m2[1])]);
 	  
 	  var t = d3.timer(function(elapsed) {
-	    draw_canvas(context, width, height);
+	    draw_canvas(width, height);
 	    if (elapsed > duration + (0.3 * duration)) t.stop();
 	  });
 	}
 
-	function search_for_node(node, tax_id){
+	function search_for_node(node, tax_id, path_root){
+	  path_root = (path_root == null) ? [] : path_root;
 	  if(node.tax_id == tax_id){
-	    return node;
+	    path_root.push(node);
+	    return path_root;
 	  } else if(node.children != null) {
 	    var t;
 	    for(let i = 0; i < node.children.length;i++){
-	      t = search_for_node(node.children[i], tax_id);
-	      if(t != null){
+	      t = search_for_node(node.children[i], tax_id, path_root);
+	      if(t.length != 0){
+		t.unshift(node);
 		return t;
 	      }
 	    }
 	  }
-	  return null;
+	  return [];
 	}
 
 	function remove_children_at_depth(node, depth, tax_id){
@@ -399,18 +420,20 @@ angular.module('dashboardApp')
 	  } else {
 	    canvas_wrapper.style("cursor", "auto");
 	  }
-	  draw_canvas(context, width, height);
+	  draw_canvas(width, height);
 	  if(coords[0] <= canvas_offset_x){
-	    draw_canvas_taxon_up(context, width, height);
+	    draw_canvas_taxon_up(width, height);
 	  }
 	}
 
 	function set_view_port(node, tax_id){
 	  var n = search_for_node(node, tax_id);
-	  if(n == null){
-	    return n;
+	  draw_breadcrumbs(n);
+	  // n = n[n.length - 1];
+	  if(n.length == 0){
+	    return null;
 	  }
-	  var json = (n.parent == null) ? n : search_for_node(node, n.parent);
+	  var json = (n.length == 1) ? n[n.length - 1] : n[n.length - 2]; // To account for root
 	  remove_children_at_depth(json, 2, tax_id);
 	  return json;
 	}
@@ -438,11 +461,63 @@ angular.module('dashboardApp')
 	  return [min, max];
 	}
 
+	function get_path_to_root(n, path){
+	  path = (path == null) ? [] : path;
+	  if(n.parent == null){
+	    return path;
+	  }
+	  path.unshift({
+	    "taxon_name": n.taxon_name,
+	    "tax_id": n.tax_id
+	  });
+	  return get_path_to_root(n.parent, path);
+	}
+
+	function draw_breadcrumbs(path_root){
+	  var current_tax = path_root[path_root.length - 1].tax_id;
+	  var li = breadcrumbs.selectAll(".breadcrumb-item").data(path_root, function(d){
+	    return d;
+	  });
+	  var liEnter = li.enter()
+	      .append("li")
+	      .attr("class", function(d,i){
+		if(d.tax_id == current_tax){
+		  return "breadcrumb-item active";
+		}
+		return "breadcrumb-item";
+	      })
+	      .style("cursor", "pointer")
+	      .text(function(d){
+		return d.taxon_name;
+	      })
+	      .on("click", function(d){
+		data = jQuery.extend(true, {}, data_orig);
+		data = set_view_port(data, d.tax_id);
+		update(data, context, width, height);
+	      });
+	  
+	  var liUpdate = liEnter.merge(li)
+	      .attr("class", function(d,i){
+		if(d.tax_id == current_tax){
+		  return "breadcrumb-item active";
+		}
+		return "breadcrumb-item";
+	      })
+
+	      .text(function(d){
+		return d.taxon_name;
+	      });
+
+	  var liExit = li.exit().remove();
+	  
+	}
+
 	d3.json(scope.jsonFile, function(error, data){
 	  data_orig = jQuery.extend(true, {}, data);
 	  height = window.innerHeight;
 	  width = window.innerWidth;
 	  context = setupCanvas("tree-view", width, height);
+	  var t;
 	  d3.select("#tree-view")
 	    .on("click", function(d){
 	      var coords = d3.mouse(this);
