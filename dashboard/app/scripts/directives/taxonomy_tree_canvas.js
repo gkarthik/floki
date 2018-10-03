@@ -28,14 +28,6 @@ angular.module('dashboardApp')
 	    canvas_offset_x = window.innerWidth/12,
 	    data;
 
-	var annotated_heatmap = {
-	  "square_size": 10,
-	  "width": window.innerWidth/2,
-	  "height": window.innerHeight * 2,
-	  "offset_x": window.innerWidth/6,
-	  "offset_y": window.innerHeight/6
-	};
-
 	var heatmap = {
 	  "square_size": 10
 	};
@@ -64,7 +56,7 @@ angular.module('dashboardApp')
 	  "padding": 20
 	};
 	
-	function setupCanvas(id, width, height) {
+	function setup_canvas(id, width, height) {
 	  var canvas = document.getElementById(id);
 	  canvas.style.width = width+"px";
 	  canvas.style.height = height+ "px";
@@ -156,6 +148,28 @@ angular.module('dashboardApp')
 	  }
 	}
 
+	
+	function draw_heatmap(_node, d, key){
+	  var start_x = parseFloat(_node.attr("x")) + heatmap.square_size,
+	      start_y = parseFloat(_node.attr("y"));
+	  if(d.children !=null){
+	    start_x = parseFloat(_node.attr("x")) - (heatmap.square_size * d.data[key].length)/2;
+	    start_y = start_y + 22;
+	  }
+	  for (var i = 0; i < d.data[key].length; i++) {
+	    context.beginPath();
+	    context.fillStyle = scales[key][d.depth-1](d.data[key][i]);
+	    context.moveTo(start_x + (heatmap.square_size * i), start_y - (heatmap.square_size/2));
+	    context.rect(start_x + (heatmap.square_size * i), start_y - (heatmap.square_size/2), heatmap.square_size, heatmap.square_size);
+	    context.fill();
+	    context.strokeStyle = "#000000";
+	    context.stroke();
+	    context.closePath();
+	  }
+	  return 0;
+	}
+
+
 	function draw_canvas(width, height){
 	  context.clearRect(0, 0, width, height);
 	  canvas_wrapper.selectAll("custom-link").each(function(d){
@@ -208,106 +222,6 @@ angular.module('dashboardApp')
 	  });
 	}
 
-	function get_all_annotated_nodes(n, key, annotated_nodes){
-	  annotated_nodes = annotated_nodes || [];
-	  if(n[key] && (n.rank == "species" || n.rank == "genus")){
-	    annotated_nodes.push(n);
-	  }
-	  for (var i = 0; i < n.children.length; i++) {
-	    annotated_nodes = get_all_annotated_nodes(n.children[i], key, annotated_nodes);
-	  }
-	  return annotated_nodes;
-	}
-
-	scope.drawPathogenHeatmap = function(){
-	  setupCanvas("tree-view", window.innerWidth, window.innerHeight * 2);
-	  draw_heatmap_annotated(jQuery.extend(true, {}, data_orig));
-	}
-
-	function draw_heatmap_annotated(d){
-	  // update({}, context, width, height);
-
-	  var annotated_nodes = get_all_annotated_nodes(d, "pathogenic");
-	  console.log(annotated_nodes);
-	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
-	    return d;
-	  });
-
-	  var y = d3.scaleBand()
-	      .rangeRound([0, annotated_heatmap.height])
-	      .domain(annotated_nodes.map(function(x){return x.taxon_name;}));
-
-	  var _min = Math.min.apply(Math, annotated_nodes.map(function(x){
-	    return Math.min.apply(Math, x.percentage);
-	  }));
-	  
-	  var _max = Math.max.apply(Math, annotated_nodes.map(function(x){
-	    return Math.max.apply(Math, x.percentage);
-	  }));
-	  
-	  var percentage_scale = d3.scaleSequential(d3.interpolateYlOrRd)
-	      .domain([_min, _max]);
-	  
-	  var nodeEnter = node.enter()
-	      .append("annotated-node")
-	      .classed("annotated-node", true)
-	      .attr("x", function(d){
-		return annotated_heatmap.offset_x;
-	      })
-	      .attr("y", function(d){
-		return y(d.taxon_name);
-	      })
-	      .text(function(d){
-		return d.taxon_name;
-	      });
-
-	  var nodeUpdate = nodeEnter.merge(node);
-
-	  var nodeExit = node.exit().remove();
-
-	  context.clearRect(0, 0, width, height);
-	  canvas_wrapper.selectAll(".annotated-node").each(function(d){
-	    var _node = d3.select(this);
-	    context.beginPath();
-	    context.strokeStyle = "#000000";
-	    context.lineWidth = 2;
-	    for (var i = 0; i < d.percentage.length; i++) {
-	      context.rect(annotated_heatmap.offset_x + (i*annotated_heatmap.square_size), y(_node.text()) - annotated_heatmap.square_size/2, annotated_heatmap.square_size, annotated_heatmap.square_size);
-	      context.fillStyle = percentage_scale(d.percentage[i]);
-	      context.fill();
-	      context.stroke();
-	    }
-	    context.fillStyle="#000000";
-	    context.font = "12px Helvetica";
-	    context.textAlign = "right";
-	    context.textBaseline = "middle";
-
-	    context.fillText(_node.text(), annotated_heatmap.offset_x, y(_node.text()));
-	    context.closePath();
-	  });
-	  
-	}
-
-	function draw_heatmap(_node, d, key){
-	  var start_x = parseFloat(_node.attr("x")) + heatmap.square_size,
-	      start_y = parseFloat(_node.attr("y"));
-	  if(d.children !=null){
-	    start_x = parseFloat(_node.attr("x")) - (heatmap.square_size * d.data[key].length)/2;
-	    start_y = start_y + 22;
-	  }
-	  for (var i = 0; i < d.data[key].length; i++) {
-	    context.beginPath();
-	    context.fillStyle = scales[key][d.depth-1](d.data[key][i]);
-	    context.moveTo(start_x + (heatmap.square_size * i), start_y - (heatmap.square_size/2));
-	    context.rect(start_x + (heatmap.square_size * i), start_y - (heatmap.square_size/2), heatmap.square_size, heatmap.square_size);
-	    context.fill();
-	    context.strokeStyle = "#000000";
-	    context.stroke();
-	    context.closePath();
-	  }
-	  return 0;
-	}
-
 	function draw_canvas_taxon_up(width, height){
 	  context.beginPath();
 	  context.globalAlpha = 0.4;
@@ -341,7 +255,7 @@ angular.module('dashboardApp')
 	    return d;
 	  });
 	  
-	  var nodeEnter = node.enter()
+	  var node_enter = node.enter()
 	      .append("custom-node")
 	      .classed("node", true)
 	      .attr("x", function(d){
@@ -359,9 +273,9 @@ angular.module('dashboardApp')
 	      .attr("text-fill", color_scheme["text-fill"])
 	      .attr("line-width", stroke_width);
 	
-	  var nodeUpdate = nodeEnter.merge(node);
+	  var node_update = node_enter.merge(node);
 
-	  nodeUpdate
+	  node_update
 	    .attr("x", function(d){
 	      return d.y;
 	    })
@@ -372,7 +286,7 @@ angular.module('dashboardApp')
 	      return d.data.taxon_name;
 	    });
 
-	  var nodeExit = node.exit()
+	  var node_exit = node.exit()
 	      .remove();
 
 	  var link = canvas_wrapper.selectAll("custom-link").data(links, function(d){
@@ -605,7 +519,7 @@ angular.module('dashboardApp')
 	  data_orig = jQuery.extend(true, {}, data);
 	  height = window.innerHeight;
 	  width = window.innerWidth;
-	  context = setupCanvas("tree-view", width, height);
+	  context = setup_canvas("tree-view", width, height);
 	  var t;
 	  d3.select("#tree-view")
 	    .on("click", function(d){

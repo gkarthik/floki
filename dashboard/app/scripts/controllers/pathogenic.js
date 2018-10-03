@@ -2,14 +2,15 @@
 
 /**
  * @ngdoc function
- * @name dashboardApp.controller:MainCtrl
+ * @name dashboardApp.controller:AboutCtrl
  * @description
- * # MainCtrl
+ * # AboutCtrl
  * Controller of the dashboardApp
  */
 angular.module('dashboardApp')
-  .controller('MainCtrl', function ($scope) {
+  .controller('PathogenicCtrl', function ($scope, $window) {
     $scope.jsonOutputs = [
       "json_output/centrifuge_2018.09.21.json"
     ];
+
   });
