@@ -26,7 +26,7 @@ angular.module('dashboardApp')
 	var annotated_heatmap = {
 	  "padding": 5,
 	  "square_size": 20,
-	  "width": window.innerWidth * 2,
+	  "width": window.innerWidth,
 	  "height": window.innerHeight,
 	  "offset_x": window.innerWidth/6,
 	  "offset_y": window.innerHeight/10
@@ -60,16 +60,24 @@ angular.module('dashboardApp')
 	function draw_heatmap_annotated(d){
 
 	  var annotated_nodes = get_all_annotated_nodes(d, "pathogenic");
-	  annotated_heatmap.width = annotated_nodes.length * (annotated_heatmap.square_size + annotated_heatmap.padding * 2);
-	  width = annotated_heatmap.width + annotated_heatmap["offset_x"] * 2;
+	  // annotated_heatmap.width = annotated_nodes.length * (annotated_heatmap.square_size + annotated_heatmap.padding * 2);
+    annotated_heatmap.height = annotated_nodes.length % width_fit_number * (100);
+	  width = annotated_heatmap.width;
+    height = annotated_heatmap.height + annotated_heatmap["offset_y"] * 2;
 	  context = setup_canvas("annotation-wrapper", width, height);
 	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
 	    return d;
 	  });
 
+    var width_fit_number = (annotated_heatmap.width - annotated_heatmap["offset_x"])/(annotated_heatmap.square_size + annotated_heatmap.padding * 2)
+
 	  var x = d3.scaleBand()
 	      .rangeRound([15, annotated_heatmap.width])
-	      .domain(annotated_nodes.map(function(x){return x.taxon_name;}));
+        .domain(d3.range(width_fit_number));
+
+    var y = d3.scaleBand()
+        .rangeRound([annotated_heatmap.offset_y, annotated_nodes.length%width_fit_number])
+        .domain(d3.range(Math.ceil(annotated_nodes.length/width_fit_number)));
 
 	  var _min = Math.min.apply(Math, annotated_nodes.map(function(x){
 	    return Math.min.apply(Math, x.percentage);
@@ -85,11 +93,14 @@ angular.module('dashboardApp')
 	  var nodeEnter = node.enter()
 	      .append("annotated-node")
 	      .classed("annotated-node", true)
-	      .attr("y", function(d){
-		return annotated_heatmap.offset_y;
-	      })
 	      .attr("x", function(d){
-		return x(d.taxon_name);
+          console.log(x(Math.floor(annotated_nodes.indexOf(d) % width_fit_number)))
+		return x(Math.floor(annotated_nodes.indexOf(d) % width_fit_number));
+	      })
+	      .attr("y", function(d){
+          console.log(y(Math.floor(annotated_nodes.indexOf(d)/width_fit_number)))
+          // console.log(y(Math.floor(annotated_nodes.indexOf(d)/width_fit_number)))
+		return y(Math.floor(annotated_nodes.indexOf(d)/width_fit_number));
 	      })
 	      .text(function(d){
 		return d.taxon_name;
