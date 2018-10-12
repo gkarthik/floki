@@ -7,21 +7,29 @@ import taxon_tree
 import json
 import os
 
+import time
+
 # Sample dataframes
-p="/Users/karthik/hpc_downloads/2018.09.24/samples/"
+p="/Users/karthik/hpc_downloads/2018.10.11/centrifuge_report/"
+ctrl_path = "/Users/karthik/hpc_downloads/2018.10.11/W0006.centrifuge.report"
+
+json_path = "./dashboard/app/json_output/"+time.strftime("%Y.%m.%d.%s")+".json"
+
 dirs = sorted(os.listdir(p))
 
-centrifuge_output = []
+names = []
+tool_output = []
 for f in dirs:
     if f[-7:] == ".report":
         print(f)
-        centrifuge_output.append(pd.read_table(p+f))
+        tool_output.append(pd.read_csv(p+f))
+        names.append(f[:-7])
 
 # centrifuge_output = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report.tsv")
 # centrifuge_output2 = pd.read_table("~/hpc_downloads/2018.08.06/centrifuge_report_2.tsv")
 
 # Control dataframe
-ctrl_output = pd.read_table("/Users/karthik/hpc_downloads/2018.09.24/W0004.centrifuge.report")
+ctrl_output = pd.read_csv(ctrl_path)
 
 # Annotations
 annotations = pd.read_csv("./merged_disease_pathogen_symptom_annotations.csv")
@@ -43,20 +51,23 @@ nodes_df = nodes_df.apply(lambda x: x.str.strip() if x.dtype == np.object else x
 nodes_df = nodes_df.set_index("tax_id")
 names_df = names_df.set_index("tax_id")
 
+print("Populating Taxonomy.. ")
 imp.reload(taxon_tree)
 root = taxon_tree.Node(1, None, "Root", "no rank")
-for i in centrifuge_output:
+for i in tool_output:
     root.populate_taxonomy(i, nodes_df, names_df, root)
 
+print("Populating Annotations.. ")
 root.populate_annotations(annotations)
 
 # Dump computed object as pickle
 root.dump_object()
 
+print("Populating read counts..")
+
 # Batch samples
-for i in centrifuge_output:
-    root.populate_with_reads(i)
-# root.populate_with_reads(centrifuge_output2)
+for _, i in enumerate(tool_output):
+    root.populate_with_reads(i, names[_])
 
 # Ctrl reads
 root.populate_ctr_reads(ctrl_output)
@@ -68,11 +79,11 @@ root.populate_percentage(root.get_total_reads())
 
 # root.compute_pvalues()
 
-
 d = root.to_dict()
 _str = json.dumps(d)
-with open("./dashboard/app/json_output/centrifuge_2018.09.21.json", "w") as f:
+with open(json_path, "w") as f:
     f.write(_str)
+    print("Finished writing file to "+json_path)
 
 f.close()
 

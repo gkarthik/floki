@@ -67,7 +67,7 @@ class Node:
         return None
 
     def populate_taxonomy(self, reads_df, nodes_df, names_df, root):
-        for _i, i in enumerate(reads_df["taxID"].tolist()): # get tax IDS from centrifuge output
+        for _i, i in enumerate(reads_df["tax_id"].tolist()): # get tax IDS from output of tool
             if _i % 100000 == 0:
                 print(_i)
             n = root.get_node(i)
@@ -82,6 +82,9 @@ class Node:
                     n.set_parent(p)
                 tax_id = nodes_df.ix[tax_id]["parent_tax_id"]
                 n = p
+        # Create unassigned
+        if root.get_node(0) == None:
+            n = Node(0,root, "Unassigned", "No Rank")
 
     def get_total_children(self):
         ctr = 1
@@ -141,11 +144,11 @@ class Node:
         self.init_new_sample(name)
         for i in df.index.values:
             _ = df.ix[i]
-            n = self.get_node(_["taxID"])
+            n = self.get_node(_["tax_id"])
             if n == None:
                 continue
-            n.reads[-1] += _["numReads"]
-            n.unique_reads[-1] += _["numUniqueReads"]
+            n.reads[-1] += _["num_reads"]
+            # n.unique_reads[-1] += _["numUniqueReads"]
 
     def print_read_metrics(self):
         for i in range(len(self.reads)):
@@ -167,10 +170,10 @@ class Node:
     def populate_ctr_reads(self, df):
         for i in df.index.values:
             _ = df.ix[i]
-            n = self.get_node(_["taxID"])
+            n = self.get_node(_["tax_id"])
             if n == None:
                 continue
-            n.ctrl_reads += _["numReads"]
+            n.ctrl_reads += _["num_reads"]
         if self.tax_id == 1:
             total = self.get_total_ctrl_reads()
             self.populate_ctrl_percentage(total)
@@ -254,4 +257,6 @@ class Node:
         }
         if len(self.children) > 0:
             d["children"] =  [i.to_dict() for i in self.children]
+        else:
+            d["children"] = []
         return d
