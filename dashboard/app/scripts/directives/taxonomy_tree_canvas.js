@@ -31,7 +31,7 @@ angular.module('dashboardApp')
 	var heatmap = {
 	  "square_size": 10
 	};
-	
+
 	var color_scheme = {
 	  "fill": "#4682b4",
 	  "hover-fill": "red",
@@ -55,7 +55,7 @@ angular.module('dashboardApp')
 	  "ctrl": "red",
 	  "padding": 20,
 	};
-	
+
 	function setup_canvas(id, width, height) {
 	  var canvas = document.getElementById(id);
 	  canvas.style.width = width+"px";
@@ -78,7 +78,7 @@ angular.module('dashboardApp')
 	      .padding(0.1);
 	  var y = d3.scaleLinear()
 	      .rangeRound([0, barchart.height]);
-	  var _x = d.y + 20 + offset_x;
+	  var _x = d.y + 50 + offset_x;
 	  var _y = d.x + 20 + offset_y;
 	  x.domain(d.data["file"]);
 	  var y_domain_elmns = d.data[key].slice();
@@ -120,14 +120,14 @@ angular.module('dashboardApp')
 	  });
 	  context.strokeStyle = "#000000";
 	  context.stroke();
-	  
+
 	  // yxais ticks
 	  y.ticks(10).forEach(function(d) {
 	    context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	    context.lineTo(_x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	    context.textAlign = "right";
 	    context.textBaseline = "middle";
-	    context.fillText(d, _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    context.fillText(d.toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	  });
 	  context.strokeStyle = "#000000";
 	  context.stroke();
@@ -143,24 +143,24 @@ angular.module('dashboardApp')
 	  context.lineTo(_x + barchart.padding+barchart.width/2, _y + barchart.padding + (barchart.height - y(d.data["ctrl_"+key])));
 	  context.stroke();
 	}
-	
-	function draw_hover(d, keys){	  
+
+	function draw_hover(d, keys){
 	  // Background
 	  context.beginPath();
 	  context.fillStyle = barchart.background;
-	  context.rect(d.y + 20,d.x+20, barchart.width + barchart.padding * 2, barchart.height + 4 * barchart.padding);
+	  context.rect(d.y + 20, d.x + 20, 80 + barchart.width + barchart.padding * 2, barchart.height + 4 * barchart.padding);
 	  context.fill();
 	  context.strokeStyle = "#000000";
 	  context.stroke();
 	  context.closePath();
-	  
+
 	  var _width = barchart.width/keys.length;
 	  for (var i = 0; i < keys.length; i++) {
 	    draw_barchart(d, keys[i], (_width + barchart.padding) * i, 0, d3.schemeDark2[i]);
 	  }
 	}
 
-	
+
 	function draw_heatmap(_node, d, key){
 	  var start_x = parseFloat(_node.attr("x")) + heatmap.square_size,
 	      start_y = parseFloat(_node.attr("y"));
@@ -196,7 +196,7 @@ angular.module('dashboardApp')
 	    context.stroke();
 	    context.closePath();
 	  });
-	  
+
 	  canvas_wrapper.selectAll("custom-node").each(function(d){
 	    var _node = d3.select(this);
 	    context.moveTo(_node.attr("x"), _node.attr("y"));
@@ -250,7 +250,7 @@ angular.module('dashboardApp')
 	  context.fillText("Back", canvas_offset_x/2, height/2);
 	  context.closePath();
 	}
-	
+
 	function update(data, context, width, height){
 	  var root = d3.hierarchy(data, function(d){return d.children;});
 	  var tree_layout = d3.cluster().size([height, width - 300]);
@@ -261,12 +261,12 @@ angular.module('dashboardApp')
 	  nodes.forEach(function(d){
 	    d.y = (d.depth * width/6) + canvas_offset_x;
 	  });
-	  
+
 	  var duration = 300;
 	  var node = canvas_wrapper.selectAll("custom-node").data(nodes, function(d){
 	    return d;
 	  });
-	  
+
 	  var node_enter = node.enter()
 	      .append("custom-node")
 	      .classed("node", true)
@@ -284,7 +284,7 @@ angular.module('dashboardApp')
 	      .attr("stroke-style", color_scheme["stroke-style"])
 	      .attr("text-fill", color_scheme["text-fill"])
 	      .attr("line-width", stroke_width);
-	
+
 	  var node_update = node_enter.merge(node);
 
 	  node_update
@@ -339,7 +339,7 @@ angular.module('dashboardApp')
 	    .attr("ty", function(d){
 	      return d.x;
 	    });
-	  
+
 	  var linkExit = link.exit()
 	      .transition()
 	      .duration(duration)
@@ -364,7 +364,7 @@ angular.module('dashboardApp')
 	    .domain([Math.min.apply(Math, m1[0]), Math.max.apply(Math, m1[1])]);
 	  scales.percentage[1] = d3.scaleSequential(d3.interpolateBlues)
 	    .domain([Math.min.apply(Math, m2[0]), Math.max.apply(Math, m2[1])]);
-	  
+
 	  var t = d3.timer(function(elapsed) {
 	    draw_canvas(width, height);
 	    if (elapsed > duration + (0.3 * duration)) t.stop();
@@ -510,7 +510,7 @@ angular.module('dashboardApp')
 		data = set_view_port(data, d.tax_id);
 		update(data, context, width, height);
 	      });
-	  
+
 	  var liUpdate = liEnter.merge(li)
 	      .attr("class", function(d,i){
 		if(d.tax_id == current_tax){
@@ -524,7 +524,7 @@ angular.module('dashboardApp')
 	      });
 
 	  var liExit = li.exit().remove();
-	  
+
 	}
 	
 	

@@ -22,7 +22,7 @@ angular.module('dashboardApp')
 	    height = window.innerHeight,
 	    context,
 	    canvas_wrapper =  d3.select("#annotation-wrapper");
-	
+
 	var annotated_heatmap = {
 	  "padding": 5,
 	  "square_size": 20,
@@ -60,17 +60,17 @@ angular.module('dashboardApp')
 	function draw_heatmap_annotated(d){
 
 	  var annotated_nodes = get_all_annotated_nodes(d, "pathogenic");
-	  
+
 	  annotated_heatmap.width = annotated_nodes.length * (annotated_heatmap.square_size + annotated_heatmap.padding * 2);
-	  
+
 	  annotated_heatmap.cell_height = 200 + annotated_nodes[0].percentage.length * annotated_heatmap.square_size;
-	  
+
 	  var x = d3.scaleBand()
 	      .rangeRound([0, annotated_heatmap.width])
 	      .domain(annotated_nodes.map(function(x){return x.taxon_name;}));
-	  
+
 	  height = annotated_heatmap.offset_y + x(annotated_nodes[annotated_nodes.length - 1].taxon_name)/(width - 2 * annotated_heatmap.offset_x) * annotated_heatmap.cell_height + annotated_heatmap.offset_x;
-	  
+
 	  context = setup_canvas("annotation-wrapper", width, height);
 	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
 	    return d;
@@ -127,11 +127,10 @@ angular.module('dashboardApp')
 	    context.restore();
 	    context.closePath();
 	  });
-	  
+
 	}
 
 	d3.json(scope.jsonFile, function(error, data){
-	  console.log(data);
 	  draw_heatmap_annotated(data);
 	});
 
