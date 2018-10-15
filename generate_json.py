@@ -10,8 +10,8 @@ import os
 import time
 
 # Sample dataframes
-p="/Users/karthik/hpc_downloads/2018.10.11/centrifuge_report/"
-ctrl_path = "/Users/karthik/hpc_downloads/2018.10.11/W0006.centrifuge.report"
+p="/Users/karthik/hpc_downloads/2018.10.15/centrifuge_report/"
+ctrl_path = "/Users/karthik/hpc_downloads/2018.10.15/ctrl/W-1012.centrifuge.report"
 
 json_path = "./dashboard/app/json_output/"+time.strftime("%Y.%m.%d.%s")+".json"
 
@@ -76,6 +76,7 @@ root.populate_ctr_reads(ctrl_output)
 root.populate_reads_at_taxon()
 
 root.populate_percentage(root.get_total_reads())
+root.populate_ctrl_percentage(root.get_total_ctrl_reads())
 
 # root.compute_pvalues()
 

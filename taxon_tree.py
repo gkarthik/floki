@@ -174,12 +174,9 @@ class Node:
             if n == None:
                 continue
             n.ctrl_reads += _["num_reads"]
-        if self.tax_id == 1:
-            total = self.get_total_ctrl_reads()
-            self.populate_ctrl_percentage(total)
 
     def populate_ctrl_percentage(self, total):
-        self.ctrl_percentage = self.ctrl_reads/total
+        self.ctrl_percentage = self.ctrl_taxon_reads/total
         for i in self.children:
             i.populate_ctrl_percentage(total)
 
@@ -191,7 +188,7 @@ class Node:
 
     def populate_reads_at_taxon(self):
         self.taxon_reads = self.get_total_reads()
-        self.ctrl_reads = self.get_total_ctrl_reads()
+        self.ctrl_taxon_reads = self.get_total_ctrl_reads()
         for i in self.children:
             i.populate_reads_at_taxon()
 
@@ -237,6 +234,7 @@ class Node:
             "rank": self.rank,
             # Ctrl
             "ctrl_reads": np.asscalar(np.int64(self.ctrl_reads)),
+            "ctrl_taxon_reads": np.asscalar(np.int64(self.ctrl_taxon_reads)),
             "ctrl_percentage": np.float(self.ctrl_percentage),
             # Sample
             "reads": [np.asscalar(np.int64(i)) for i in self.reads],

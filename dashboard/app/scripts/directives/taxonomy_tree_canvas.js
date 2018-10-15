@@ -53,7 +53,7 @@ angular.module('dashboardApp')
 	  "height": window.innerHeight/6,
 	  "fill": "#4682b4",
 	  "ctrl": "red",
-	  "padding": 20
+	  "padding": 20,
 	};
 	
 	function setup_canvas(id, width, height) {
@@ -81,7 +81,14 @@ angular.module('dashboardApp')
 	  var _x = d.y + 20 + offset_x;
 	  var _y = d.x + 20 + offset_y;
 	  x.domain(d.data["file"]);
-	  y.domain([Math.min.apply(Math, d.data[key]), Math.max.apply(Math, d.data[key])]);
+	  var y_domain_elmns = d.data[key].slice();
+	  y_domain_elmns.push(d.data["ctrl_"+key]); // Get ctrl value as well
+	  y_domain_elmns.push(0);		    // Add zero
+	  var y_domain = [Math.min.apply(Math, y_domain_elmns), Math.max.apply(Math, y_domain_elmns)];
+	  if (y_domain[0] == y_domain[1]) {
+	    y_domain[0] = y_domain[1] - 0.5; // If value 0 show zero.
+	  }
+	  y.domain(y_domain);
 
 	  // x-axis
 	  context.beginPath();
@@ -97,6 +104,7 @@ angular.module('dashboardApp')
 	  // xaxis ticks
 	  context.beginPath();
 	  context.fillStyle = "#000000";
+	  context.strokeStyle = "#000000";
 	  x.domain().forEach(function(d) {
 	    context.moveTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height);
 	    context.lineTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height + 6);
@@ -121,7 +129,7 @@ angular.module('dashboardApp')
 	    context.textBaseline = "middle";
 	    context.fillText(d, _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	  });
-	  context.strokeStyle = "black";
+	  context.strokeStyle = "#000000";
 	  context.stroke();
 
 	  for (var i = 0; i < d.data[key].length; i++) {
@@ -129,7 +137,11 @@ angular.module('dashboardApp')
 	    context.rect(_x + barchart.padding + x(d.data["file"][i]), _y + barchart.padding + (barchart.height - y(d.data[key][i])), x.bandwidth(), y(d.data[key][i]));
 	    context.fill();
 	  }
-	  context.closePath();
+	  context.beginPath();
+	  context.strokeStyle=barchart.ctrl;
+	  context.moveTo(_x + barchart.padding, _y + barchart.padding + (barchart.height - y(d.data["ctrl_"+key])));
+	  context.lineTo(_x + barchart.padding+barchart.width/2, _y + barchart.padding + (barchart.height - y(d.data["ctrl_"+key])));
+	  context.stroke();
 	}
 	
 	function draw_hover(d, keys){	  
@@ -514,7 +526,8 @@ angular.module('dashboardApp')
 	  var liExit = li.exit().remove();
 	  
 	}
-
+	
+	
 	d3.json(scope.jsonFile, function(error, data){
 	  data_orig = jQuery.extend(true, {}, data);
 	  height = window.innerHeight;
