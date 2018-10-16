@@ -127,7 +127,7 @@ angular.module('dashboardApp')
 	    context.lineTo(_x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	    context.textAlign = "right";
 	    context.textBaseline = "middle";
-	    context.fillText(d.toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    context.fillText((d * 100).toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	  });
 	  context.strokeStyle = "#000000";
 	  context.stroke();
