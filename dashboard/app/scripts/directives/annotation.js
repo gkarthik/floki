@@ -21,6 +21,8 @@ angular.module('dashboardApp')
 	    width = window.innerWidth,
 	    height = window.innerHeight,
 	    context,
+      y_pos,
+      x_pos,
 	    canvas_wrapper =  d3.select("#annotation-wrapper");
 
 	var annotated_heatmap = {
@@ -31,6 +33,15 @@ angular.module('dashboardApp')
 	  "offset_x": window.innerWidth/12,
 	  "offset_y": window.innerHeight/6
 	};
+
+  var barchart = {
+    "background": "#FFFFFF",
+    "width": window.innerWidth/3,
+    "height": window.innerHeight/6,
+    "fill": "#4682b4",
+    "ctrl": "red",
+    "padding": 20,
+  };
 
 	function setup_canvas(id, width, height) {
 	  var canvas = document.getElementById(id);
@@ -128,10 +139,144 @@ angular.module('dashboardApp')
 	    context.closePath();
 	  });
 
+    canvas_wrapper.selectAll(".annotated-node").each(function(d){
+      var _node = d3.select(this);
+      if(_node.attr("hover-status")=="active"){
+        draw_hover(d, ["percentage", "taxon_reads"]);
+      }
+    });
 	}
+
+  function highlight_on_mouseover(coords, d){
+    var annotated_nodes = get_all_annotated_nodes(d, "pathogenic");
+    var x = d3.scaleBand()
+       .rangeRound([0, annotated_heatmap.width])
+       .domain(annotated_nodes.map(function(x){return x.taxon_name;}));
+	  var n = null;
+	  var cursor_pointer = false;
+	  d3.selectAll(".annotated-node")
+	    .each(function(d){
+	      if(within_radius([Math.floor(x(d.taxon_name) / (width - 2 * annotated_heatmap.offset_x)) * annotated_heatmap.cell_height + annotated_heatmap.offset_y, x(d.taxon_name) % (width - 2 * annotated_heatmap.offset_x) + annotated_heatmap.offset_x], coords, annotated_heatmap.square_size+annotated_heatmap.square_size)){
+      		d3.select(this).attr("hover-status", "active");
+          x_pos = x(d.taxon_name) % (width - 2 * annotated_heatmap.offset_x) + annotated_heatmap.offset_x;
+          y_pos = Math.floor(x(d.taxon_name) / (width - 2 * annotated_heatmap.offset_x)) * annotated_heatmap.cell_height + annotated_heatmap.offset_y;
+      		cursor_pointer = true;
+	      } else {
+		d3.select(this).attr("hover-status", "inactive");
+	      }
+	    });
+	  draw_heatmap_annotated(d);
+	  // if(coords[0] <= canvas_offset_x){
+	  //   draw_canvas_taxon_up(width, height);
+	  // }
+	}
+
+  function within_radius(p1,p2,r){
+    var a = (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2;
+    a = Math.sqrt(a);
+    return (a <= r);
+  }
+
+  function draw_hover(d, keys){
+    // Background
+    context.beginPath();
+    context.fillStyle = barchart.background;
+
+    context.rect(y_pos + 20, x_pos + 20, 80 + barchart.width + barchart.padding * 2, barchart.height + 4 * barchart.padding);
+    context.fill();
+    context.strokeStyle = "#000000";
+    context.stroke();
+    context.closePath();
+
+    var _width = barchart.width/keys.length;
+    for (var i = 0; i < keys.length; i++) {
+      draw_barchart(d, keys[i], (_width + barchart.padding) * i, 0, d3.schemeDark2[i]);
+    }
+  }
+
+  function draw_barchart(d, key, offset_x, offset_y, _color){
+    offset_y = (offset_y == null) ? 0 : offset_y;
+    offset_x = (offset_x == null) ? 0 : offset_x;
+
+    var bar_x = d3.scaleBand()
+       .rangeRound([0, barchart.width/2])
+       .padding(0.1);
+    var bar_y = d3.scaleLinear()
+       .rangeRound([0, barchart.height]);
+
+    var _x = d.y + 50 + offset_x;
+    var _y = d.x + 20 + offset_y;
+    bar_x.domain(d["file"]);
+    var y_domain_elmns = d[key].slice();
+    y_domain_elmns.push(d["ctrl_"+key]); // Get ctrl value as well
+    y_domain_elmns.push(0);		    // Add zero
+    var y_domain = [Math.min.apply(Math, y_domain_elmns), Math.max.apply(Math, y_domain_elmns)];
+    if (y_domain[0] == y_domain[1]) {
+      y_domain[0] = y_domain[1] - 0.5; // If value 0 show zero.
+    }
+    bar_y.domain(y_domain);
+
+    // x-axis
+    context.beginPath();
+    context.lineWidth = 2;
+    context.strokeStyle = "#000000";
+    context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height + 1);
+    context.lineTo(_x + (bar_x.padding() + bar_x.bandwidth()) * (d[key].length + 1) + barchart.padding * 2, _y + barchart.padding + barchart.height + 1);
+    context.moveTo(_x + barchart.padding, _y + barchart.padding+barchart.height + 2);
+    context.lineTo(_x + barchart.padding, _y + barchart.padding);
+    context.stroke();
+    context.closePath();
+
+    // xaxis ticks
+    context.beginPath();
+    context.fillStyle = "#000000";
+    context.strokeStyle = "#000000";
+    bar_x.domain().forEach(function(d) {
+      context.moveTo(_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2, _y + barchart.padding + barchart.height);
+      context.lineTo(_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2, _y + barchart.padding + barchart.height + 6);
+      context.font="12px Helvetica";
+      context.save();
+      context.translate(_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+      context.rotate(-Math.PI/2);
+      context.translate( -1 * (_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2) , -1 * (_y + barchart.padding + barchart.height + 6));
+      context.textAlign = "right";
+      context.textBaseline = "middle";
+      context.fillText(d, _x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+      context.restore();
+    });
+    context.strokeStyle = "#000000";
+    context.stroke();
+
+    // yxais ticks
+    bar_y.ticks(10).forEach(function(d) {
+      context.moveTo(_x + barchart.padding, _y + barchart.padding + barchart.height - bar_y(d) + 0.5);
+      context.lineTo(_x + barchart.padding - 6, _y + barchart.padding + barchart.height - bar_y(d) + 0.5);
+      context.textAlign = "right";
+      context.textBaseline = "middle";
+      context.fillText((d * 100).toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - bar_y(d) + 0.5);
+    });
+    context.strokeStyle = "#000000";
+    context.stroke();
+
+    for (var i = 0; i < d[key].length; i++) {
+      context.fillStyle = _color;
+      context.rect(_x + barchart.padding + bar_x(d["file"][i]), _y + barchart.padding + (barchart.height - bar_y(d[key][i])), bar_x.bandwidth(), bar_y(d[key][i]));
+      context.fill();
+    }
+    context.beginPath();
+    context.strokeStyle=barchart.ctrl;
+    context.moveTo(_x + barchart.padding, _y + barchart.padding + (barchart.height - bar_y(d["ctrl_"+key])));
+    context.lineTo(_x + barchart.padding+barchart.width/2, _y + barchart.padding + (barchart.height - bar_y(d["ctrl_"+key])));
+    context.stroke();
+  }
 
 	d3.json(scope.jsonFile, function(error, data){
 	  draw_heatmap_annotated(data);
+    d3.select("#annotation-wrapper")
+      .on("mousemove", function(d){
+        var coords = d3.mouse(this);
+        highlight_on_mouseover(coords, data);
+      });
 	});
 
       }
