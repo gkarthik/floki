@@ -43,9 +43,14 @@ class Node:
         # Other Annotations
         self.genome_size = 0
 
+    def set_depth(self):
+        if self.parent != None:
+            self.depth = self.parent.depth + 1
+        for i in self.children:
+            i.set_depth()
+
     def set_parent(self, p):
         self.parent = p
-        self.depth = self.parent.depth + 1
         p.children.append(self)
 
     def add_child(self, n):
@@ -66,25 +71,33 @@ class Node:
                 return _
         return None
 
-    def populate_taxonomy(self, reads_df, nodes_df, names_df, root):
+    def populate_taxonomy(self, reads_df, nodes_df, names_df):
         for _i, i in enumerate(reads_df["tax_id"].tolist()): # get tax IDS from output of tool
             if _i % 100000 == 0:
                 print(_i)
-            n = root.get_node(i)
+            n = self.get_node(i)
             tax_id = i
+            child = None
             while(n == None):
                 if tax_id not in nodes_df.index.values:
                     print(str(tax_id)+" not in NCBI taxonomy. Please check to see if the tax id was merged into another and replace the old id")
                     break
                 n = Node(tax_id, None, names_df.ix[tax_id]["name_txt"], nodes_df.ix[tax_id]["rank"])
-                p = root.get_node(nodes_df.ix[tax_id]["parent_tax_id"])
+                if child != None:
+                    child.set_parent(n)
+                    child = None
+                p = self.get_node(nodes_df.ix[tax_id]["parent_tax_id"])
                 if p != None:
                     n.set_parent(p)
+                else:
+                    child = n
                 tax_id = nodes_df.ix[tax_id]["parent_tax_id"]
                 n = p
         # Create unassigned
-        if root.get_node(0) == None:
-            n = Node(0,root, "Unassigned", "No Rank")
+        if self.get_node(0) == None:
+            n = Node(0, self, "Unassigned", "No Rank")
+        self.set_depth()
+        
 
     def get_total_children(self):
         ctr = 1
@@ -120,6 +133,7 @@ class Node:
         self.unique_reads.append(0)
         self.file.append(name)
         self.pvalue.append(0)
+        self.oddsratio.append(0)
         self.uncorrected_pvalue.append(0)
         for i in self.children:
             i.init_new_sample(name)
@@ -207,22 +221,22 @@ class Node:
         for i in self.children:
             i.populate_annotations(df)
 
-    # Fisher's eaxt
+    # Fisher's exact test one tailed
     #         | Sample | Ctrl
     # Species |
     # Total   |
-    def compute_pvalues(self):
+    def compute_pvalues(self, root):
         pval = [1] * len(self.taxon_reads)
         oddsratio = [1] * len(self.taxon_reads)
-        _t = self.get_total_reads()
+        _t = root.taxon_reads
         for _i, i in enumerate(self.taxon_reads):
-            _ = stats.fisher_exact([[i, self.ctrl_reads], [_t[_i], self.get_total_ctrl_reads()]])
-            oddsratio[_i] = _[0]
-            pval[_i] = _[1]
+            _ = stats.fisher_exact([[i, self.ctrl_taxon_reads], [_t[_i], root.ctrl_taxon_reads]])
+            oddsratio[_i] = _[0] # Not sure why including this
+            pval[_i] = _[1]/2 if i >= self.ctrl_taxon_reads else 1
         self.pvalue = pval
         self.oddsratio = oddsratio
         for i in self.children:
-            i.compute_pvalues()
+            i.compute_pvalues(root)
 
     def to_dict(self):
         d = {
@@ -242,9 +256,9 @@ class Node:
             "percentage": [np.float(i) for i in self.percentage],
             "unique_reads": [np.asscalar(np.int64(i)) for i in self.unique_reads],
             "file": self.file,
-            "pvalue": [np.asscalar(np.int64(i)) for i in self.pvalue],
-            "oddsratio": [np.asscalar(np.int64(i)) if not np.isnan(i) and i != np.float('Inf') else -1 for i in self.oddsratio],
-            "uncorrected_pvalue": [np.asscalar(np.int64(i)) for i in self.pvalue], # For now no multiple hypothesis testing. To add.
+            "pvalue": [np.float(i) for i in self.pvalue],
+            "oddsratio": [np.float(i) if i not in [np.nan, np.float("Infinity")] else "Infinity/NaN" for i in self.oddsratio],
+            "uncorrected_pvalue": [np.float(i) for i in self.pvalue], # For now no multiple hypothesis testing. To add.
             # Ontology Annotation
             "disease": self.disease,
             "disease_label": self.disease_label,

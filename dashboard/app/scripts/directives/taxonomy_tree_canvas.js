@@ -127,7 +127,12 @@ angular.module('dashboardApp')
 	    context.lineTo(_x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
 	    context.textAlign = "right";
 	    context.textBaseline = "middle";
-	    context.fillText((d * 100).toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    if(key=="percentage"){
+	      context.fillText((d * 100).toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    } else {
+	      context.fillText(d.toExponential(1), _x + barchart.padding - 6, _y + barchart.padding + barchart.height - y(d) + 0.5);
+	    }
+	    
 	  });
 	  context.strokeStyle = "#000000";
 	  context.stroke();
@@ -359,6 +364,7 @@ angular.module('dashboardApp')
 
 	  var m1 = get_range_at_depth(data, "percentage", data.depth + 1);
 	  var m2 = get_range_at_depth(data, "percentage", data.depth + 2);
+	  console.log(data);
 
 	  scales.percentage[0] = d3.scaleSequential(d3.interpolateGreens)
 	    .domain([Math.min.apply(Math, m1[0]), Math.max.apply(Math, m1[1])]);
