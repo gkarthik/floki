@@ -67,20 +67,23 @@ angular.module('dashboardApp')
 
 
 	function draw_heatmap_annotated(annotated_nodes){
-	  var _min = Math.min.apply(Math, annotated_nodes.map(function(x){
+	  var _min = annotated_nodes.map(function(x){
 	    return Math.min.apply(Math, x.percentage);
-	  }));
+	  });
 
-	  var _max = Math.max.apply(Math, annotated_nodes.map(function(x){
+	  var _max = annotated_nodes.map(function(x){
 	    return Math.max.apply(Math, x.percentage);
-	  }));
+	  });
 
-	  var percentage_scale = d3.scaleSequential(d3.interpolateYlOrRd)
-	      .domain([_min, _max]);
+	  var percentage_scale = [];
+	  for (var i = 0; i < _min.length; i++) {
+	    percentage_scale.push(d3.scaleSequential(d3.interpolateOrRd)
+				  .domain([_min[i], _max[i]]));
+	  }
 
 	  var _node;
 	  context.clearRect(0, 0, width, height);
-	  canvas_wrapper.selectAll(".annotated-node").each(function(d){
+	  canvas_wrapper.selectAll(".annotated-node").each(function(d, taxon_index){
 	    _node= d3.select(this);
 	    context.beginPath();
 	    context.strokeStyle = "#000000";
@@ -96,8 +99,9 @@ angular.module('dashboardApp')
 	      context.shadowColor = "#666666";
 	    }
 	    for (var i = 0; i < d.percentage.length; i++) {
+	      context.beginPath();
 	      context.rect(parseFloat(_node.attr("x")), parseFloat(_node.attr("y")) + (i * annotated_heatmap.square_size), annotated_heatmap.square_size, annotated_heatmap.square_size);
-	      context.fillStyle = percentage_scale(d.percentage[i]);
+	      context.fillStyle = percentage_scale[taxon_index](d.percentage[i]);
 	      context.fill();
 	      context.stroke();
 	    }
