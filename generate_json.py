@@ -1,4 +1,5 @@
 import imp
+import sys
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,9 +10,16 @@ import os
 
 import time
 
-# Sample dataframes
-p="/Users/karthik/hpc_downloads/2018.10.15/centrifuge_report/"
-ctrl_path = "/Users/karthik/hpc_downloads/2018.10.15/ctrl/W-1012.centrifuge.report"
+# Samples folder path
+# p="/Users/karthik/hpc_downloads/2018.10.17/centrifuge_report/"
+# Control path
+# ctrl_path = "/Users/karthik/hpc_downloads/2018.10.17/centrifuge_report/W1015.centrifuge.report"
+
+p = sys.argv[1]
+ctrl_path = sys.argv[2]
+
+# p = "/Users/karthik/hpc_downloads/2018.10.17/centrifuge_report/"
+# ctrl_path = "/Users/karthik/hpc_downloads/2018.10.17/W1015.centrifuge.report"
 
 json_path = "./dashboard/app/json_output/"+time.strftime("%Y.%m.%d.%s")+".json"
 
@@ -55,7 +63,7 @@ print("Populating Taxonomy.. ")
 imp.reload(taxon_tree)
 root = taxon_tree.Node(1, None, "Root", "no rank")
 for i in tool_output:
-    root.populate_taxonomy(i, nodes_df, names_df, root)
+    root.populate_taxonomy(i, nodes_df, names_df)
 
 print("Populating Annotations.. ")
 root.populate_annotations(annotations)
@@ -78,7 +86,8 @@ root.populate_reads_at_taxon()
 root.populate_percentage(root.get_total_reads())
 root.populate_ctrl_percentage(root.get_total_ctrl_reads())
 
-# root.compute_pvalues()
+print("Computing significance values..")
+root.compute_pvalues(root)
 
 d = root.to_dict()
 _str = json.dumps(d)
