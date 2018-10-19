@@ -250,7 +250,7 @@ angular.module('dashboardApp')
 	      .rangeRound([0, annotated_heatmap.width])
 	    .domain(annotated_nodes.map(function(x){return x.taxon_name;}));
 
-	  height = annotated_heatmap.offset_y + scale_x(annotated_nodes[annotated_nodes.length - 1].taxon_name)/(width - 2 * annotated_heatmap.offset_x) * annotated_heatmap.cell_height + annotated_heatmap.offset_x;
+	  height = annotated_heatmap.offset_y + scale_x(annotated_nodes[annotated_nodes.length - 1].taxon_name)/(width - 2 * annotated_heatmap.offset_x) * annotated_heatmap.cell_height + annotated_heatmap.offset_x * 2;
 
 	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
 	    return d;
