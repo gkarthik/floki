@@ -256,6 +256,8 @@ angular.module('dashboardApp')
 
 	  height = annotated_heatmap.offset_y + scale_x(annotated_nodes[annotated_nodes.length - 1].taxon_name)/(width - 2 * annotated_heatmap.offset_x) * annotated_heatmap.cell_height + annotated_heatmap.offset_x * 2;
 
+	  context = setup_canvas("annotation-wrapper", width, height);
+
 	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
 	    return d;
 	  });
@@ -282,7 +284,6 @@ angular.module('dashboardApp')
 	}
 
 	d3.json(scope.jsonFile, function(error, data){
-	  context = setup_canvas("annotation-wrapper", width, height);
 	  annotated_nodes = get_all_annotated_nodes(data, "pathogenic");
 	  update(annotated_nodes);
 	  d3.select("#annotation-wrapper")

@@ -10,7 +10,7 @@
 angular.module('dashboardApp')
   .controller('PathogenicCtrl', function ($scope, $window) {
     $scope.jsonOutputs = [
-      "json_output/centrifuge_2018.09.21.json"
+      "json_output/2018.10.25.1540495990.json"
     ];
 
   });

@@ -232,7 +232,7 @@ class Node:
         for _i, i in enumerate(self.taxon_reads):
             _ = stats.fisher_exact([[i, self.ctrl_taxon_reads], [_t[_i], root.ctrl_taxon_reads]])
             oddsratio[_i] = _[0] # Not sure why including this
-            pval[_i] = _[1]/2 if i >= self.ctrl_taxon_reads else 1
+            pval[_i] = _[1]/2
         self.pvalue = pval
         self.oddsratio = oddsratio
         for i in self.children:

@@ -46,8 +46,8 @@ annotations = annotations.fillna("")
 nodes_cols = ["tax_id", "parent_tax_id", "rank", "embl_code", "div_id", "inherited_div_flag", "genetic_code_id", "inherited_gc_flag", "mito_genetic_code_id", "inherited_mito_flag", "genbank_flag_id", "hidden_subtree_flag", "comments", "none"]
 names_cols = ["tax_id", "name_txt", "unique_name", "name_class", "none"]
 
-names_src="taxdmp/names.dmp"
-nodes_src="taxdmp/nodes.dmp"
+names_src="taxdump/names.dmp"   # Downloaded from ftp://ftp.ncbi.nih.gov/pub/taxonomy
+nodes_src="taxdump/nodes.dmp"
 names_df = pd.read_table(names_src, sep="|", names = names_cols)
 nodes_df = pd.read_table(nodes_src, sep="|", names = nodes_cols)
 
@@ -86,8 +86,8 @@ root.populate_reads_at_taxon()
 root.populate_percentage(root.get_total_reads())
 root.populate_ctrl_percentage(root.get_total_ctrl_reads())
 
-print("Computing significance values..")
-root.compute_pvalues(root)
+# print("Computing significance values..")
+# root.compute_pvalues(root)
 
 d = root.to_dict()
 _str = json.dumps(d)
