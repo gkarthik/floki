@@ -10,7 +10,7 @@ Use scripts/create_reports.sh and scripts/generate_json.py to create a json obje
 To run the web interface, clone the git repository and then execute the following comands,
 
 ```
-cd pathogen-dashboard/dashboard/
+cd floki/dashboard/
 npm install
 bower install
 grunt serve
