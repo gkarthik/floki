@@ -62,6 +62,11 @@ angular.module('dashboardApp')
 	  for (var i = 0; i < n.children.length; i++) {
 	    annotated_nodes = get_all_annotated_nodes(n.children[i], key, annotated_nodes);
 	  }
+	  annotated_nodes.sort(function(a, b){
+	    if(a.taxon_name < b.taxon_name) { return -1; }
+	    if(a.taxon_name > b.taxon_name) { return 1; }
+	    return 0;
+	  });
 	  return annotated_nodes;
 	}
 
