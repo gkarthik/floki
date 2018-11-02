@@ -7,9 +7,9 @@
  * # sampleComparison
  */
 angular.module('dashboardApp')
-  .directive('annotation', function ($window) {
+  .directive('search', function ($window) {
     return {
-      templateUrl: 'templates/annotation.html',
+      templateUrl: 'templates/search.html',
       restrict: 'E',
       scope: {
 	jsonFile: "@"
@@ -62,11 +62,6 @@ angular.module('dashboardApp')
 	  for (var i = 0; i < n.children.length; i++) {
 	    annotated_nodes = get_all_annotated_nodes(n.children[i], key, annotated_nodes);
 	  }
-	  annotated_nodes.sort(function(a, b){
-	    if(a.taxon_name < b.taxon_name) { return -1; }
-	    if(a.taxon_name > b.taxon_name) { return 1; }
-	    return 0;
-	  });
 	  return annotated_nodes;
 	}
 
@@ -148,7 +143,7 @@ angular.module('dashboardApp')
 	  // }
 	}
 
-	function within_radius(p1,p2,r){
+  function within_radius(p1,p2,r){
     if ((Math.abs(p1[0] - p2[0]) < 15) && ((p2[1] - p1[1]) < 20*annotated_nodes[0].percentage.length) && ((p2[1] - p1[1]) > -20)){
       return true;
     }else {
