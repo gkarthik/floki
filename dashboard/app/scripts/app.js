@@ -29,6 +29,11 @@ angular
         controller: 'PathogenicCtrl',
         controllerAs: 'pathogenic'
       })
+      .when('/search', {
+        templateUrl: 'views/search.html',
+        controller: 'SearchCtrl',
+        controllerAs: 'search'
+      })
       .otherwise({
         redirectTo: '/'
       });
