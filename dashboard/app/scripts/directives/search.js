@@ -2,7 +2,7 @@
 
 /**
  * @ngdoc directive
- * @name dashboardApp.directive:sampleComparison
+ * @name dashboardApp.directive:searchText
  * @description
  * # sampleComparison
  */
@@ -19,7 +19,7 @@ angular.module('dashboardApp')
 	    width = window.innerWidth,
 	    height = window.innerHeight,
 	    context,
-	    canvas_wrapper =  d3.select("#annotation-wrapper"),
+	    canvas_wrapper =  d3.select("#search-wrapper"),
 	    annotated_nodes,
 	    scale_x;
 
@@ -54,17 +54,27 @@ angular.module('dashboardApp')
 	  return ctx;
 	}
 
-	function get_all_annotated_nodes(n, key, annotated_nodes){
-	  annotated_nodes = annotated_nodes || [];
-	  if(n[key] && (n.rank == "species" || n.rank == "genus")){
-	    annotated_nodes.push(n);
-	  }
-	  for (var i = 0; i < n.children.length; i++) {
-	    annotated_nodes = get_all_annotated_nodes(n.children[i], key, annotated_nodes);
-	  }
-	  return annotated_nodes;
-	}
+  function find_names(n, names){
+    names = names || [];
+    names.push(n.taxon_name);
+    for (var i = 0; i < n.children.length; i++) {
+      annotated_nodes = find_names(n.children[i], names);
+    }
+    return names;
+  }
 
+  function search_all_nodes(n, key, annotated_nodes){
+    annotated_nodes = annotated_nodes || [];
+    for (var i = 0; i < key.length; i++) {
+      if(n.taxon_name == key[i]){
+        annotated_nodes.push(n);
+      }
+    }
+    for (var i = 0; i < n.children.length; i++) {
+      annotated_nodes = search_all_nodes(n.children[i], key, annotated_nodes);
+    }
+    return annotated_nodes;
+  }
 
 	function draw_heatmap_annotated(annotated_nodes){
 	  var _min = annotated_nodes.map(function(x){
@@ -258,12 +268,11 @@ angular.module('dashboardApp')
 
 	  height = annotated_heatmap.offset_y + scale_x(annotated_nodes[annotated_nodes.length - 1].taxon_name)/(width - 2 * annotated_heatmap.offset_x) * annotated_heatmap.cell_height + annotated_heatmap.offset_x * 2;
 
-	  context = setup_canvas("annotation-wrapper", width, height);
+	  context = setup_canvas("search-wrapper", width, height);
 
 	  var node = canvas_wrapper.selectAll(".annotated-node").data(annotated_nodes, function(d){
 	    return d;
 	  });
-
 
 	  var nodeEnter = node.enter()
 	      .append("annotated-node")
@@ -286,13 +295,32 @@ angular.module('dashboardApp')
 	}
 
 	d3.json(scope.jsonFile, function(error, data){
-	  annotated_nodes = get_all_annotated_nodes(data, "pathogenic");
-	  update(annotated_nodes);
-	  d3.select("#annotation-wrapper")
-	    .on("mousemove", function(d){
+
+    scope.runSearch = function(){
+
+    }
+
+    var select = document.getElementById("select");
+
+    var options = find_names(data);
+    for(var i = 0; i < options.length; i++) {
+        var opt = options[i];
+        var el = document.createElement("option");
+        el.text = opt;
+        el.value = opt;
+        select.add(el);
+    }
+
+    var search_term = ["Bacteria"];
+    annotated_nodes = search_all_nodes(data, search_term);
+    update(annotated_nodes);
+    d3.select("#search-wrapper")
+      .on("mousemove", function(d){
               var coords = d3.mouse(this);
               highlight_on_mouseover(coords, annotated_nodes);
-	    });
+      });
+
+
 	});
 
       }
