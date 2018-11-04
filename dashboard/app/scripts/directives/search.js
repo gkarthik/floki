@@ -10,9 +10,12 @@ angular.module('dashboardApp')
   .directive('search', function ($window) {
     return {
       templateUrl: 'templates/search.html',
+      require: '^ngModel',
       restrict: 'E',
       scope: {
-	jsonFile: "@"
+	jsonFile: "@",
+  taxname: "=",
+  runSearch: "&"
       },
       link: function postLink(scope, element, attrs) {
 	var d3 = $window.d3,
@@ -62,6 +65,8 @@ angular.module('dashboardApp')
     }
     return names;
   }
+
+  // $scope.$watch(‘taxname’, runSearch);
 
   function search_all_nodes(n, key, annotated_nodes){
     annotated_nodes = annotated_nodes || [];
@@ -294,13 +299,13 @@ angular.module('dashboardApp')
 	  draw_heatmap_annotated(nodes);
 	}
 
+  scope.runSearch = function(){
+    console.log('dab');
+  }
+
 	d3.json(scope.jsonFile, function(error, data){
 
-    scope.runSearch = function(){
-
-    }
-
-    var select = document.getElementById("select");
+    var select = document.getElementById("select-taxon");
 
     var options = find_names(data);
     for(var i = 0; i < options.length; i++) {
