@@ -10,12 +10,10 @@ angular.module('dashboardApp')
   .directive('search', function ($window) {
     return {
       templateUrl: 'templates/search.html',
-      require: '^ngModel',
+      // require: '^ngModel',
       restrict: 'E',
       scope: {
-	jsonFile: "@",
-  taxname: "=",
-  runSearch: "&"
+	jsonFile: "@"
       },
       link: function postLink(scope, element, attrs) {
 	var d3 = $window.d3,
@@ -299,32 +297,46 @@ angular.module('dashboardApp')
 	  draw_heatmap_annotated(nodes);
 	}
 
-  scope.runSearch = function(){
-    console.log('dab');
-  }
+  var options;
+  var typingTimer;
+  var doneTypingInterval = 200;
 
 	d3.json(scope.jsonFile, function(error, data){
 
-    var select = document.getElementById("select-taxon");
-
-    var options = find_names(data);
-    for(var i = 0; i < options.length; i++) {
-        var opt = options[i];
-        var el = document.createElement("option");
-        el.text = opt;
-        el.value = opt;
-        select.add(el);
+    scope.search_tree = function () {
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(function() {
+        var element = document.getElementById("dropdown");
+        while (element.firstChild) {
+          element.removeChild(element.firstChild);
+        }
+        scope.preselect = [];
+        options = find_names(data);
+        for (var i = 0; i < options.length; i++) {
+          if (scope.taxname && (options[i].toUpperCase()).match(scope.taxname.toUpperCase())){
+            scope.preselect.push(options[i])
+          }
+        }
+        for (var i = 0; i < 5; i++) {
+          var div = document.createElement("div");
+          div.setAttribute("ng-model", String(scope.preselect[i]))
+          div.setAttribute("ng-click", "runSearch()")
+          div.innerHTML += String(scope.preselect[i]);
+          document.getElementById("dropdown").appendChild(div);
+        }
+      }, doneTypingInterval);
     }
 
-    var search_term = ["Bacteria"];
-    annotated_nodes = search_all_nodes(data, search_term);
-    update(annotated_nodes);
-    d3.select("#search-wrapper")
-      .on("mousemove", function(d){
-              var coords = d3.mouse(this);
-              highlight_on_mouseover(coords, annotated_nodes);
-      });
-
+    scope.runSearch = function(){
+      console.log('hello')
+      annotated_nodes = search_all_nodes(data, search_term);
+      update(annotated_nodes);
+      d3.select("#search-wrapper")
+        .on("mousemove", function(d){
+                var coords = d3.mouse(this);
+                highlight_on_mouseover(coords, annotated_nodes);
+        });
+    }
 
 	});
 
