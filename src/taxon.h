@@ -6,6 +6,7 @@
 #include <map>
 
 #include "taxon_stats.h"
+#include "annotations.h"
 
 class taxon {
 private:
@@ -16,6 +17,7 @@ private:
   std::vector<taxon *> children;
   uint32_t parent_id;
   taxon_stats* stats;
+  annotation* annot;
   uint32_t depth;
 
 public:
@@ -42,6 +44,7 @@ public:
   uint32_t get_parent_id();
   taxon_stats* get_stats();
   uint32_t get_depth();
+  annotation* get_annotations();
 
   int add_child(uint32_t i);
   int add_parent(taxon* p);
@@ -61,6 +64,8 @@ public:
   int init_ctrl_sample(std::string name);
   bool prune_empty_branches();
   int generate_statistics(int indice, taxon* root);
+
+  int add_annotation(std::string disease_uid, std::string disease_label, std::string symptom_uid, std::string symptom_label);
   
   std::string to_json();
 };

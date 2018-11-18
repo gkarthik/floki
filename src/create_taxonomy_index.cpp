@@ -33,7 +33,7 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
 	break;
       }
       case 1: {
-	if(cell.compare("tax_id") == 0)
+	if(cell.find("tax_id") != std::string::npos)
 	  break;
 	taxid = (uint32_t) std::stoi(cell);
 	if(taxons[taxid] == NULL){
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]){
       std::cout << ctr << "\n";
     }
   }
-  taxons[1]->set_depth();	// Root st depth = 1
+  taxons[1]->set_depth();	// Root set depth = 1
   taxons[0] = taxons[1]->add_unclassified_reads_node();
   for (std::map<uint32_t, taxon*>::iterator it=std::next(taxons.begin()); it!=taxons.end(); ++it){
     t = it->second;
@@ -114,6 +114,7 @@ int main(int argc, char *argv[]){
   nodes_file.open(argv[2]);	// scientific_names.tsv file
   ctr = 0;
   std::cout << "Populating Names" << std::endl;
+  // Add node names
   while(std::getline(nodes_file, line)){
     std::stringstream line_stream(line);
     i = 0;
@@ -139,11 +140,63 @@ int main(int argc, char *argv[]){
     }
   }
   std::cout << taxons[1]->get_total_number_of_children() << std::endl;
+  // Add disease annotations
+  nodes_file.close();
+  std::cout << "Populating annotations ... " << std::endl;
+  nodes_file.open(argv[3]);	// merged_annotations.csv
+  ctr = 0;
+  std::string disease_uid, disease_label, symptom_uid, symptom_label;
+  uint32_t taxid;
+  while(std::getline(nodes_file, line)){
+    std::stringstream line_stream(line);
+    i = 0;
+    while(std::getline(line_stream,cell, ',')){
+      switch (i) {
+      case 1: {
+	disease_uid = cell;
+	break;
+      }
+      case 2: {
+	disease_label = cell;
+	break;
+      }
+      case 5: {
+	symptom_uid = cell;
+	break;
+      }
+      case 6: {
+	symptom_label = cell;
+	break;
+      }
+      case 7: {
+	if((cell.find("tax_id") != std::string::npos) || cell.empty())
+	  break;
+	taxid = (uint32_t) std::stoi(cell);
+	break;
+      }
+      default:
+	break;
+      }
+      i++;
+    }
+    line_stream.clear();
+    if(disease_uid.compare("disease") == 0)
+      continue;
+    if(taxons[taxid]!=NULL){
+      taxons[taxid]->add_annotation(disease_uid, disease_label, symptom_uid, symptom_label);
+    } else {
+      std::cout << "Tax ID " << taxid << "is not in annotations" << std::endl;
+    }
+    ctr++;
+    if (ctr%500 == 0) {
+      std::cout << ctr << "\n";
+    }
+  }  
   taxon* root = taxons[1];
   t = NULL;
-  generate_taxonomy_tree(taxons, root, argv[3], true); // First in control. Followed by other reports
+  generate_taxonomy_tree(taxons, root, argv[4], true); // First add control. Followed by other reports
   std::cout << root->get_stats()->get_ctrl_taxon_read_counts() << std::endl;
-  for (i = 4; i < argc; ++i) {
+  for (i = 5; i < argc; ++i) {
     std::cout << argv[i] << std::endl;
     generate_taxonomy_tree(taxons, root, argv[i], false);
   }
@@ -155,7 +208,7 @@ int main(int argc, char *argv[]){
   for (i = 0; i < root->get_stats()->get_last_indice()+1; ++i) {
     root->generate_statistics(i, root);
   }
-  std::cout << "Generating statistics took " << " took " << double( clock() - start_time ) / (double)CLOCKS_PER_SEC<< " seconds." << std::endl;
+  std::cout << "Generating statistics took " << double( clock() - start_time ) / (double)CLOCKS_PER_SEC<< " seconds." << std::endl;
   std::ofstream json_file;
   json_file.open("test.json");
   json_file << root->to_json();

@@ -3,18 +3,20 @@
 
 #include "taxon.h"
 #include "taxon_stats.h"
+#include "annotations.h"
 
-taxon::taxon(): stats(NULL), parent(NULL), id(0) {};
-taxon::taxon(uint32_t i): id(i), stats(NULL), parent(NULL) {};
-taxon::taxon(uint32_t i, uint32_t p): stats(NULL), parent(NULL), parent_id(p), id(i) {};
-taxon::taxon(uint32_t i, taxon* p): stats(NULL), parent(p), id(i) {};
-taxon::taxon(std::string n, std::string r, uint32_t i): stats(NULL), parent(NULL), name(n), rank(r), id(i) {};
-taxon::taxon(std::string n, std::string r, uint32_t i, taxon* p): stats(NULL), parent(p), name(n), rank(r), id(i) {
+taxon::taxon(): stats(NULL), parent(NULL), id(0), annot(NULL) {};
+taxon::taxon(uint32_t i): id(i), stats(NULL), parent(NULL), annot(NULL) {};
+taxon::taxon(uint32_t i, uint32_t p): stats(NULL), parent(NULL), parent_id(p), id(i), annot(NULL) {};
+taxon::taxon(uint32_t i, taxon* p): stats(NULL), parent(p), id(i), annot(NULL) {};
+taxon::taxon(std::string n, std::string r, uint32_t i): stats(NULL), parent(NULL), name(n), rank(r), id(i), annot(NULL) {};
+taxon::taxon(std::string n, std::string r, uint32_t i, taxon* p): stats(NULL), parent(p), name(n), rank(r), id(i), annot(NULL) {
   parent->children.push_back(this);
 };
 
 taxon::~taxon(){
   delete stats;
+  delete annot;
   parent = NULL;
   for(std::vector<taxon*>::iterator it = children.begin(); it != children.end();){
     delete (*it);
@@ -45,6 +47,10 @@ uint32_t taxon::get_parent_id(){
 
 taxon_stats* taxon::get_stats(){
   return stats;
+}
+
+annotation* taxon::get_annotations(){
+  return annot;
 }
 
 std::vector<taxon *> taxon::get_children(){
@@ -233,6 +239,14 @@ int taxon::generate_statistics(int indice, taxon* root){
   return 0;
 }
 
+int taxon::add_annotation(std::string disease_uid, std::string disease_label, std::string symptom_uid, std::string symptom_label){
+  if(annot == NULL)
+    annot = new annotation();
+  annot->add_disease(disease_uid, disease_label);
+  annot->add_symptom(disease_uid, symptom_uid, symptom_label);
+  return 0;
+}
+
 int taxon::set_depth(){
   if(id==1)
     depth = 0;
@@ -250,7 +264,13 @@ std::string taxon::to_json(){
   json << "\"parent\":\"" << parent_id  << "\",";
   json << "\"depth\":" << depth << ",";
   json << "\"rank\":\"" << rank << "\",";
-  json << get_stats()->to_json();
+  json << get_stats()->to_json() << ",";
+  if(get_annotations()!=NULL){
+    json << "\"pathogenic\":" << get_annotations()->get_pathogenic() << ",";
+    json << get_annotations()->to_json();
+  } else {
+    json << "\"pathogenic\":" << false;
+  }
   for(std::vector<taxon*>::iterator it = children.begin(); it != children.end();++it){
     if(it == children.begin())
       json << ",\"children\":[";
@@ -263,3 +283,4 @@ std::string taxon::to_json(){
   json << "}";
   return json.str();
 }
+
