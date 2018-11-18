@@ -4,3 +4,4 @@ taxdmp/*
 dashboard/app/json_output/*
 dashboard/app/.DS_Store
 .tern-port
+tmp/*

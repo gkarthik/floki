@@ -9,6 +9,19 @@ import json
 import os
 
 import time
+from datetime import datetime as dt
+
+from multiprocessing import Pool
+from multiprocessing.managers import BaseManager
+imp.reload(taxon_tree)
+
+class TaxonomyManager(BaseManager):
+    pass
+
+TaxonomyManager.register('Node', taxon_tree.Node)
+
+mngr = TaxonomyManager()
+mngr.start()
 
 # Samples folder path
 # p="/Users/karthik/hpc_downloads/2018.10.17/centrifuge_report/"
@@ -18,10 +31,13 @@ import time
 p = sys.argv[1]
 ctrl_path = sys.argv[2]
 
+p = "/Users/karthik/hpc_downloads/2018.11.04/centrifuge_report/"
+ctrl_path = "/Users/karthik/hpc_downloads/2018.11.04/W-1031.centrifuge.report"
+
 # p = "/Users/karthik/hpc_downloads/2018.10.17/centrifuge_report/"
 # ctrl_path = "/Users/karthik/hpc_downloads/2018.10.17/W1015.centrifuge.report"
 
-json_path = "./dashboard/app/json_output/"+time.strftime("%Y.%m.%d.%s")+".json"
+json_path = "../dashboard/app/json_output/"+time.strftime("%Y.%m.%d.%s")+".json"
 
 dirs = sorted(os.listdir(p))
 
@@ -59,11 +75,14 @@ nodes_df = nodes_df.apply(lambda x: x.str.strip() if x.dtype == np.object else x
 nodes_df = nodes_df.set_index("tax_id")
 names_df = names_df.set_index("tax_id")
 
-print("Populating Taxonomy.. ")
-imp.reload(taxon_tree)
-root = taxon_tree.Node(1, None, "Root", "no rank")
+
+root = mngr.Node(1, None, "Root", "no rank")
+taxids = []
 for i in tool_output:
-    root.populate_taxonomy(i, nodes_df, names_df)
+    taxids = list(set(taxids) | set(i["tax_id"]))
+
+len(taxids)
+root.populate_taxonomy(taxids, nodes_df, names_df)
 
 print("Populating Annotations.. ")
 root.populate_annotations(annotations)
@@ -75,7 +94,10 @@ print("Populating read counts..")
 
 # Batch samples
 for _, i in enumerate(tool_output):
-    root.populate_with_reads(i, names[_])
+    root.init_new_sample(names[_])
+
+pool = Pool(processes=8)
+pool.map(root.populate_with_reads, [(i, _i) for _i, i in enumerate(tool_output)])
 
 # Ctrl reads
 root.populate_ctr_reads(ctrl_output)
@@ -86,8 +108,10 @@ root.populate_reads_at_taxon()
 root.populate_percentage(root.get_total_reads())
 root.populate_ctrl_percentage(root.get_total_ctrl_reads())
 
-# print("Computing significance values..")
-# root.compute_pvalues(root)
+print("Computing significance values..")
+dt.now().time()
+root.compute_pvalues(root)
+dt.now().time()
 
 d = root.to_dict()
 _str = json.dumps(d)
@@ -104,3 +128,5 @@ def get_type(n):
             print(i)
     for i in n["children"]:
         get_type(i)
+
+

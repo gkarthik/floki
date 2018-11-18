@@ -14,7 +14,7 @@ class Node:
             p.children.append(self)
         else:
             self.parent = None
-            self.depth = 0
+            self.depthb = 0
         self.rank =r
         self.children = []
 
@@ -71,10 +71,8 @@ class Node:
                 return _
         return None
 
-    def populate_taxonomy(self, reads_df, nodes_df, names_df):
-        for _i, i in enumerate(reads_df["tax_id"].tolist()): # get tax IDS from output of tool
-            if _i % 100000 == 0:
-                print(_i)
+    def populate_taxonomy(self, taxids, nodes_df, names_df):
+        for _i, i in enumerate(taxids): # get tax IDS from output of tool
             n = self.get_node(i)
             tax_id = i
             child = None
@@ -154,15 +152,15 @@ class Node:
         for i in self.children:
             i.populate_percentage(total_count)
 
-    def populate_with_reads(self, df, name = None):
-        self.init_new_sample(name)
+    def populate_with_reads(self, args):
+        df = args[0]
+        sample_indice = args[1]
         for i in df.index.values:
             _ = df.ix[i]
             n = self.get_node(_["tax_id"])
             if n == None:
                 continue
-            n.reads[-1] += _["num_reads"]
-            # n.unique_reads[-1] += _["numUniqueReads"]
+            n.reads[sample_indice] += _["num_reads"]
 
     def print_read_metrics(self):
         for i in range(len(self.reads)):
@@ -230,9 +228,12 @@ class Node:
         oddsratio = [1] * len(self.taxon_reads)
         _t = root.taxon_reads
         for _i, i in enumerate(self.taxon_reads):
-            _ = stats.fisher_exact([[i, self.ctrl_taxon_reads], [_t[_i], root.ctrl_taxon_reads]])
-            oddsratio[_i] = _[0] # Not sure why including this
-            pval[_i] = _[1]/2
+            pval = [1] * len(self.taxon_reads)
+            oddsratio = [1] * len(self.taxon_reads)
+            if i/_t[_i] > self.ctrl_taxon_reads/root.ctrl_taxon_reads:
+                _ = stats.fisher_exact([[i, self.ctrl_taxon_reads], [_t[_i], root.ctrl_taxon_reads]], alternative='greater')
+                oddsratio[_i] = _[0] # Not sure why including this
+                pval[_i] = _[1]
         self.pvalue = pval
         self.oddsratio = oddsratio
         for i in self.children:
