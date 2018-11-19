@@ -56,9 +56,42 @@ uint32_t taxon_stats::get_read_counts(int indice){
   return read_counts.at(indice);
 }
 
+float taxon_stats::get_kmer_coverage(int indice){
+  return kmer_coverage.at(indice);
+}
+
+float taxon_stats::get_kmer_depth(int indice){
+  return kmer_depth.at(indice);
+}
+
+float taxon_stats::get_ctrl_kmer_coverage(){
+  return ctrl_kmer_coverage;
+}
+
+float taxon_stats::get_ctrl_kmer_depth(){
+  return ctrl_kmer_depth;
+}
+
 uint32_t taxon_stats::get_taxon_read_counts(int indice){
   return taxon_read_counts.at(indice);
 }
+
+void taxon_stats::set_kmer_depth(int indice, float r){
+  kmer_depth.at(indice) = r;
+}
+
+void taxon_stats::set_kmer_coverage(int indice, float r){
+  kmer_coverage.at(indice) = r;
+}
+
+void taxon_stats::set_ctrl_kmer_depth(float r){
+  ctrl_kmer_depth = r;
+}
+
+void taxon_stats::set_ctrl_kmer_coverage(float r){
+  ctrl_kmer_coverage = r;
+}
+
 
 void taxon_stats::set_taxon_read_counts(int indice, uint32_t r){
   taxon_read_counts.at(indice) = r;
@@ -150,11 +183,15 @@ std::string taxon_stats::to_json(){
   json << "\"ctrl_reads\":" << get_ctrl_read_counts() << ",";
   json << "\"ctrl_taxon_reads\":" << get_ctrl_taxon_read_counts() << ",";
   json << "\"ctrl_percentage\":" << get_ctrl_percentage() << ",";
+  json << "\"ctrl_kmer_coverage\":" << get_ctrl_kmer_coverage() << ",";
+  json << "\"ctrl_kmer_depth\":" << get_ctrl_kmer_depth() << ",";
   json << "\"reads\":" << generate_json_for_vector(read_counts, false) << ",";
   json << "\"taxon_reads\":" << generate_json_for_vector(taxon_read_counts, false) << ",";
   json << "\"percentage\":" << generate_json_for_vector(read_percentage, false) << ",";
   json << "\"pvalue\":" << generate_json_for_vector(pvalues, false) << ",";
   json << "\"oddsratio\":" << generate_json_for_vector(odds_ratio, false) << ",";
+  json << "\"kmer_depth\":" << generate_json_for_vector(kmer_depth, false) << ",";
+  json << "\"kmer_coverage\":" << generate_json_for_vector(kmer_coverage, false) << ",";
   json << "\"file\":" << generate_json_for_vector(file_names, true);
   return json.str();
 }

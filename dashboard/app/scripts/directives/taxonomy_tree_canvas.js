@@ -44,7 +44,6 @@ angular.module('dashboardApp')
 	    "taxon_reads": scope.taxon_reads,
 	    "odds_ratio": scope.odds_ratio
 	  };
-	  console.log(current_tax_id);
 	  data = jQuery.extend(true, {}, data_orig);
 	  data = set_view_port(data, current_tax_id);
 	  update(data, context, width, height);
@@ -66,17 +65,20 @@ angular.module('dashboardApp')
 	  "taxon_reads": [],
 	  "percentage": [],
 	  "pathogenic": [],
+	  "kmer_depth": [],
+	  "kmer_coverage": [],
 	  "pvalue": []
 	};
 
 	var barchart = {
 	  "background": "#FFFFFF",
 	  "width": window.innerWidth/3,
-	  "height": window.innerHeight/6,
+	  "height": window.innerHeight/8,
 	  "fill": "#4682b4",
 	  "ctrl": "red",
 	  "padding": 20,
-	  "offset_x": 60
+	  "offset_x": 60,
+	  "offset_y": 30
 	};
 
 	function setup_canvas(id, width, height) {
@@ -176,15 +178,16 @@ angular.module('dashboardApp')
 	  // Background
 	  context.beginPath();
 	  context.fillStyle = barchart.background;
-	  context.rect(d.y + 20, d.x + 20, 80 + barchart.width + barchart.padding * 2, barchart.height + 4 * barchart.padding);
+	  context.rect(d.y + 20, d.x + 20, 80 + barchart.width + barchart.padding * 2, (barchart.height * 2) + 4 * barchart.padding + barchart.offset_y + 80);
 	  context.fill();
 	  context.strokeStyle = "#000000";
 	  context.stroke();
 	  context.closePath();
 
-	  var _width = barchart.width/keys.length;
+	  var _width = barchart.width/(keys.length/2);
+	  var _height = barchart.height * (keys.length/2);
 	  for (var i = 0; i < keys.length; i++) {
-	    draw_barchart(d, keys[i], (_width + barchart.offset_x) * i, 0, d3.schemeDark2[i]);
+	    draw_barchart(d, keys[i], (_width + barchart.offset_x) * parseInt(i%2), (_height) * parseInt(i/2), d3.schemeDark2[i]);
 	  }
 	}
 
@@ -257,7 +260,7 @@ angular.module('dashboardApp')
 	  canvas_wrapper.selectAll("custom-node").each(function(d){
 	    var _node = d3.select(this);
 	    if(_node.attr("hover-status")=="active"){
-	      draw_hover(d, ["percentage", "taxon_reads"]);
+	      draw_hover(d, ["percentage", "taxon_reads", "kmer_depth", "kmer_coverage"]);
 	    }
 	  });
 	}
@@ -387,6 +390,8 @@ angular.module('dashboardApp')
 
 	  var m1 = get_range_at_depth(data, "percentage", data.depth + 1);
 	  var m2 = get_range_at_depth(data, "percentage", data.depth + 2);
+
+	  console.log(data);
 
 	  scales.percentage[0] = d3.scaleSequential(d3.interpolateGreens)
 	    .domain([Math.min.apply(Math, m1[0]), Math.max.apply(Math, m1[1])]);

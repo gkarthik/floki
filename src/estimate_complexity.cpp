@@ -6,32 +6,29 @@ int main(int argc, char *argv[]){
   uint32 _kmer_length, _mode,_counter_size, _lut_prefix_length, _signature_len, _min_count;
   uint64 _total_kmers, _max_count;
   std::string kmer;
-
-  kmer_database.OpenForListing ("../tmp/MG-0015_R1.9606");
+  std::string path_to_kmer_db = argv[1];
+  kmer_database.OpenForListing (path_to_kmer_db);
 
   kmer_database.Info(_kmer_length, _mode, _counter_size, _lut_prefix_length, _signature_len, _min_count, _max_count, _total_kmers);
   CKmerAPI kmer_object ( _kmer_length );
-  std::cout << _kmer_length << " " << _total_kmers << std::endl;
+  // std::cout << _kmer_length << " " << _total_kmers << std::endl;
 
-  uint32 counters[255] = {0}, counter;		// max count set at 255
+  uint32 counters[1000] = {0}, counter;		// max count set at 1000
   uint64 kmer_coverage;
   uint64 num_kmers;
-  std::cout << "Min count: " << _min_count << std::endl;
-  std::cout << "Max count: " << _max_count << std::endl;
   while (kmer_database.ReadNextKmer(kmer_object, counter)) {
     counters[counter] += 1;
   }
 
   int64 sum = 0;
   float kmer_coverage_depth = 0;
-  for (int i = 0; i < 255; ++i) {
+  for (int i = 0; i < 1000; ++i) {
     sum += counters[i];
     kmer_coverage_depth += i * counters[i];
   }
 
-  kmer_coverage_depth = kmer_coverage_depth/sum;
-  std::cout << "Total kmers: " << sum << " " << _total_kmers << std::endl;
-  std::cout << "Kmer coverage: " << kmer_coverage_depth << std::endl;
+  kmer_coverage_depth = kmer_coverage_depth/(float) sum;
+  std::cout << _total_kmers << "," << kmer_coverage_depth;
 
   return 0;
 }

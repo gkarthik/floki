@@ -20,32 +20,47 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
   std::string line, cell;
   int i = 0, ctr= 0;
   uint32_t taxid, reads;
+  float kmer_coverage, kmer_depth;
+  bool valid_line = true;
   report_file.open(report_file_path);
   while(std::getline(report_file, line)){
     std::stringstream line_stream(line);
     i = 0;
+    valid_line = true;
     while(std::getline(line_stream,cell, ',')){
       switch (i) {
       case 0: {
-	if(cell.compare("num_reads") == 0)
+	if(cell.compare("num_reads") == 0){
+	  valid_line = false;
 	  break;
+	}
 	reads = (uint32_t) std::stoi(cell);
 	break;
       }
       case 1: {
-	if(cell.find("tax_id") != std::string::npos)
+	if(cell.find("tax_id") != std::string::npos){
+	  valid_line = false;
 	  break;
-	taxid = (uint32_t) std::stoi(cell);
-	if(taxons[taxid] == NULL){
-	  std::cout << "Tax Id " << taxid << " is not in the taxonomy. Please check if this was merged into another id. " << reads << " reads were excluded." << std::endl;
-	  continue;
 	}
-	if(ctrl)
-	  taxons[taxid]->get_stats()->populate_ctrl_reads(reads);
-	else
-	  taxons[taxid]->get_stats()->populate_sample_reads(sample_indice, reads);
+	taxid = (uint32_t) std::stoi(cell);
 	break;
       }
+      case 2: {
+	if(cell.find("unique_bases") != std::string::npos){
+	  valid_line = false;
+	  break;
+	}
+	kmer_coverage = (float) std::stof(cell);
+	break;
+      }
+      case 3: {
+	if(cell.find("kmer_depth") != std::string::npos){
+	  valid_line = false;
+	  break;
+	}
+	kmer_depth = (float) std::stof(cell);
+	break;
+      }	
       default:
 	break;
       }
@@ -55,6 +70,20 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
     line_stream.clear();
     if (ctr%100000 == 0) {
       std::cout << ctr << "\n";
+    }
+    if(taxons[taxid] == NULL || !valid_line){
+      std::cout << "Tax Id " << taxid << " is not in the taxonomy. Please check if this was merged into another id. " << reads << " reads were excluded." << std::endl;
+      continue;
+    }
+    if(ctrl){
+      taxons[taxid]->get_stats()->populate_ctrl_reads(reads);
+      taxons[taxid]->get_stats()->set_ctrl_kmer_coverage(kmer_coverage);
+      taxons[taxid]->get_stats()->set_ctrl_kmer_depth(kmer_depth);
+    }
+    else{
+      taxons[taxid]->get_stats()->populate_sample_reads(sample_indice, reads);
+      taxons[taxid]->get_stats()->set_kmer_coverage(sample_indice, kmer_coverage);
+      taxons[taxid]->get_stats()->set_kmer_depth(sample_indice, kmer_depth);
     }
   }
   if(ctrl){
