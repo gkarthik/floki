@@ -26,7 +26,29 @@ angular.module('dashboardApp')
 	    node_size = 5,
 	    stroke_width = 2,
 	    canvas_offset_x = window.innerWidth/12,
-	    data;
+	    data,
+	    current_tax_id,
+	    limits = {
+	      "pvalue": 0.05,
+	      "taxon_reads": 10,
+	      "odds_ratio": 0
+	    };
+
+	scope.pvalue = 0.05;
+	scope.taxon_reads = 10;
+	scope.odds_ratio = 0;
+
+	scope.update_limits = function(){
+	  limits = {
+	    "pvalue": scope.pvalue,
+	    "taxon_reads": scope.taxon_reads,
+	    "odds_ratio": scope.odds_ratio
+	  };
+	  console.log(current_tax_id);
+	  data = jQuery.extend(true, {}, data_orig);
+	  data = set_view_port(data, current_tax_id);
+	  update(data, context, width, height);
+	};
 
 	var heatmap = {
 	  "square_size": 10
@@ -54,6 +76,7 @@ angular.module('dashboardApp')
 	  "fill": "#4682b4",
 	  "ctrl": "red",
 	  "padding": 20,
+	  "offset_x": 60
 	};
 
 	function setup_canvas(id, width, height) {
@@ -108,14 +131,14 @@ angular.module('dashboardApp')
 	  x.domain().forEach(function(d) {
 	    context.moveTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height);
 	    context.lineTo(_x + barchart.padding + x(d) + x.bandwidth() / 2, _y + barchart.padding + barchart.height + 6);
-	    context.font="12px Helvetica";
+	    context.font="12px Open Sans";
 	    context.save();
 	    context.translate(_x + barchart.padding + x(d) + x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
 	    context.rotate(-Math.PI/2);
 	    context.translate( -1 * (_x + barchart.padding + x(d) + x.bandwidth() / 2) , -1 * (_y + barchart.padding + barchart.height + 6));
 	    context.textAlign = "right";
 	    context.textBaseline = "middle";
-	    context.fillText(d, _x + barchart.padding + x(d) + x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+	    context.fillText(d.split(".")[0], _x + barchart.padding + x(d) + x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
 	    context.restore();
 	  });
 	  context.strokeStyle = "#000000";
@@ -161,7 +184,7 @@ angular.module('dashboardApp')
 
 	  var _width = barchart.width/keys.length;
 	  for (var i = 0; i < keys.length; i++) {
-	    draw_barchart(d, keys[i], (_width + barchart.padding) * i, 0, d3.schemeDark2[i]);
+	    draw_barchart(d, keys[i], (_width + barchart.offset_x) * i, 0, d3.schemeDark2[i]);
 	  }
 	}
 
@@ -214,7 +237,7 @@ angular.module('dashboardApp')
 	    context.stroke();
 	    context.closePath();
 	    context.beginPath();
-	    context.font = "18px Helvetica";
+	    context.font = "18px Open Sans";
 	    context.fillStyle = _node.attr("text-fill");
 	    if(d.children!=null){
 	      context.textAlign = "center";
@@ -249,7 +272,7 @@ angular.module('dashboardApp')
 	  context.beginPath();
 	  context.globalAlpha = 1;
 	  context.fillStyle = "#FFFFFF";
-	  context.font = "30px Helvetica";
+	  context.font = "16px Open Sans";
 	  context.textAlign = "center";
 	  context.textBaseline = "middle";
 	  context.fillText("Back", canvas_offset_x/2, height/2);
@@ -364,7 +387,6 @@ angular.module('dashboardApp')
 
 	  var m1 = get_range_at_depth(data, "percentage", data.depth + 1);
 	  var m2 = get_range_at_depth(data, "percentage", data.depth + 2);
-	  console.log(data);
 
 	  scales.percentage[0] = d3.scaleSequential(d3.interpolateGreens)
 	    .domain([Math.min.apply(Math, m1[0]), Math.max.apply(Math, m1[1])]);
@@ -448,6 +470,7 @@ angular.module('dashboardApp')
 	}
 
 	function set_view_port(node, tax_id){
+	  current_tax_id = tax_id;
 	  var n = search_for_node(node, tax_id);
 	  draw_breadcrumbs(n);
 	  // n = n[n.length - 1];
@@ -456,6 +479,7 @@ angular.module('dashboardApp')
 	  }
 	  var json = (n.length == 1) ? n[n.length - 1] : n[n.length - 2]; // To account for root
 	  remove_children_at_depth(json, 2, tax_id);
+	  filter_based_on_read_count(json, limits);
 	  return json;
 	}
 
@@ -532,16 +556,52 @@ angular.module('dashboardApp')
 	  var liExit = li.exit().remove();
 
 	}
-	
+
+	function filter_based_on_read_count(d, limit){
+	  var cond = [], keep_node = false, tmp;
+	  // Minimum number of reads
+	  keep_node = d.taxon_reads.some(function(x){
+	    return x >= limit.taxon_reads;
+	  });
+	  cond.push(keep_node);
+	  // Maximum pvalue
+	  keep_node = d.pvalue.some(function(x){
+	    return x <= limit.pvalue;
+	  });
+	  cond.push(keep_node);
+	  // Minimum odds ratio
+	  keep_node = d.oddsratio.some(function(x){
+	    return x >= limit.odds_ratio;
+	  });
+	  cond.push(keep_node);
+	  keep_node = cond.every(function(x){
+	    return x;
+	  });
+
+	  cond = [keep_node];
+	  if(d.children != null){
+	    for (var i = 0; i < d.children.length; i++) {
+	      tmp = filter_based_on_read_count(d.children[i], limit);
+	      cond.push(tmp);
+	      if(!tmp){
+		d.children.splice(i, 1);
+		i--;
+	      }
+	    }
+	  }
+	  keep_node = cond.some(function(x){
+	    return x;
+	  });
+	  return keep_node;
+	}
 	
 	d3.json(scope.jsonFile, function(error, data){
 	  data_orig = jQuery.extend(true, {}, data);
 	  height = window.innerHeight;
 	  width = window.innerWidth;
 	  context = setup_canvas("tree-view", width, height);
-	  var t;
 	  d3.select("#tree-view")
-	    .on("click", function(d){
+	    .on("click", function(){
 	      var coords = d3.mouse(this);
 	      var tax_id = -1;
 	      if(coords[0] <= canvas_offset_x){
@@ -556,7 +616,7 @@ angular.module('dashboardApp')
 		update(data, context, width, height);
 	      }
 	    })
-	    .on("mousemove", function(d){
+	    .on("mousemove", function(){
 	      var coords = d3.mouse(this);
 	      highlight_on_mouseover(coords);
 	    });

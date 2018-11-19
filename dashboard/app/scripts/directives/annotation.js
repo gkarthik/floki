@@ -21,7 +21,33 @@ angular.module('dashboardApp')
 	    context,
 	    canvas_wrapper =  d3.select("#annotation-wrapper"),
 	    annotated_nodes,
-	    scale_x;
+	    scale_x,
+	    data_orig,
+	    data,
+	    jQuery = $window.jQuery,
+	    limits;
+
+	scope.pvalue = 0.05;
+	scope.taxon_reads = 10;
+	scope.odds_ratio = 0;
+
+	scope.update_limits = function(){
+	  limits = {
+	    "pvalue": scope.pvalue,
+	    "taxon_reads": scope.taxon_reads,
+	    "odds_ratio": scope.odds_ratio
+	  };
+	  data = jQuery.extend(true, {}, data_orig);
+	  annotated_nodes = get_all_annotated_nodes(data, "pathogenic");
+	  update(annotated_nodes);
+	};
+
+
+	limits = {
+	  "pvalue": scope.pvalue,
+	  "taxon_reads": scope.taxon_reads,
+	  "odds_ratio": scope.odds_ratio
+	};
 
 	var annotated_heatmap = {
 	  "padding": 5,
@@ -39,6 +65,7 @@ angular.module('dashboardApp')
 	  "fill": "#4682b4",
 	  "ctrl": "red",
 	  "padding": 20,
+	  "offset_x": 60
 	};
 
 	function setup_canvas(id, width, height) {
@@ -55,9 +82,29 @@ angular.module('dashboardApp')
 	}
 
 	function get_all_annotated_nodes(n, key, annotated_nodes){
+	  var keep_node = false, cond = [];
 	  annotated_nodes = annotated_nodes || [];
-	  if(n[key] && (n.rank == "species" || n.rank == "genus")){
-	    annotated_nodes.push(n);
+	  if(n[key] == 1 && (n.rank == "species" || n.rank == "genus")){
+	    keep_node = n.taxon_reads.some(function(x){
+	      return x >= limits.taxon_reads;
+	    });
+	    cond.push(keep_node);
+	    // Maximum pvalue
+	    keep_node = n.pvalue.some(function(x){
+	      return x <= limits.pvalue;
+	    });
+	    cond.push(keep_node);
+	    // Minimum odds ratio
+	    keep_node = n.oddsratio.some(function(x){
+	      return x >= limits.odds_ratio;
+	    });
+	    cond.push(keep_node);
+	    keep_node = cond.every(function(x){
+	      return x;
+	    });
+	    if(keep_node){
+	      annotated_nodes.push(n);
+	    }
 	  }
 	  for (var i = 0; i < n.children.length; i++) {
 	    annotated_nodes = get_all_annotated_nodes(n.children[i], key, annotated_nodes);
@@ -113,7 +160,7 @@ angular.module('dashboardApp')
 	    context.save();
 	    context.translate(parseFloat(_node.attr("x")), parseFloat(_node.attr("y")));
 	    context.fillStyle="#000000";
-	    context.font = "12px Helvetica";
+	    context.font = "12px Open Sans";
 	    context.textAlign = "left";
 	    context.textBaseline = "top";
 	    context.rotate(-1 * Math.PI/3);
@@ -168,7 +215,7 @@ angular.module('dashboardApp')
 
 	  var _width = barchart.width/keys.length;
 	  for (var i = 0; i < keys.length; i++) {
-	    draw_barchart(d, node, keys[i], (_width + barchart.padding) * i, 0, d3.schemeDark2[i]);
+	    draw_barchart(d, node, keys[i], (_width + barchart.offset_x) * i, 0, d3.schemeDark2[i]);
 	  }
 	}
 
@@ -212,14 +259,14 @@ angular.module('dashboardApp')
 	  bar_x.domain().forEach(function(d) {
 	    context.moveTo(_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2, _y + barchart.padding + barchart.height);
 	    context.lineTo(_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2, _y + barchart.padding + barchart.height + 6);
-	    context.font="12px Helvetica";
+	    context.font="12px Open Sans";
 	    context.save();
 	    context.translate(_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
 	    context.rotate(-Math.PI/2);
 	    context.translate( -1 * (_x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2) , -1 * (_y + barchart.padding + barchart.height + 6));
 	    context.textAlign = "right";
 	    context.textBaseline = "middle";
-	    context.fillText(d, _x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
+	    context.fillText(d.split(".")[0], _x + barchart.padding + bar_x(d) + bar_x.bandwidth() / 2 , _y + barchart.padding + barchart.height + 6);
 	    context.restore();
 	  });
 	  context.strokeStyle = "#000000";
@@ -291,6 +338,7 @@ angular.module('dashboardApp')
 	}
 
 	d3.json(scope.jsonFile, function(error, data){
+	  data_orig = jQuery.extend(true, {}, data);
 	  annotated_nodes = get_all_annotated_nodes(data, "pathogenic");
 	  update(annotated_nodes);
 	  d3.select("#annotation-wrapper")

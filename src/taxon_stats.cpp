@@ -95,16 +95,14 @@ uint32_t taxon_stats::sum_taxon_read_counts_across_samples(){
 std::vector<double> fisher_test_greater(unsigned a, unsigned b, unsigned c, unsigned d) {
   uint32_t N = a + b + c + d;
   uint32_t r = a + c;
-  uint32_t n = c + d;
-  uint32_t max_k = (b<c) ? (b+1) : (c+1);
-  uint32_t min_k = (0>(r+n-N)) ? 0 : (r+n-N);
+  uint32_t n = a + b;
+  uint32_t max_k = n;
+  uint32_t min_k = a;
   boost::math::hypergeometric_distribution<> hgd(r, n, N);
-  double cutoff = pdf(hgd, c);
-  double prob = 0.0;
-  for(int k = min_k;k < max_k;k++) {
-    double p = pdf(hgd, k);
-    if(p <= cutoff)
-      prob += p;
+  double tmp_p = 0.0, p;
+  for(int k = min_k;k < max_k+1;k++) {
+    p = pdf(hgd, k);
+    tmp_p += p;
   }
   double odds_ratio;
   // odds_ratio = std::numeric_limits<double>::infinity();
@@ -112,15 +110,15 @@ std::vector<double> fisher_test_greater(unsigned a, unsigned b, unsigned c, unsi
     odds_ratio = -1;		// -1 if Infinity
   else
     odds_ratio = (double)(a*d)/(double)(b*c);
-  std::vector<double> res = {prob, odds_ratio};
+  std::vector<double> res = {tmp_p, odds_ratio};
   return res;
 }
 
 /*
- Chi squared test
-         | Sample | Ctrl
- Species |
- Total   |
+  Fisher exact test
+          | Sample | Ctrl
+  Species |
+  Total   |
 */
 
 int taxon_stats::compare_to_ctrl(int indice, uint32_t total_taxon_read_counts, uint32_t total_ctrl_read_counts){

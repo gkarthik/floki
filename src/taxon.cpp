@@ -129,7 +129,6 @@ int taxon::add_parent(taxon* p){
     return -1;
   this->parent = p;
   p->children.push_back(this);
-  set_depth();
   return 0;
 }
 
@@ -157,6 +156,7 @@ int taxon::compute_taxon_read_counts(int indice, taxon* root){
 
 int taxon::compute_read_percentage(int indice, taxon *root){
   stats->populate_sample_percentage(indice, root->get_stats()->get_taxon_read_counts(indice));
+  set_depth();
   for(std::vector<taxon*>::iterator it = children.begin(); it != children.end(); ++it) {
     (*it)->compute_read_percentage(indice, root);
   }

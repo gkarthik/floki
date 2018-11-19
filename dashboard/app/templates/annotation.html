@@ -1,1 +1,19 @@
-<canvas id ="annotation-wrapper"></canvas>
+<form>
+  <div class="form-row col-md-12 align-items-center">
+    <div class="form-group col-md-3">
+      <label for="min_read_count">Minimum Read Count</label>
+      <input class="form-control" id="min_read_count" placeholder="Minimum Read Count" ng-model="taxon_reads">
+    </div>
+    <div class="form-group col-md-3">
+      <label for="sig_level">Significance Level</label>
+      <input class="form-control" id="sig_level" placeholder="Significance Level" ng-model="pvalue">
+    </div>
+    <div class="form-group col-md-3">
+      <label for="ratio_percentage">Minimum ratio of percentage</label>
+      <input class="form-control" id="ratio_percentage" placeholder="Minimum ratio of percentage" ng-model="odds_ratio">
+    </div>
+  </div>
+  <button ng-click="update_limits()" style="margin-left:30px;" type="submit" class="btn btn-primary">Update Filters</button>
+</form>
+
+<canvas class="canvas_display" id ="annotation-wrapper"></canvas>

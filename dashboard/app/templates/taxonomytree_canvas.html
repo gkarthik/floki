@@ -1,9 +1,22 @@
-<table>
-  <tr>
-    <button ng-click="drawPathogenHeatmap()" type="button" class="btn btn-primary">Pathogenic Taxon</button>
-  </tr>
-</table>
-<nav aria-label="breadcrumb">
+<form>
+  <div class="form-row col-md-12 align-items-center">
+    <div class="form-group col-md-3">
+      <label for="min_read_count">Minimum Read Count</label>
+      <input class="form-control" id="min_read_count" placeholder="Minimum Read Count" ng-model="taxon_reads">
+    </div>
+    <div class="form-group col-md-3">
+      <label for="sig_level">Significance Level</label>
+      <input class="form-control" id="sig_level" placeholder="Significance Level" ng-model="pvalue">
+    </div>
+    <div class="form-group col-md-3">
+      <label for="ratio_percentage">Minimum ratio of percentage</label>
+      <input class="form-control" id="ratio_percentage" placeholder="Minimum ratio of percentage" ng-model="odds_ratio">
+    </div>
+  </div>
+  <button ng-click="update_limits()" style="margin-left:30px;" type="submit" class="btn btn-primary">Update Filters</button>
+</form>
+
+<nav class="navbar" style="margin-top:20px;" aria-label="breadcrumb">
   <ul id="breadcrumbs" class="breadcrumb"></ul>
 </nav>
-<canvas id="tree-view"></canvas>
+<canvas class="canvas_display" id="tree-view"></canvas>
