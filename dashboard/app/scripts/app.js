@@ -34,6 +34,11 @@ angular
         controller: 'SearchCtrl',
         controllerAs: 'search'
       })
+      .when('/ar', {
+        templateUrl: 'views/ar.html',
+        controller: 'ArCtrl',
+        controllerAs: 'ar'
+      })
       .otherwise({
         redirectTo: '/'
       });

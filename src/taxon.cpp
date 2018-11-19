@@ -271,15 +271,13 @@ std::string taxon::to_json(){
   } else {
     json << "\"pathogenic\":" << false;
   }
+  json << ",\"children\":[";
   for(std::vector<taxon*>::iterator it = children.begin(); it != children.end();++it){
-    if(it == children.begin())
-      json << ",\"children\":[";
     json << (*it)->to_json();
-    if(it == children.end()-1)
-      json << "]";
-    else
+    if(it != children.end()-1)
       json << ",";
   }
+  json << "]";
   json << "}";
   return json.str();
 }

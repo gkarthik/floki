@@ -1,0 +1,17 @@
+<h3>Antibiotic Resistance</h3>
+<div ng-repeat="j in arData">
+  <div ng-repeat="sample in j track by $index">
+    <div ng-repeat="seq in sample track by $index">
+      Accession: {{seq["ncbi_accession_id"]}}<br>
+      Coverage: {{seq["coverage"] * 100}}<br>
+      Per base depth: {{seq["avg_depth_per_base"]}}
+      <div ng-repeat="model in seq['card_data'] track by $index">
+	<h3>{{model["model_name"]}}</h3>
+	<h5>Description</h5>
+	<p>{{model["model_description"]}}</p>
+	<h5>Species: </h5>{{model["model_sequences"]["sequence"]}}
+      </div>
+      <hr>
+    </div>
+  </div>
+</div>
