@@ -19,7 +19,12 @@
 	</span>
 	</div>
 	<span class="float-left" ng-repeat="category in model['ARO_category'] track by $index">
-	  <span class="badge badge-info float-left">{{category["category_aro_name"]}}</span>
+	  <span class="animate-switch-container" ng-switch on="category['category_aro_class_name']">
+	    <span style="background:#28a745;" class="animate-switch badge badge-danger float-left" ng-switch-when="Resistance Mechanism">{{category["category_aro_name"]}}</span>
+	    <span style= "background:#dc3545;" class="animate-switch badge badge-success float-left" ng-switch-when="Antibiotic">{{category["category_aro_name"]}}</span>
+	    <span style= "background:#007bff;" class="animate-switch badge badge-success float-left" ng-switch-when="Drug Class">{{category["category_aro_name"]}}</span>
+	    <span class="animate-switch badge badge-info float-left" ng-switch-default>{{category["category_aro_name"]}}</span>
+	  </span>
 	</span>
       </div>
       <hr>
