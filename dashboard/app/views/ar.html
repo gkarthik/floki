@@ -1,17 +1,29 @@
 <h3>Antibiotic Resistance</h3>
+<div class="container-fluid">
 <div ng-repeat="j in arData">
   <div ng-repeat="sample in j track by $index">
-    <div ng-repeat="seq in sample track by $index">
-      Accession: {{seq["ncbi_accession_id"]}}<br>
-      Coverage: {{seq["coverage"] * 100}}<br>
-      Per base depth: {{seq["avg_depth_per_base"]}}
-      <div ng-repeat="model in seq['card_data'] track by $index">
-	<h3>{{model["model_name"]}}</h3>
-	<h5>Description</h5>
-	<p>{{model["model_description"]}}</p>
-	<h5>Species: </h5>{{model["model_sequences"]["sequence"]}}
+    <h2 class="col-md-12">{{sample["sample"]}}</h2>
+    <div ng-repeat="seq in sample.data track by $index" class="col-md-12 shadow-sm p-3 mb-5 bg-white rounded">
+      <ul class="list-group col-md-2">
+	<li class="list-group-item"><div class="bg-primary p-3 mb-2">Coverage</div> {{seq["coverage"] * 100}} %</li>
+	<li class="list-group-item"><div class="bg-primary p-3 mb-2">Per base depth</div> {{seq["avg_depth_per_base"]}}</li>
+	<li class="list-group-item"><div class="bg-primary p-3 mb-2">NCBI Accession ID</div> {{seq["ncbi_accession_id"]}}</li>	
+      </ul>
+      <div ng-repeat="model in seq['card_data'] track by $index" class="col-md-10">
+	<h3>{{model["ARO_name"]}}</h3>
+	<p>{{model["ARO_description"]}}</p>
+	<div>
+	<span class="text-primary">Species</span>
+	<span ng-repeat="m in model['model_sequences']['sequence']" class="badge badge-primary">
+	  {{m["NCBI_taxonomy"]["NCBI_taxonomy_name"]}}
+	</span>
+	</div>
+	<span class="float-left" ng-repeat="category in model['ARO_category'] track by $index">
+	  <span class="badge badge-info float-left">{{category["category_aro_name"]}}</span>
+	</span>
       </div>
       <hr>
     </div>
   </div>
+</div>
 </div>
