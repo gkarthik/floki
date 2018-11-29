@@ -22,6 +22,7 @@ angular.module('dashboardApp')
 	    context,
 	    canvas_wrapper =  d3.select("#search-wrapper"),
 	    annotated_nodes,
+      selected=[],
 	    scale_x;
 
 	var annotated_heatmap = {
@@ -320,23 +321,39 @@ angular.module('dashboardApp')
         for (var i = 0; i < 5; i++) {
           var div = document.createElement("div");
           div.setAttribute("ng-model", String(scope.preselect[i]))
-          div.setAttribute("ng-click", "runSearch()")
+          div.setAttribute("ng-click", "onclick()")
           div.innerHTML += String(scope.preselect[i]);
           document.getElementById("dropdown").appendChild(div);
         }
+      scope.runSearch();
       }, doneTypingInterval);
     }
 
-    scope.runSearch = function(){
-      console.log('hello')
-      annotated_nodes = search_all_nodes(data, search_term);
-      update(annotated_nodes);
-      d3.select("#search-wrapper")
-        .on("mousemove", function(d){
-                var coords = d3.mouse(this);
-                highlight_on_mouseover(coords, annotated_nodes);
-        });
+    scope.onclick = function () {
+      // push the ID of element which is clicked on
+      selected.push(div.id);
+      // append selected to the displayed selection
+      scope.runSearch();
     }
+
+    scope.clearsearch = function () {
+      selected=[];
+      scope.runSearch();
+    }
+
+    scope.runSearch = function(){
+      if (selected.length>0){
+        annotated_nodes= search_all_nodes(data, selected);
+        update(annotated_nodes);
+        d3.select("#search-wrapper")
+          .on("mousemove", function(d){
+              var coords = d3.mouse(this);
+              highlight_on_mouseover(coords, annotated_nodes);
+          });
+      }
+    }
+
+    scope.runSearch();
 
 	});
 
