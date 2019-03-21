@@ -27,7 +27,7 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
     std::stringstream line_stream(line);
     i = 0;
     valid_line = true;
-    while(std::getline(line_stream,cell, ',')){
+    while(std::getline(line_stream,cell, '\t')){
       switch (i) {
       case 0: {
 	if(cell.compare("num_reads") == 0){
@@ -60,7 +60,7 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
 	}
 	kmer_depth = (float) std::stof(cell);
 	break;
-      }	
+      }
       default:
 	break;
       }

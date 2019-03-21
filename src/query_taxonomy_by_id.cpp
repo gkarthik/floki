@@ -4,10 +4,14 @@
 #include <sstream>
 #include "taxon.h"
 
-void print_all_children(taxon* node){
-  std::cout << node->get_id() << "\t" << node->get_name() << std::endl;
-  for(std::vector<taxon*>::iterator it = node->get_children().begin(); it != node->get_children().end(); ++it) {
-    print_all_children(*it);
+void print_all_children(taxon *node, std::string rank){
+  if(node->get_rank() == rank){
+    std::cout << node->get_id() << "\t" << node->get_name() << std::endl;
+  }
+  std::vector<taxon*> children = node->get_children();
+  for(std::vector<taxon*>::iterator it = children.begin(); it != children.end(); ++it) {
+    // std::cout << (*it)->get_name() << std::endl;
+    print_all_children(*it, rank);
   }
 }
 
@@ -47,8 +51,8 @@ int main(int argc, char *argv[]){
       std::cout << ctr << "\n";
     }
   }
+  // taxons[1]->print();
   taxons[1]->set_depth();	// Root set depth = 1
-  taxons[0] = taxons[1]->add_unclassified_reads_node();
   for (std::map<uint32_t, taxon*>::iterator it=std::next(taxons.begin()); it!=taxons.end(); ++it){
     t = it->second;
     t->add_parent(taxons[t->get_parent_id()]);
@@ -83,6 +87,8 @@ int main(int argc, char *argv[]){
     }
   }
   std::cout << taxons[1]->get_total_number_of_children() << std::endl;
-  print_all_children(taxons[std::stoi(argv[3])]);
+  std::cout << taxons[9126]->get_total_number_of_children() << std::endl;
+  // std::cout << (taxons[9126]->get_children() == taxons[9126]->get_children()) << std::endl;
+  print_all_children(taxons[std::stoul(argv[3])], argv[4]);
   return 0;
 }

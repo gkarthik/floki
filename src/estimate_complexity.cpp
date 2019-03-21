@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
   }
 
   kmer_coverage_depth = kmer_coverage_depth/(float) sum;
-  std::cout << _total_kmers << "," << kmer_coverage_depth;
+  std::cout << _total_kmers << "\t" << kmer_coverage_depth;
 
   return 0;
 }
