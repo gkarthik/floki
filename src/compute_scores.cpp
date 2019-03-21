@@ -103,7 +103,7 @@ int compute_score(std::string taxa_str, taxon_summary* ts){
   while (std::getline(tokenStream, split, ' ')){
     pos = split.find(":");
     tmp = split.substr(0, pos);
-    if (tmp.compare("|") == 0) {
+    if (tmp.compare("|") == 0 || tmp.compare("A") == 0) {
       forward = false;
       continue;
     }
@@ -163,8 +163,12 @@ int main(int argc, char *argv[])
       case 3: {			// Read lengths
 	taxon_score[id]->increase_sequence_count();
 	pos = field.find("|");
-	taxon_score[id]->set_average_forward_read_length(std::stoi(field.substr(0, pos)));
-	taxon_score[id]->set_average_reverse_read_length(std::stoi(field.substr(pos+1)));
+	if(pos!=std::string::npos){
+	  taxon_score[id]->set_average_forward_read_length(std::stoi(field.substr(0, pos)));
+	  taxon_score[id]->set_average_reverse_read_length(std::stoi(field.substr(pos+1)));
+	} else {
+	  taxon_score[id]->set_average_forward_read_length(std::stoi(field));
+	}
 	break;
       }
       case 4: {
