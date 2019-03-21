@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
   CKmerAPI kmer_object ( _kmer_length );
   // std::cout << _kmer_length << " " << _total_kmers << std::endl;
 
-  uint32 counters[1000] = {0}, counter;		// max count set at 1000
+  uint32 counters[100000] = {0}, counter;		// max count set at 100000
   uint64 kmer_coverage;
   uint64 num_kmers;
   while (kmer_database.ReadNextKmer(kmer_object, counter)) {
