@@ -103,7 +103,10 @@ int compute_score(std::string taxa_str, taxon_summary* ts){
   while (std::getline(tokenStream, split, ' ')){
     pos = split.find(":");
     tmp = split.substr(0, pos);
-    if (tmp.compare("|") == 0 || tmp.compare("A") == 0) {
+    if (tmp.compare("A") == 0) {
+      continue;
+    }
+    if (tmp.compare("|") == 0) {
       forward = false;
       continue;
     }
