@@ -24,6 +24,10 @@ int taxon_stats::add_new_sample(std::string name){
   estimated_read_depth.push_back(0);
   pvalues.push_back(0);
   odds_ratio.push_back(0);
+  average_forward_read_length.push_back(0);
+  average_reverse_read_length.push_back(0);
+  forward_score_distribution.push_back("");
+  reverse_score_distribution.push_back("");
   return 0;
 }
 
@@ -125,6 +129,70 @@ uint32_t taxon_stats::sum_taxon_read_counts_across_samples(){
   return std::accumulate(taxon_read_counts.begin(), taxon_read_counts.end(), 0);
 }
 
+float taxon_stats::get_ctrl_average_forward_read_length(){
+  return ctrl_average_forward_read_length;
+}
+
+float taxon_stats::get_ctrl_average_reverse_read_length(){
+  return ctrl_average_reverse_read_length;
+}
+
+std::string taxon_stats::get_ctrl_forward_score_distribution(){
+  return ctrl_forward_score_distribution;
+}
+
+std::string taxon_stats::get_ctrl_reverse_score_distribution(){
+  return ctrl_reverse_score_distribution;
+}
+
+void taxon_stats::set_ctrl_average_forward_read_length(float k){
+  ctrl_average_forward_read_length = k;
+}
+
+void taxon_stats::set_ctrl_average_reverse_read_length(float k){
+  ctrl_average_reverse_read_length = k;
+}
+
+void taxon_stats::set_ctrl_forward_score_distribution(std::string k){
+  ctrl_forward_score_distribution = k;
+}
+
+void taxon_stats::set_ctrl_reverse_score_distribution(std::string k){
+  ctrl_reverse_score_distribution = k;
+}
+
+void taxon_stats::set_average_forward_read_length(int indice, float k){
+  average_forward_read_length.at(indice) = k;
+}
+
+void taxon_stats::set_average_reverse_read_length(int indice, float k){
+  average_reverse_read_length.at(indice) = k;
+}
+
+void taxon_stats::set_forward_score_distribution(int indice, std::string k){
+  forward_score_distribution.at(indice) = k;
+}
+
+void taxon_stats::set_reverse_score_distribution(int indice, std::string k){
+  reverse_score_distribution.at(indice) = k;
+}
+
+std::vector<float> taxon_stats::get_average_forward_read_length(){
+  return average_forward_read_length;
+}
+
+std::vector<float> taxon_stats::get_average_reverse_read_length(){
+  return average_reverse_read_length;
+}
+
+std::vector<std::string> taxon_stats::get_forward_score_distribution(){
+  return forward_score_distribution;
+}
+
+std::vector<std::string> taxon_stats::get_reverse_score_distribution(){
+  return reverse_score_distribution;
+}
+
 std::vector<double> fisher_test_greater(unsigned a, unsigned b, unsigned c, unsigned d) {
   uint32_t N = a + b + c + d;
   uint32_t r = a + c;
@@ -185,6 +253,10 @@ std::string taxon_stats::to_json(){
   json << "\"ctrl_percentage\":" << get_ctrl_percentage() << ",";
   json << "\"ctrl_kmer_coverage\":" << get_ctrl_kmer_coverage() << ",";
   json << "\"ctrl_kmer_depth\":" << get_ctrl_kmer_depth() << ",";
+  json << "\"ctrl_average_forward_read_length\":" << get_ctrl_average_forward_read_length() << ",";
+  json << "\"ctrl_average_reverse_read_length\":" << get_ctrl_average_reverse_read_length() << ",";
+  json << "\"ctrl_forward_score_distribution\":\"" << get_ctrl_forward_score_distribution() << "\",";
+  json << "\"ctrl_reverse_score_distribution\":\"" << get_ctrl_reverse_score_distribution() << "\",";
   json << "\"reads\":" << generate_json_for_vector(read_counts, false) << ",";
   json << "\"taxon_reads\":" << generate_json_for_vector(taxon_read_counts, false) << ",";
   json << "\"percentage\":" << generate_json_for_vector(read_percentage, false) << ",";
@@ -192,6 +264,10 @@ std::string taxon_stats::to_json(){
   json << "\"oddsratio\":" << generate_json_for_vector(odds_ratio, false) << ",";
   json << "\"kmer_depth\":" << generate_json_for_vector(kmer_depth, false) << ",";
   json << "\"kmer_coverage\":" << generate_json_for_vector(kmer_coverage, false) << ",";
-  json << "\"file\":" << generate_json_for_vector(file_names, true);
+  json << "\"file\":" << generate_json_for_vector(file_names, true) << ",";
+  json << "\"average_forward_read_length\":" << generate_json_for_vector(average_forward_read_length, false) << ",";
+  json << "\"average_reverse_read_length\":" << generate_json_for_vector(average_reverse_read_length, false) << ",";
+  json << "\"forward_score_distribution\":" << generate_json_for_vector(forward_score_distribution, true) << ",";
+  json << "\"reverse_score_distribution\":" << generate_json_for_vector(reverse_score_distribution, true);
   return json.str();
 }

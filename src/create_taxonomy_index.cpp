@@ -20,7 +20,9 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
   std::string line, cell;
   int i = 0, ctr= 0;
   uint32_t taxid, reads;
-  float kmer_coverage, kmer_depth;
+  float kmer_coverage, kmer_depth, average_forward_read_length, average_reverse_read_length;
+  std::string forward_score_distribution;
+  std::string reverse_score_distribution;
   bool valid_line = true;
   report_file.open(report_file_path);
   while(std::getline(report_file, line)){
@@ -29,35 +31,35 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
     valid_line = true;
     while(std::getline(line_stream,cell, '\t')){
       switch (i) {
-      case 0: {
-	if(cell.compare("num_reads") == 0){
-	  valid_line = false;
-	  break;
-	}
-	reads = (uint32_t) std::stoi(cell);
-	break;
-      }
-      case 1: {
-	if(cell.find("tax_id") != std::string::npos){
-	  valid_line = false;
-	  break;
-	}
+      case 0: {			// tax_id
 	taxid = (uint32_t) std::stoi(cell);
 	break;
       }
+      case 1: {			// num_reads
+	reads = (uint32_t) std::stoi(cell);
+	break;
+      }
       case 2: {
-	if(cell.find("unique_bases") != std::string::npos){
-	  valid_line = false;
-	  break;
-	}
-	kmer_coverage = (float) std::stof(cell);
+	average_forward_read_length = (float) std::stof(cell);
 	break;
       }
       case 3: {
-	if(cell.find("kmer_depth") != std::string::npos){
-	  valid_line = false;
-	  break;
-	}
+	average_reverse_read_length = (float) std::stof(cell);
+	break;
+      }
+      case 4: {
+        forward_score_distribution = cell;
+	break;
+      }
+      case 5: {
+	reverse_score_distribution = cell;
+	break;
+      }
+      case 6: {			// unique_bases
+	kmer_coverage = (float) std::stof(cell);
+	break;
+      }
+      case 7: {			// kmer_depth
 	kmer_depth = (float) std::stof(cell);
 	break;
       }
@@ -71,7 +73,7 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
     if (ctr%100000 == 0) {
       std::cout << ctr << "\n";
     }
-    if(taxons[taxid] == NULL || !valid_line){
+    if(taxons[taxid] == NULL){
       std::cout << "Tax Id " << taxid << " is not in the taxonomy. Please check if this was merged into another id. " << reads << " reads were excluded." << std::endl;
       continue;
     }
@@ -79,11 +81,19 @@ int generate_taxonomy_tree(std::map<uint32_t, taxon*> taxons, taxon* root, std::
       taxons[taxid]->get_stats()->populate_ctrl_reads(reads);
       taxons[taxid]->get_stats()->set_ctrl_kmer_coverage(kmer_coverage);
       taxons[taxid]->get_stats()->set_ctrl_kmer_depth(kmer_depth);
+      taxons[taxid]->get_stats()->set_ctrl_average_forward_read_length(average_forward_read_length);
+      taxons[taxid]->get_stats()->set_ctrl_average_reverse_read_length(average_reverse_read_length);
+      taxons[taxid]->get_stats()->set_ctrl_forward_score_distribution(forward_score_distribution);
+      taxons[taxid]->get_stats()->set_ctrl_reverse_score_distribution(reverse_score_distribution);
     }
     else{
       taxons[taxid]->get_stats()->populate_sample_reads(sample_indice, reads);
       taxons[taxid]->get_stats()->set_kmer_coverage(sample_indice, kmer_coverage);
       taxons[taxid]->get_stats()->set_kmer_depth(sample_indice, kmer_depth);
+      taxons[taxid]->get_stats()->set_average_forward_read_length(sample_indice, average_forward_read_length);
+      taxons[taxid]->get_stats()->set_average_reverse_read_length(sample_indice, average_reverse_read_length);
+      taxons[taxid]->get_stats()->set_forward_score_distribution(sample_indice, forward_score_distribution);
+      taxons[taxid]->get_stats()->set_reverse_score_distribution(sample_indice, reverse_score_distribution);
     }
   }
   if(ctrl){
